@@ -1,0 +1,353 @@
+import React from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/Button';
+import { Container } from '@/components/ui/Container';
+import { Check, Star } from 'lucide-react';
+
+export default function PricingPage() {
+  const plans = [
+    {
+      name: 'Free',
+      price: '£0',
+      period: 'forever',
+      description: 'Perfect for testing and small shops',
+      features: [
+        '3 generations per day',
+        '1 rewrite per day',
+        'Basic SEO optimization',
+        'Copy to clipboard',
+        'Community support'
+      ],
+      limitations: [
+        'No Etsy publishing',
+        'No bulk operations',
+        'No history tracking'
+      ],
+      cta: 'Get Started Free',
+      ctaLink: '/app',
+      ctaVariant: 'outline' as const,
+      popular: false
+    },
+    {
+      name: 'Pro',
+      price: '£19',
+      period: 'per month',
+      description: 'Best for solo sellers and small businesses',
+      features: [
+        'Unlimited generations',
+        'Unlimited rewrites',
+        'Etsy publishing & updates',
+        'Tone presets',
+        'History tracking',
+        'Priority support',
+        'Advanced SEO features'
+      ],
+      limitations: [],
+      cta: 'Start Pro Trial',
+      ctaLink: '/api/stripe/checkout?plan=pro',
+      ctaVariant: 'primary' as const,
+      popular: true
+    },
+    {
+      name: 'Business',
+      price: '£39',
+      period: 'per month',
+      description: 'Perfect for power sellers and agencies',
+      features: [
+        'Everything in Pro',
+        'Bulk listing generation (50 at once)',
+        'Bulk publishing to Etsy',
+        'CSV export/import',
+        'Advanced analytics',
+        'Priority processing',
+        'Email support'
+      ],
+      limitations: [],
+      cta: 'Start Business Trial',
+      ctaLink: '/api/stripe/checkout?plan=business',
+      ctaVariant: 'primary' as const,
+      popular: false
+    },
+    {
+      name: 'Agency',
+      price: '£99',
+      period: 'per month',
+      description: 'For agencies managing multiple shops',
+      features: [
+        'Everything in Business',
+        'Bulk operations (200 at once)',
+        'Multi-shop management',
+        '3 team seats included',
+        'White-label options',
+        'Custom integrations',
+        'Dedicated support'
+      ],
+      limitations: [],
+      cta: 'Contact Sales',
+      ctaLink: '/api/stripe/checkout?plan=agency',
+      ctaVariant: 'primary' as const,
+      popular: false
+    }
+  ];
+
+  return (
+    <div className="bg-white">
+      {/* Header */}
+      <section className="py-20 bg-gradient-to-br from-brand-50 to-white">
+        <Container>
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Simple, transparent pricing
+            </h1>
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              Choose the plan that fits your business. Start free and upgrade anytime.
+            </p>
+          </div>
+        </Container>
+      </section>
+
+      {/* Pricing Cards */}
+      <section className="py-20">
+        <Container>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {plans.map((plan) => (
+              <div
+                key={plan.name}
+                className={`relative bg-white rounded-lg border-2 p-8 ${
+                  plan.popular
+                    ? 'border-brand-500 shadow-lg scale-105'
+                    : 'border-gray-200 shadow-sm'
+                }`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-brand-500 text-white px-4 py-1 rounded-full text-sm font-medium flex items-center">
+                      <Star className="w-4 h-4 mr-1" />
+                      Most Popular
+                    </span>
+                  </div>
+                )}
+
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                  <div className="mb-2">
+                    <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
+                    <span className="text-gray-600 ml-1">/{plan.period}</span>
+                  </div>
+                  <p className="text-gray-600 text-sm">{plan.description}</p>
+                </div>
+
+                <div className="space-y-4 mb-8">
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2">Features included:</h4>
+                    <ul className="space-y-2">
+                      {plan.features.map((feature, index) => (
+                        <li key={index} className="flex items-center text-sm text-gray-600">
+                          <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {plan.limitations.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2">Limitations:</h4>
+                      <ul className="space-y-2">
+                        {plan.limitations.map((limitation, index) => (
+                          <li key={index} className="flex items-center text-sm text-gray-500">
+                            <span className="w-4 h-4 mr-2 flex-shrink-0 text-gray-400">•</span>
+                            {limitation}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-center">
+                  {plan.ctaLink.startsWith('/api/') ? (
+                    <Link href={plan.ctaLink}>
+                      <Button variant={plan.ctaVariant} size="lg" className="w-full">
+                        {plan.cta}
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link href={plan.ctaLink}>
+                      <Button variant={plan.ctaVariant} size="lg" className="w-full">
+                        {plan.cta}
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      {/* Feature Comparison */}
+      <section className="py-20 bg-gray-50">
+        <Container>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Compare all features
+            </h2>
+            <p className="text-xl text-gray-600">
+              See exactly what's included in each plan
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full bg-white rounded-lg shadow-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-4 px-6 font-semibold text-gray-900">Features</th>
+                  <th className="text-center py-4 px-6 font-semibold text-gray-900">Free</th>
+                  <th className="text-center py-4 px-6 font-semibold text-gray-900">Pro</th>
+                  <th className="text-center py-4 px-6 font-semibold text-gray-900">Business</th>
+                  <th className="text-center py-4 px-6 font-semibold text-gray-900">Agency</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-6 text-gray-900">Daily generations</td>
+                  <td className="text-center py-4 px-6 text-gray-600">3</td>
+                  <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
+                  <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
+                  <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-6 text-gray-900">Daily rewrites</td>
+                  <td className="text-center py-4 px-6 text-gray-600">1</td>
+                  <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
+                  <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
+                  <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-6 text-gray-900">Etsy publishing</td>
+                  <td className="text-center py-4 px-6 text-red-500">❌</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-6 text-gray-900">Bulk generation</td>
+                  <td className="text-center py-4 px-6 text-red-500">❌</td>
+                  <td className="text-center py-4 px-6 text-red-500">❌</td>
+                  <td className="text-center py-4 px-6 text-green-600">50 items</td>
+                  <td className="text-center py-4 px-6 text-green-600">200 items</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-6 text-gray-900">History tracking</td>
+                  <td className="text-center py-4 px-6 text-red-500">❌</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-6 text-gray-900">Tone presets</td>
+                  <td className="text-center py-4 px-6 text-red-500">❌</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-6 text-gray-900">Multi-shop support</td>
+                  <td className="text-center py-4 px-6 text-red-500">❌</td>
+                  <td className="text-center py-4 px-6 text-red-500">❌</td>
+                  <td className="text-center py-4 px-6 text-red-500">❌</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-6 text-gray-900">Support</td>
+                  <td className="text-center py-4 px-6 text-gray-600">Community</td>
+                  <td className="text-center py-4 px-6 text-gray-600">Priority</td>
+                  <td className="text-center py-4 px-6 text-gray-600">Email</td>
+                  <td className="text-center py-4 px-6 text-gray-600">Dedicated</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </Container>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-20">
+        <Container>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Billing FAQ
+            </h2>
+          </div>
+
+          <div className="max-w-3xl mx-auto space-y-8">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Can I change plans anytime?
+              </h3>
+              <p className="text-gray-600">
+                Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any billing differences.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Is there a free trial?
+              </h3>
+              <p className="text-gray-600">
+                Yes! All paid plans come with a 14-day free trial. No credit card required to start. Cancel anytime during the trial.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                What payment methods do you accept?
+              </h3>
+              <p className="text-gray-600">
+                We accept all major credit cards (Visa, MasterCard, American Express) and PayPal. All payments are processed securely through Stripe.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Can I cancel anytime?
+              </h3>
+              <p className="text-gray-600">
+                Absolutely. You can cancel your subscription at any time from your account settings. You'll continue to have access until the end of your billing period.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Do you offer refunds?
+              </h3>
+              <p className="text-gray-600">
+                We offer a 30-day money-back guarantee for all paid plans. If you're not satisfied, contact us for a full refund.
+              </p>
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-20 bg-brand-50">
+        <Container>
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Ready to get started?
+            </h2>
+            <p className="text-xl text-gray-600 mb-8">
+              Join thousands of Etsy sellers who are already optimizing their listings with AI.
+            </p>
+            <Link href="/app">
+              <Button size="lg">
+                Start Free Trial
+              </Button>
+            </Link>
+          </div>
+        </Container>
+      </section>
+    </div>
+  );
+}
