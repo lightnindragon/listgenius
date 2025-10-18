@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
   
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     console.log('User ID from auth:', userId);
     
     if (!userId) {
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     logger.error('Failed to create Stripe checkout session', {
-      userId: auth().userId,
+      userId: (await auth()).userId,
       error: error.message,
       errorType: error.type,
       errorCode: error.code,
