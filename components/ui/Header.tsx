@@ -20,13 +20,13 @@ const Header: React.FC = () => {
   ];
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-background shadow-sm border-b border-border">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-brand-600">ListGenius</span>
+              <span className="text-2xl font-bold text-primary">ListGenius</span>
             </Link>
           </div>
 
@@ -36,7 +36,7 @@ const Header: React.FC = () => {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-gray-700 hover:text-brand-600 px-3 py-2 text-sm font-medium transition-colors"
+                className="text-muted-foreground hover:text-primary px-3 py-2 text-sm font-medium transition-colors"
               >
                 {item.name}
               </Link>
@@ -47,11 +47,11 @@ const Header: React.FC = () => {
           <div className="hidden md:flex items-center space-x-4">
             {isSignedIn ? (
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-muted-foreground">
                   {user?.firstName || user?.emailAddresses[0]?.emailAddress}
                 </span>
                 <SignOutButton>
-                  <button className="text-gray-700 hover:text-brand-600 px-3 py-2 text-sm font-medium transition-colors">
+                  <button className="text-muted-foreground hover:text-primary px-3 py-2 text-sm font-medium transition-colors">
                     Sign Out
                   </button>
                 </SignOutButton>
