@@ -3,7 +3,15 @@ import { logger } from './logger';
 import { StripeError } from './errors';
 
 // Initialize Stripe client
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+console.log('Stripe Secret Key exists:', !!stripeSecretKey);
+console.log('Stripe Secret Key starts with:', stripeSecretKey?.substring(0, 7));
+
+if (!stripeSecretKey) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is required');
+}
+
+export const stripe = new Stripe(stripeSecretKey, {
   apiVersion: '2024-12-18.acacia',
 });
 
