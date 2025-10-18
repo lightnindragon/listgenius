@@ -37,7 +37,7 @@ class Logger {
     
     if (this.isDevelopment) {
       // Pretty print in development
-      console.log(`[${logEntry.timestamp}] ${level.toUpperCase()}: ${message`, data ? data : '');
+      console.log(`[${logEntry.timestamp}] ${level.toUpperCase()}: ${message}`, data ? data : '');
     } else {
       // JSON format for production
       console.log(JSON.stringify(logEntry));
