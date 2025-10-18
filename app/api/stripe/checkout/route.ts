@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { stripe } from '@/lib/stripe';
-import { getUserWithMetadata } from '@/lib/clerk';
+import { getCurrentUser } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user details
-    const user = await getUserWithMetadata();
+    const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'User not found' },
