@@ -52,9 +52,9 @@ export async function POST(request: NextRequest) {
 
     // Get price ID for the plan (using test price IDs for development)
     const priceIdMapping: { [key: string]: string } = {
-      pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO || 'price_1OjXyZ2eZvKYlo2C123456789', // Test price ID
-      business: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUSINESS || 'price_1OjXyZ2eZvKYlo2C987654321', // Test price ID
-      agency: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_AGENCY || 'price_1OjXyZ2eZvKYlo2C111222333', // Test price ID
+      pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO || 'price_1Q5Z4K2eZvKYlo2C123456789', // Test price ID
+      business: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUSINESS || 'price_1Q5Z4K2eZvKYlo2C987654321', // Test price ID
+      agency: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_AGENCY || 'price_1Q5Z4K2eZvKYlo2C111222333', // Test price ID
     };
 
     const priceId = priceIdMapping[plan];
@@ -78,13 +78,46 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // If price ID doesn't exist, create a test product and price
+    let finalPriceId = priceId;
+    if (!priceId || priceId.startsWith('price_1OjXyZ2eZvKYlo2C') || priceId.startsWith('price_1Q5Z4K2eZvKYlo2C')) {
+      try {
+        console.log('Creating test product and price for plan:', plan);
+        
+        // Create a test product
+        const product = await stripe.products.create({
+          name: `ListGenius ${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan`,
+          description: `ListGenius ${plan} plan subscription`,
+        });
+
+        // Create a test price
+        const price = await stripe.prices.create({
+          product: product.id,
+          unit_amount: plan === 'pro' ? 1900 : plan === 'business' ? 3900 : 9900, // £19, £39, £99
+          currency: 'gbp',
+          recurring: {
+            interval: 'month',
+          },
+        });
+
+        finalPriceId = price.id;
+        console.log('Created test price ID:', finalPriceId);
+      } catch (createError) {
+        console.error('Failed to create test product/price:', createError);
+        return NextResponse.json({
+          success: false,
+          error: 'Failed to create test subscription. Please contact support.',
+        }, { status: 500 });
+      }
+    }
+
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       customer_email: user.emailAddresses[0]?.emailAddress,
       payment_method_types: ['card'],
       line_items: [
         {
-          price: priceId,
+          price: finalPriceId,
           quantity: 1,
         },
       ],
