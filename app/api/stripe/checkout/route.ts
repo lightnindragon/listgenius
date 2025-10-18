@@ -51,6 +51,15 @@ export async function POST(request: NextRequest) {
 
     const priceId = priceIdMapping[plan];
     
+    // Log the request details for debugging
+    logger.info('Creating Stripe checkout session', {
+      userId,
+      plan,
+      priceId,
+      userEmail: user.emailAddresses[0]?.emailAddress,
+      hasStripeKey: !!process.env.STRIPE_SECRET_KEY
+    });
+
     // For development, we'll create a mock response if Stripe is not configured
     if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_your_stripe_key_here') {
       return NextResponse.json({
@@ -108,11 +117,18 @@ export async function POST(request: NextRequest) {
     logger.error('Failed to create Stripe checkout session', {
       userId: auth().userId,
       error: error.message,
+      errorType: error.type,
+      errorCode: error.code,
       stack: error.stack,
     });
 
+    // Return more specific error message
+    const errorMessage = error.type === 'StripeInvalidRequestError' 
+      ? `Invalid Stripe request: ${error.message}`
+      : error.message || 'Failed to create checkout session';
+
     return NextResponse.json(
-      { success: false, error: 'Failed to create checkout session' },
+      { success: false, error: errorMessage },
       { status: 500 }
     );
   }
