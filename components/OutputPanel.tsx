@@ -100,7 +100,7 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
                 {tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="bg-brand-100 text-brand-800 px-3 py-1 rounded-full text-sm"
+                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium border border-blue-200"
                   >
                     {tag}
                   </span>
@@ -121,7 +121,7 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
                 {materials.map((material, index) => (
                   <span
                     key={index}
-                    className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
+                    className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium border border-green-200"
                   >
                     {material}
                   </span>
