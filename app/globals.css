@@ -89,13 +89,13 @@ body {
 
 /* Better input styling */
 input, textarea, select {
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
   border-color: var(--border) !important;
 }
 
 input::placeholder, textarea::placeholder {
-  color: var(--muted-foreground) !important;
+  color: #9ca3af !important;
   opacity: 1;
 }
 

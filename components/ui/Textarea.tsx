@@ -18,7 +18,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         )}
         <textarea
           className={cn(
-            'block w-full px-3 py-2 border border-border rounded-lg shadow-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors resize-vertical',
+            'block w-full px-3 py-2 border border-border rounded-lg shadow-sm bg-white text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors resize-vertical',
             error && 'border-destructive focus:ring-destructive focus:border-destructive',
             className
           )}
