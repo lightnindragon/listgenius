@@ -160,3 +160,15 @@ export const analytics = new Analytics();
 export async function trackEvent(userId: string, event: string, metadata?: Record<string, any>): Promise<void> {
   return analytics.trackEvent(userId, event, metadata);
 }
+
+/**
+ * Convenience function for tracking generation created
+ */
+export async function trackGenerationCreated(userId: string, metadata?: {
+  model: string;
+  tokensUsed: number;
+  wordCount: number;
+  hasExtras: boolean;
+}): Promise<void> {
+  return analytics.trackGenerationCreated(userId, metadata);
+}
