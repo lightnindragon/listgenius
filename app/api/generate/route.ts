@@ -145,6 +145,15 @@ export async function POST(request: NextRequest) {
       }, { status: 429 });
     }
 
+    // Handle OpenAI quota/billing errors specifically
+    if (error instanceof Error && error.message.includes('429')) {
+      return NextResponse.json({
+        success: false,
+        error: 'OpenAI API quota exceeded. Please check your OpenAI billing and usage limits.',
+        type: 'OPENAI_QUOTA_ERROR'
+      }, { status: 429 });
+    }
+
     const errorResponse = getErrorResponse(error);
     return NextResponse.json(errorResponse, { status: errorResponse.statusCode });
   }
