@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
+import { CheckoutButton } from '@/components/CheckoutButton';
 import { Check, Star } from 'lucide-react';
 
 export default function PricingPage() {
@@ -166,12 +167,14 @@ export default function PricingPage() {
                 </div>
 
                 <div className="text-center">
-                  {plan.ctaLink.startsWith('/api/') ? (
-                    <Link href={plan.ctaLink}>
-                      <Button variant={plan.ctaVariant} size="lg" className="w-full">
-                        {plan.cta}
-                      </Button>
-                    </Link>
+                  {plan.ctaLink.startsWith('/api/stripe/checkout') ? (
+                    <CheckoutButton
+                      plan={plan.name.toLowerCase() as 'pro' | 'business' | 'agency'}
+                      variant={plan.ctaVariant}
+                      size="lg"
+                    >
+                      {plan.cta}
+                    </CheckoutButton>
                   ) : (
                     <Link href={plan.ctaLink}>
                       <Button variant={plan.ctaVariant} size="lg" className="w-full">
