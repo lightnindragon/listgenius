@@ -6,7 +6,17 @@ const isProtectedRoute = createRouteMatcher([
   '/bulk(.*)',
   '/api/generate(.*)',
   '/api/rewrite(.*)',
-  '/api/etsy(.*)'
+  '/api/etsy(.*)',
+  '/api/stripe/checkout(.*)',
+  '/api/stripe/portal(.*)'
+]);
+
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/pricing',
+  '/legal(.*)',
+  '/api/stripe/webhook(.*)',
+  '/api/health(.*)'
 ]);
 
 export default clerkMiddleware((auth, req) => {
