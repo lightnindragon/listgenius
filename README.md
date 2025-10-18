@@ -77,6 +77,7 @@ ListGenius is an AI-powered platform that helps Etsy sellers create SEO-optimize
    ETSY_CLIENT_SECRET=your_etsy_client_secret
    ETSY_REDIRECT_URI=http://localhost:3000/api/etsy/oauth
    ETSY_API_BASE_URL=https://openapi.etsy.com/v3
+   ETSY_SANDBOX_MODE=true
    
    # Security
    ENCRYPTION_KEY=your_32_byte_hex_key

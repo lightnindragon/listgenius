@@ -248,6 +248,10 @@ export async function updateEtsyConnection(userId: string, shopId: string, encry
       etsyTokens: encryptedTokens
     };
     
+    await user.update({
+      publicMetadata: updatedMetadata
+    });
+    
     logger.info('Etsy connection updated', { userId, shopId });
   } catch (error) {
     logger.error('Failed to update Etsy connection', { userId, shopId, error });
