@@ -235,7 +235,7 @@ export default function LandingPage() {
                   <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Tags</h4>
                   <div className="flex flex-wrap gap-2">
                     {['wedding planner printable', 'digital wedding planner', 'printable template', 'wedding organizer', 'bridal planner', 'wedding checklist', 'wedding planning', 'digital download', 'instant download', 'wedding printables', 'wedding stationery', 'wedding binder', 'wedding journal'].map((tag, index) => (
-                      <span key={index} className="bg-brand-100 text-brand-800 px-3 py-1 rounded-full text-sm">
+                      <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium border border-blue-200">
                         {tag}
                       </span>
                     ))}
