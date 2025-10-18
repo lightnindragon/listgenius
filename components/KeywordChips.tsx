@@ -28,13 +28,13 @@ const KeywordChips: React.FC<KeywordChipsProps> = ({
       {keywords.map((keyword, index) => (
         <div
           key={index}
-          className="inline-flex items-center gap-1 bg-brand-100 text-brand-800 px-3 py-1 rounded-full text-sm"
+          className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium border border-blue-200"
         >
           <span>{keyword}</span>
           {onRemove && (
             <button
               onClick={() => onRemove(index)}
-              className="ml-1 hover:text-brand-600 transition-colors"
+              className="ml-1 hover:text-blue-600 transition-colors"
               aria-label={`Remove ${keyword}`}
             >
               <X className="h-3 w-3" />
