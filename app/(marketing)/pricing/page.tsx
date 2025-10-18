@@ -1,11 +1,45 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
-import { CheckoutButton } from '@/components/CheckoutButton';
 import { Check, Star } from 'lucide-react';
 
 export default function PricingPage() {
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  const handleCheckout = async (plan: string) => {
+    setLoadingPlan(plan);
+    
+    try {
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan: plan.toLowerCase(),
+          successUrl: `${window.location.origin}/settings?subscription=success`,
+          cancelUrl: `${window.location.origin}/pricing?subscription=cancelled`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Failed to start checkout. Please try again.');
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
   const plans = [
     {
       name: 'Free',
@@ -168,13 +202,15 @@ export default function PricingPage() {
 
                 <div className="text-center">
                   {plan.ctaLink.startsWith('/api/stripe/checkout') ? (
-                    <CheckoutButton
-                      plan={plan.name.toLowerCase() as 'pro' | 'business' | 'agency'}
+                    <Button
                       variant={plan.ctaVariant}
                       size="lg"
+                      className="w-full"
+                      onClick={() => handleCheckout(plan.name)}
+                      disabled={loadingPlan === plan.name}
                     >
-                      {plan.cta}
-                    </CheckoutButton>
+                      {loadingPlan === plan.name ? 'Processing...' : plan.cta}
+                    </Button>
                   ) : (
                     <Link href={plan.ctaLink}>
                       <Button variant={plan.ctaVariant} size="lg" className="w-full">
