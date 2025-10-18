@@ -2,51 +2,110 @@ import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
-import { ArrowRight, Check, Star, Zap, Target, Users, BarChart3 } from 'lucide-react';
+import { ArrowRight, Check, Star, Zap, Target, Users, BarChart3, Sparkles, TrendingUp, Shield, Clock, Award, Rocket, Heart } from 'lucide-react';
 
 export default function LandingPage() {
   return (
     <div className="bg-white">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-50 to-white py-20 lg:py-32">
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-20 lg:py-32">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23000000" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+        </div>
+        
         <Container>
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              AI Etsy Listing{' '}
-              <span className="text-brand-600">Expert</span>
+          <div className="text-center relative z-10">
+            {/* Badge */}
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium mb-6">
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI-Powered Etsy Optimization
+            </div>
+            
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+              Transform Your{' '}
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Etsy Listings
+              </span>{' '}
+              with AI
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Generate SEO-optimized Etsy listings with AI. Create professional titles, descriptions, and tags that rank higher and sell more.
+            
+            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed">
+              Create SEO-optimized titles, descriptions, and tags that rank higher, convert better, and boost your sales. 
+              <span className="font-semibold text-gray-800"> Join 10,000+ successful Etsy sellers</span> already using ListGenius.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link href="/app">
-                <Button size="lg" className="w-full sm:w-auto">
-                  Get Started Free
+                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
+                  <Rocket className="mr-2 h-5 w-5" />
+                  Start Generating Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/pricing">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  See Pricing
+                <Button variant="outline" size="lg" className="w-full sm:w-auto border-2 hover:bg-gray-50">
+                  <TrendingUp className="mr-2 h-5 w-5" />
+                  View Pricing Plans
                 </Button>
               </Link>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-gray-500">
+              <div className="flex items-center">
+                <Shield className="w-4 h-4 mr-2 text-green-500" />
+                No Credit Card Required
+              </div>
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 mr-2 text-blue-500" />
+                Generate in 30 Seconds
+              </div>
+              <div className="flex items-center">
+                <Award className="w-4 h-4 mr-2 text-purple-500" />
+                SEO Optimized
+              </div>
             </div>
           </div>
         </Container>
       </section>
 
       {/* Social Proof */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-16 bg-white border-b border-gray-100">
         <Container>
           <div className="text-center">
-            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-8">
+            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-12">
               Trusted by Etsy sellers worldwide
             </p>
-            <div className="flex justify-center items-center space-x-8 opacity-60">
-              <div className="text-2xl font-bold text-gray-400">10,000+</div>
-              <div className="text-2xl font-bold text-gray-400">Listings Generated</div>
-              <div className="text-2xl font-bold text-gray-400">500+</div>
-              <div className="text-2xl font-bold text-gray-400">Happy Sellers</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                  <BarChart3 className="w-8 h-8 text-blue-600" />
+                </div>
+                <div className="text-3xl font-bold text-gray-900 mb-2">10,000+</div>
+                <div className="text-sm text-gray-600">Listings Generated</div>
+              </div>
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                  <Users className="w-8 h-8 text-green-600" />
+                </div>
+                <div className="text-3xl font-bold text-gray-900 mb-2">500+</div>
+                <div className="text-sm text-gray-600">Happy Sellers</div>
+              </div>
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
+                  <TrendingUp className="w-8 h-8 text-purple-600" />
+                </div>
+                <div className="text-3xl font-bold text-gray-900 mb-2">85%</div>
+                <div className="text-sm text-gray-600">More Sales</div>
+              </div>
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
+                  <Star className="w-8 h-8 text-orange-600" />
+                </div>
+                <div className="text-3xl font-bold text-gray-900 mb-2">4.9/5</div>
+                <div className="text-sm text-gray-600">User Rating</div>
+              </div>
             </div>
           </div>
         </Container>
@@ -65,36 +124,36 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center p-6">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-brand-100 rounded-lg mb-4">
-                <Zap className="h-6 w-6 text-brand-600" />
+            <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl mb-6 shadow-lg">
+                <Zap className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Write Listings</h3>
-              <p className="text-gray-600">Generate complete listings with SEO-optimized titles, descriptions, and tags.</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">AI Generation</h3>
+              <p className="text-gray-600 leading-relaxed">Generate complete listings with SEO-optimized titles, descriptions, and tags in seconds.</p>
             </div>
 
-            <div className="text-center p-6">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-brand-100 rounded-lg mb-4">
-                <Target className="h-6 w-6 text-brand-600" />
+            <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-xl mb-6 shadow-lg">
+                <Target className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Rewrite & Publish</h3>
-              <p className="text-gray-600">Improve existing listings and publish directly to your Etsy shop.</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Direct Publishing</h3>
+              <p className="text-gray-600 leading-relaxed">Improve existing listings and publish directly to your Etsy shop with one click.</p>
             </div>
 
-            <div className="text-center p-6">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-brand-100 rounded-lg mb-4">
-                <Star className="h-6 w-6 text-brand-600" />
+            <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl mb-6 shadow-lg">
+                <Star className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Tone Presets</h3>
-              <p className="text-gray-600">Choose from professional, casual, luxury, or playful tones for your brand.</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Tone Customization</h3>
+              <p className="text-gray-600 leading-relaxed">Choose from professional, casual, luxury, or playful tones that match your brand voice.</p>
             </div>
 
-            <div className="text-center p-6">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-brand-100 rounded-lg mb-4">
-                <BarChart3 className="h-6 w-6 text-brand-600" />
+            <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl mb-6 shadow-lg">
+                <BarChart3 className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Platform Rules</h3>
-              <p className="text-gray-600">Automatically follows Etsy's guidelines for tags, titles, and descriptions.</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">SEO Optimization</h3>
+              <p className="text-gray-600 leading-relaxed">Automatically follows Etsy's guidelines and best practices for maximum visibility.</p>
             </div>
           </div>
         </Container>
@@ -112,33 +171,33 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 text-white rounded-full text-xl font-bold mb-6">
-                1
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div className="text-center relative">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl text-2xl font-bold mb-8 shadow-lg">
+                <Users className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Connect Shop</h3>
-              <p className="text-gray-600">
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Connect Shop</h3>
+              <p className="text-gray-600 text-lg leading-relaxed">
                 Link your Etsy shop (optional) to publish listings directly or just generate content to copy.
               </p>
             </div>
 
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 text-white rounded-full text-xl font-bold mb-6">
-                2
+            <div className="text-center relative">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl text-2xl font-bold mb-8 shadow-lg">
+                <Zap className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Paste Info</h3>
-              <p className="text-gray-600">
-                Enter your product details, keywords, and preferences. Our AI does the rest.
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Generate Content</h3>
+              <p className="text-gray-600 text-lg leading-relaxed">
+                Enter your product details, keywords, and preferences. Our AI creates optimized content in seconds.
               </p>
             </div>
 
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 text-white rounded-full text-xl font-bold mb-6">
-                3
+            <div className="text-center relative">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl text-2xl font-bold mb-8 shadow-lg">
+                <Rocket className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Copy or Publish</h3>
-              <p className="text-gray-600">
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Publish & Sell</h3>
+              <p className="text-gray-600 text-lg leading-relaxed">
                 Get your optimized listing and copy it to Etsy or publish directly from our platform.
               </p>
             </div>
@@ -254,27 +313,59 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20">
+      <section className="py-20 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+        </div>
+        
         <Container>
-          <div className="text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Ready to optimize your Etsy listings?
+          <div className="text-center relative z-10">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm font-medium mb-6">
+              <Heart className="w-4 h-4 mr-2" />
+              Trusted by 500+ Etsy Sellers
+            </div>
+            
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
+              Ready to Transform Your{' '}
+              <span className="text-yellow-300">Etsy Business?</span>
             </h2>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Join thousands of sellers who are already using AI to create better listings and increase sales.
+            
+            <p className="text-xl text-blue-100 mb-10 max-w-3xl mx-auto leading-relaxed">
+              Join thousands of sellers who are already using AI to create better listings and increase sales. 
+              <span className="font-semibold text-white"> Start free today!</span>
             </p>
+            
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/app">
-                <Button size="lg" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto bg-white text-blue-600 hover:bg-gray-50 shadow-xl">
+                  <Rocket className="mr-2 h-5 w-5" />
                   Start Generating Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/pricing">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  View Plans
+                <Button variant="outline" size="lg" className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-blue-600">
+                  <TrendingUp className="mr-2 h-5 w-5" />
+                  View Premium Plans
                 </Button>
               </Link>
+            </div>
+
+            {/* Trust indicators */}
+            <div className="mt-12 flex flex-wrap justify-center items-center gap-8 text-sm text-blue-200">
+              <div className="flex items-center">
+                <Shield className="w-4 h-4 mr-2" />
+                No Credit Card Required
+              </div>
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 mr-2" />
+                Setup in 2 Minutes
+              </div>
+              <div className="flex items-center">
+                <Award className="w-4 h-4 mr-2" />
+                Money-Back Guarantee
+              </div>
             </div>
           </div>
         </Container>
