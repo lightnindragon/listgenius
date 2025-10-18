@@ -12,9 +12,17 @@ const checkoutSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  console.log('=== STRIPE CHECKOUT API CALLED ===');
+  console.log('Environment variables check:');
+  console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
+  console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
+  
   try {
     const { userId } = auth();
+    console.log('User ID from auth:', userId);
+    
     if (!userId) {
+      console.log('No user ID found, returning 401');
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
         { status: 401 }
