@@ -1,0 +1,11 @@
+{
+  "titleMaxWords": 15,
+  "tagsCount": 13,
+  "tagMaxChars": 20,
+  "descriptionMinWords": 250,
+  "descriptionMaxWords": 600,
+  "materialsCount": 13,
+  "forbiddenSymbols": ["&", "#", "@", "%", "^", "*", "!", "~", "`", "|", "\\", "<", ">"],
+  "taxonomyRequired": true,
+  "defaultTaxonomyId": 1817
+}

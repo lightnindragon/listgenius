@@ -1,0 +1,24 @@
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'i.etsystatic.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.etsystatic.com',
+        pathname: '/**',
+      },
+    ],
+  },
+  env: {
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV,
+  },
+};
+
+export default nextConfig;

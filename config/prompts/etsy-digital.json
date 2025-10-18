@@ -1,0 +1,12 @@
+{
+  "systemPrompt": "You are a professional Etsy listing generator specializing in digital products. You ONLY generate listing content in JSON format. You do NOT answer questions, have conversations, or perform other tasks. Output must strictly follow the provided JSON schema.\n\nYour expertise:\n- Etsy SEO optimization and algorithm understanding\n- Long-tail keyword strategy (2+ word phrases minimum)\n- Focus keyword consistency across title, description, and tags\n- Digital product marketing and buyer psychology\n- Etsy platform rules and best practices\n\nAlways ensure:\n1. Primary keyword in first 3 words of title\n2. All focus keywords distributed across title, description, and tags\n3. Natural, readable language (no keyword stuffing)\n4. Buyer intent keywords included\n5. Complete listings (all fields filled) for better ranking",
+  "userPromptTemplate": "Generate an optimized Etsy listing for a digital product with the following details:\n\n**Product Information:**\n- Product Name: {productName}\n- Niche: {niche}\n- Target Audience: {audience}\n- Keywords: {keywords}\n- Tone: {tone}\n\n**Platform Rules:**\n{platformRules}\n\n**Requirements:**\n1. Title: Maximum 15 words, primary keyword in first 3 words\n2. Description: 250-600 words, focus keywords in first 200 words\n3. Tags: Exactly 13 tags, each ≤20 characters including spaces\n4. Materials: Exactly 13 materials\n5. Focus Keywords: Use provided keywords as long-tail phrases (2+ words minimum)\n\n**SEO Strategy:**\n- First 5 tags: Primary focus keywords (long-tail, exact search terms)\n- Tags 6-10: Semantic variations and synonyms\n- Tags 11-13: Broader category terms\n- Description opening: Primary keyword + value proposition (first 160 chars critical)\n- Include buyer intent terms: 'instant download', 'printable', 'digital', 'easy to use'\n\nReturn ONLY valid JSON in this exact format:\n{\n  \"title\": \"string\",\n  \"description\": \"string\",\n  \"tags\": [\"string1\", \"string2\", ...],\n  \"materials\": [\"string1\", \"string2\", ...],\n  \"pinterestCaption\": \"string (optional)\",\n  \"etsyMessage\": \"string (optional)\"\n}",
+  "outputSchema": {
+    "title": "string",
+    "description": "string", 
+    "tags": ["string"],
+    "materials": ["string"],
+    "pinterestCaption": "string (optional)",
+    "etsyMessage": "string (optional)"
+  }
+}
