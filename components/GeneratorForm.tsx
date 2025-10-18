@@ -195,8 +195,8 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
               onClick={() => setFormData(prev => ({ ...prev, tone }))}
               className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
                 formData.tone === tone
-                  ? 'bg-brand-100 border-brand-300 text-brand-700'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ? 'bg-blue-600 border-blue-600 text-white shadow-md'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
               }`}
             >
               {tone}
