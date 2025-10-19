@@ -29,12 +29,11 @@ const Header: React.FC = () => {
 
   const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'Pricing', href: '/pricing' },
-    ...(isSignedIn ? [
-      { name: 'Generator', href: '/app' },
-      { name: 'Rewrite', href: '/app/rewrite' },
-      { name: 'My Listings', href: '/app/listings' }
-    ] : [])
+    { name: 'Pricing', href: '/pricing' }
+  ];
+
+  const loggedInNavigation = [
+    { name: 'Dashboard', href: '/app' }
   ];
 
   return (
@@ -50,7 +49,7 @@ const Header: React.FC = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            {navigation.map((item) => (
+            {(isSignedIn ? loggedInNavigation : navigation).map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
@@ -116,11 +115,18 @@ const Header: React.FC = () => {
                     )}
                   </div>
                 ) : (
-                  <SignInButton>
-                    <button className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">
-                      Sign In
-                    </button>
-                  </SignInButton>
+                  <div className="flex items-center space-x-3">
+                    <SignInButton>
+                      <button className="text-muted-foreground hover:text-primary px-3 py-2 text-sm font-medium transition-colors">
+                        Sign In
+                      </button>
+                    </SignInButton>
+                    <Link href="/pricing">
+                      <button className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">
+                        Join for Free
+                      </button>
+                    </Link>
+                  </div>
                 )}
               </div>
 
@@ -143,7 +149,7 @@ const Header: React.FC = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t">
-              {navigation.map((item) => (
+              {(isSignedIn ? loggedInNavigation : navigation).map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
@@ -193,12 +199,17 @@ const Header: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      <div className="px-3 py-2">
+                      <div className="px-3 py-2 space-y-2">
                         <SignInButton>
-                          <button className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors w-full min-h-12">
+                          <button className="text-gray-700 hover:text-brand-600 block px-3 py-2 text-base font-medium transition-colors min-h-12 w-full text-left">
                             Sign In
                           </button>
                         </SignInButton>
+                        <Link href="/pricing">
+                          <button className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors w-full min-h-12">
+                            Join for Free
+                          </button>
+                        </Link>
                       </div>
                     )}
                   </div>
