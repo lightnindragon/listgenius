@@ -486,7 +486,6 @@ export default function SettingsPage() {
 
       {/* Top Right Toast Notifications */}
       <TopRightToast />
-        </div>
       </Container>
     </div>
   );
