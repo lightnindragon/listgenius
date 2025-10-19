@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth, clerkClient } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
+import { getCurrentUser } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
 
 export async function GET() {
@@ -9,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
     }
 
-    const user = await clerkClient.users.getUser(userId);
+    const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
