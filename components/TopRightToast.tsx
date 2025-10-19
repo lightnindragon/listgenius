@@ -79,10 +79,10 @@ export function TopRightToast({ className }: TopRightToastProps) {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`flex items-center space-x-3 px-4 py-3 rounded-lg border shadow-lg max-w-sm ${getToastColors(toast.type)} animate-in slide-in-from-right-full duration-300`}
+          className={`flex items-center space-x-3 px-4 py-3 rounded-lg border shadow-lg max-w-md min-w-80 ${getToastColors(toast.type)} animate-in slide-in-from-right-full duration-300`}
         >
           {getToastIcon(toast.type)}
-          <span className="text-sm font-medium flex-1">{toast.message}</span>
+          <span className="text-sm font-medium flex-1 break-words leading-relaxed">{toast.message}</span>
           <button
             onClick={() => removeToast(toast.id)}
             className="text-gray-400 hover:text-gray-600 transition-colors"
