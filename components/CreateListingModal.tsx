@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/Dialog';
+// Custom modal implementation (no Dialog component needed)
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Textarea } from './ui/Textarea';
@@ -175,19 +175,32 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
     onClose();
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New Etsy Listing</DialogTitle>
-          <DialogDescription>
-            Generate and publish a new listing directly to your Etsy shop.
-          </DialogDescription>
-        </DialogHeader>
+  if (!isOpen) return null;
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Form Section */}
-          <div className="space-y-4">
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Create New Etsy Listing</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Generate and publish a new listing directly to your Etsy shop.
+            </p>
+          </div>
+          <button
+            onClick={handleClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Form Section */}
+            <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Listing Details</h3>
             
             <form onSubmit={handleGenerate} className="space-y-4">
@@ -372,7 +385,8 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
             )}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>
   );
 };
