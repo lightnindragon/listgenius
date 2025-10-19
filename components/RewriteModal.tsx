@@ -97,7 +97,7 @@ export const RewriteModal: React.FC<RewriteModalProps> = ({
         productName: listing.title,
         niche: '',
         audience: '',
-        keywords: [],
+        keywords: listing.tags || [],
         tone: 'Professional'
       });
       setOutput(null);
@@ -117,14 +117,16 @@ export const RewriteModal: React.FC<RewriteModalProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          productName: formData.productName,
-          description: formData.originalDescription,
-          keywords: formData.keywords,
+          productName: formData.productName || formData.originalTitle,
+          keywords: formData.keywords.length > 0 ? formData.keywords : ['handmade', 'unique', 'artisan'],
           tone: formData.tone,
           niche: formData.niche,
           audience: formData.audience,
           wordCount: 300,
-          extras: true
+          extras: {
+            pinterestCaption: true,
+            etsyMessage: true
+          }
         })
       });
 
