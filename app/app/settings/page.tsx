@@ -73,13 +73,18 @@ export default function SettingsPage() {
 
   const loadUserData = async () => {
     try {
+      console.log('Loading user data...');
       const response = await fetch('/api/user/metadata');
+      console.log('Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('User data loaded:', data);
         setUserMetadata(data);
         if (data.preferences) {
           setPreferences(data.preferences);
         }
+      } else {
+        console.error('Failed to load user data:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Failed to load user data:', error);
