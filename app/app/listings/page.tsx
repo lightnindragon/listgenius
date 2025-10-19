@@ -6,6 +6,7 @@ import { Container } from '@/components/ui/Container';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { Link, RefreshCw, Edit, Plus, ExternalLink, Eye, DollarSign, Calendar } from 'lucide-react';
 import { getBaseUrl } from '@/lib/utils';
 
@@ -196,7 +197,7 @@ export default function ListingsPage() {
   }
 
   return (
-    <Container className="py-8">
+    <DashboardLayout>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
@@ -369,6 +370,6 @@ export default function ListingsPage() {
         </div>
       </div>
       <TopRightToast />
-    </Container>
+    </DashboardLayout>
   );
 }

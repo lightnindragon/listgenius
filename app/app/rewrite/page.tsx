@@ -8,6 +8,7 @@ import { OutputPanel } from '@/components/OutputPanel';
 import { EmptyState } from '@/components/EmptyState';
 import { RewriteCounter } from '@/components/RewriteCounter';
 import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { RefreshCw } from 'lucide-react';
 import { getBaseUrl } from '@/lib/utils';
 
@@ -113,7 +114,7 @@ export default function RewritePage() {
   };
 
   return (
-    <Container className="py-8">
+    <DashboardLayout>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -157,7 +158,7 @@ export default function RewritePage() {
       </div>
       
       <TopRightToast />
-    </Container>
+    </DashboardLayout>
   );
 }
 
