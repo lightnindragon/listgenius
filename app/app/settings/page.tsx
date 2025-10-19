@@ -71,6 +71,19 @@ export default function SettingsPage() {
     checkEtsyConnection();
   }, []);
 
+  // Refresh data when the page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadUserData();
+        checkEtsyConnection();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   const loadUserData = async () => {
     try {
       console.log('Loading user data...');
@@ -386,29 +399,29 @@ export default function SettingsPage() {
                 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Daily Generations:</span>
-                    <span className="font-medium">{features.generations}</span>
+                    <span className="text-gray-800">Daily Generations:</span>
+                    <span className="font-medium text-gray-900">{features.generations}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Daily Rewrites:</span>
-                    <span className="font-medium">{features.rewrites}</span>
+                    <span className="text-gray-800">Daily Rewrites:</span>
+                    <span className="font-medium text-gray-900">{features.rewrites}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Etsy Connection:</span>
-                    <span className="font-medium">{features.etsyConnection ? 'Yes' : 'No'}</span>
+                    <span className="text-gray-800">Etsy Connection:</span>
+                    <span className="font-medium text-gray-900">{features.etsyConnection ? 'Yes' : 'No'}</span>
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-gray-200">
-                  <div className="text-xs text-gray-500 mb-2">Usage Today:</div>
+                  <div className="text-xs text-gray-700 mb-2 font-medium">Usage Today:</div>
                   <div className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span>Generations:</span>
-                      <span>{userMetadata?.dailyGenCount || 0}/{typeof features.generations === 'number' ? features.generations : '∞'}</span>
+                      <span className="text-gray-800">Generations:</span>
+                      <span className="font-medium text-gray-900">{userMetadata?.dailyGenCount || 0}/{typeof features.generations === 'number' ? features.generations : '∞'}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Rewrites:</span>
-                      <span>{userMetadata?.dailyRewriteCount || 0}/{typeof features.rewrites === 'number' ? features.rewrites : '∞'}</span>
+                      <span className="text-gray-800">Rewrites:</span>
+                      <span className="font-medium text-gray-900">{userMetadata?.dailyRewriteCount || 0}/{typeof features.rewrites === 'number' ? features.rewrites : '∞'}</span>
                     </div>
                   </div>
                 </div>

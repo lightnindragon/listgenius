@@ -113,6 +113,9 @@ export async function incrementDailyGenCount(userId: string): Promise<number> {
       lastResetDate: new Date().toISOString().split('T')[0]
     };
     
+    // Actually update the user metadata
+    await user.update({ publicMetadata: updatedMetadata });
+    
     logger.info('Daily generation count incremented', { userId, count: newCount });
     return newCount;
   } catch (error) {
@@ -138,6 +141,9 @@ export async function incrementDailyRewriteCount(userId: string): Promise<number
       dailyRewriteCount: newCount,
       lastResetDate: new Date().toISOString().split('T')[0]
     };
+    
+    // Actually update the user metadata
+    await user.update({ publicMetadata: updatedMetadata });
     
     logger.info('Daily rewrite count incremented', { userId, count: newCount });
     return newCount;
