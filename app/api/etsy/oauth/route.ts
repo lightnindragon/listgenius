@@ -13,7 +13,7 @@ const oauthCallbackSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error: any) {
     logger.error('Etsy OAuth failed', { 
-      userId: auth().userId,
+      userId: (await auth()).userId,
       error: error.message,
       stack: error.stack 
     });
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     logger.error('Failed to initiate Etsy OAuth', { 
-      userId: auth().userId,
+      userId: (await auth()).userId,
       error: error.message 
     });
 

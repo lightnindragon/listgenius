@@ -10,7 +10,7 @@ import { EtsyAPIError } from '@/lib/errors';
  */
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error: any) {
     logger.error('Failed to fetch Etsy listings', { 
-      userId: auth().userId,
+      userId: (await auth()).userId,
       error: error.message,
       stack: error.stack 
     });

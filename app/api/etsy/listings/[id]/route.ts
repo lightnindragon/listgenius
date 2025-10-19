@@ -26,7 +26,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
@@ -73,7 +73,7 @@ export async function GET(
 
   } catch (error: any) {
     logger.error('Failed to fetch Etsy listing', { 
-      userId: auth().userId,
+      userId: (await auth()).userId,
       listingId: params.id,
       error: error.message,
       stack: error.stack 
@@ -101,7 +101,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
@@ -161,7 +161,7 @@ export async function PUT(
 
   } catch (error: any) {
     logger.error('Failed to update Etsy listing', { 
-      userId: auth().userId,
+      userId: (await auth()).userId,
       listingId: params.id,
       error: error.message,
       stack: error.stack 
