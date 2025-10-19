@@ -5,7 +5,7 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Container } from '@/components/ui/Container';
-import { toast } from '@/components/ui/Toast';
+import { useToast, ToastContainer } from '@/components/ui/Toast';
 import { 
   User, 
   CreditCard, 
@@ -41,6 +41,7 @@ interface UserMetadata {
 export default function SettingsPage() {
   const { user } = useUser();
   const { openUserProfile } = useClerk();
+  const { toast, toasts, removeToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
   const [preferences, setPreferences] = useState<UserPreferences>({
@@ -447,6 +448,9 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+      
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
     </Container>
   );
 }
