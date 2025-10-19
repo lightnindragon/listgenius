@@ -8,8 +8,10 @@ import {
   Calendar, 
   TrendingUp,
   Zap,
-  Clock
+  Clock,
+  Plus
 } from 'lucide-react';
+import { CreateListingModal } from './CreateListingModal';
 
 interface UserMetadata {
   plan: string;
@@ -25,6 +27,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className }) => 
   const { user } = useUser();
   const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
   const [loading, setLoading] = useState(true);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -59,6 +62,11 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className }) => 
       default:
         return { dailyGenerations: 3, name: 'Free' };
     }
+  };
+
+  const handleListingCreated = () => {
+    // Refresh user data to update any counters
+    loadUserData();
   };
 
   if (loading) {
@@ -137,7 +145,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className }) => 
       {/* Quick Actions */}
       <div className="bg-white p-6 rounded-lg border border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <a 
             href="/app/generator" 
             className="flex items-center p-4 rounded-lg border border-gray-200 hover:border-brand-300 hover:bg-brand-50 transition-colors group"
@@ -148,6 +156,17 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className }) => 
               <p className="text-sm text-gray-600">Create AI-powered Etsy listings</p>
             </div>
           </a>
+          
+          <button
+            onClick={() => setCreateModalOpen(true)}
+            className="flex items-center p-4 rounded-lg border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-colors group text-left w-full"
+          >
+            <Plus className="h-5 w-5 text-green-600 mr-3 group-hover:text-green-700" />
+            <div>
+              <p className="font-medium text-gray-900">Create & Publish</p>
+              <p className="text-sm text-gray-600">Generate and publish directly to Etsy</p>
+            </div>
+          </button>
           
           <a 
             href="/app/listings" 
@@ -161,6 +180,13 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className }) => 
           </a>
         </div>
       </div>
+
+      {/* Create Listing Modal */}
+      <CreateListingModal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onListingCreated={handleListingCreated}
+      />
     </div>
   );
 };
