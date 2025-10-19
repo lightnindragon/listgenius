@@ -113,30 +113,36 @@ export const RewriteModal: React.FC<RewriteModalProps> = ({
 
     setLoading(true);
     try {
+      const requestData = {
+        productName: formData.productName || formData.originalTitle,
+        keywords: formData.keywords.length > 0 ? formData.keywords : ['handmade', 'unique', 'artisan', 'coffee mug', 'ceramic'],
+        tone: formData.tone || 'Professional',
+        niche: formData.niche || 'kitchenware',
+        audience: formData.audience || 'coffee lovers',
+        wordCount: 300,
+        extras: {
+          pinterestCaption: true,
+          etsyMessage: true
+        }
+      };
+      
+      console.log('Rewrite request data:', requestData);
+      
       const response = await fetch(`${getBaseUrl()}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productName: formData.productName || formData.originalTitle,
-          keywords: formData.keywords.length > 0 ? formData.keywords : ['handmade', 'unique', 'artisan'],
-          tone: formData.tone,
-          niche: formData.niche,
-          audience: formData.audience,
-          wordCount: 300,
-          extras: {
-            pinterestCaption: true,
-            etsyMessage: true
-          }
-        })
+        body: JSON.stringify(requestData)
       });
 
       const result = await response.json();
+      console.log('Rewrite response:', result);
 
       if (response.ok && result.success) {
         setOutput(result.data);
         emitTopRightToast('Listing rewritten successfully!', 'success');
       } else {
         const errorMessage = result.error || 'Failed to rewrite listing';
+        console.error('Rewrite error:', errorMessage);
         emitTopRightToast(errorMessage, 'error');
       }
     } catch (error) {
