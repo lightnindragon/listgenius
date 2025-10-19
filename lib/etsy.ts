@@ -288,6 +288,130 @@ export class EtsyClient {
   }
 
   /**
+   * Create a new listing
+   */
+  async createListing(listingData: any): Promise<any> {
+    return this.makeRequest('POST', '/shops/__SELF__/listings', listingData);
+  }
+
+  /**
+   * Get all images for a listing
+   */
+  async getListingImages(listingId: number): Promise<any> {
+    return this.makeRequest('GET', `/shops/__SELF__/listings/${listingId}/images`);
+  }
+
+  /**
+   * Reorder listing images
+   */
+  async reorderListingImages(listingId: number, imageIds: number[]): Promise<any> {
+    return this.makeRequest('PUT', `/shops/__SELF__/listings/${listingId}/images`, {
+      image_ids: imageIds
+    });
+  }
+
+  /**
+   * Update listing image (alt text, rank)
+   */
+  async updateListingImage(listingId: number, imageId: number, data: any): Promise<any> {
+    return this.makeRequest('PUT', `/shops/__SELF__/listings/${listingId}/images/${imageId}`, data);
+  }
+
+  /**
+   * Upload video to listing
+   */
+  async uploadListingVideo(listingId: number, videoFile: File): Promise<any> {
+    const formData = new FormData();
+    formData.append('video', videoFile);
+
+    if (!this.accessToken) {
+      throw new EtsyAPIError('No access token available', 401);
+    }
+
+    try {
+      const response = await axios.post(
+        `${this.baseURL}/shops/__SELF__/listings/${listingId}/videos`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error: any) {
+      logger.error('Failed to upload listing video', {
+        isSandbox: this.isSandbox,
+        listingId,
+        error: error.message,
+        status: error.response?.status
+      });
+      throw new EtsyAPIError(
+        `Video upload failed: ${error.response?.data?.error || error.message}`,
+        error.response?.status || 500
+      );
+    }
+  }
+
+  /**
+   * Get all videos for a listing
+   */
+  async getListingVideos(listingId: number): Promise<any> {
+    return this.makeRequest('GET', `/shops/__SELF__/listings/${listingId}/videos`);
+  }
+
+  /**
+   * Delete listing video
+   */
+  async deleteListingVideo(listingId: number, videoId: number): Promise<any> {
+    return this.makeRequest('DELETE', `/shops/__SELF__/listings/${listingId}/videos/${videoId}`);
+  }
+
+  /**
+   * Get shop sections
+   */
+  async getShopSections(): Promise<any> {
+    return this.makeRequest('GET', '/shops/__SELF__/sections');
+  }
+
+  /**
+   * Get shipping profiles
+   */
+  async getShippingProfiles(): Promise<any> {
+    return this.makeRequest('GET', '/shops/__SELF__/shipping-profiles');
+  }
+
+  /**
+   * Get production partners
+   */
+  async getProductionPartners(): Promise<any> {
+    return this.makeRequest('GET', '/shops/__SELF__/production-partners');
+  }
+
+  /**
+   * Delete a listing
+   */
+  async deleteListing(listingId: number): Promise<any> {
+    return this.makeRequest('DELETE', `/shops/__SELF__/listings/${listingId}`);
+  }
+
+  /**
+   * Get listing inventory
+   */
+  async getListingInventory(listingId: number): Promise<any> {
+    return this.makeRequest('GET', `/listings/${listingId}/inventory`);
+  }
+
+  /**
+   * Update listing inventory
+   */
+  async updateListingInventory(listingId: number, inventoryData: any): Promise<any> {
+    return this.makeRequest('PUT', `/listings/${listingId}/inventory`, inventoryData);
+  }
+
+  /**
    * Get sandbox mode status
    */
   getSandboxMode(): boolean {

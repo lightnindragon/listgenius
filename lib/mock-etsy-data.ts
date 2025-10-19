@@ -293,3 +293,338 @@ export const mockShopInfo = {
   review_count: mockShopData.review_count,
   review_average: mockShopData.review_average
 };
+
+// Mock shop sections
+export const mockShopSections = [
+  {
+    shop_section_id: 123456789,
+    title: "Coffee Mugs & Drinkware",
+    rank: 1,
+    user_id: 987654321,
+    active_listing_count: 12
+  },
+  {
+    shop_section_id: 123456790,
+    title: "Kitchen & Dining",
+    rank: 2,
+    user_id: 987654321,
+    active_listing_count: 8
+  },
+  {
+    shop_section_id: 123456791,
+    title: "Home Decor",
+    rank: 3,
+    user_id: 987654321,
+    active_listing_count: 15
+  },
+  {
+    shop_section_id: 123456792,
+    title: "Wall Art & Hangings",
+    rank: 4,
+    user_id: 987654321,
+    active_listing_count: 10
+  }
+];
+
+// Mock shipping profiles
+export const mockShippingProfiles = [
+  {
+    shipping_profile_id: 111222333444,
+    title: "Standard Shipping",
+    user_id: 987654321,
+    min_processing_days: 3,
+    max_processing_days: 5,
+    processing_days_display_label: "3-5 business days",
+    origin_country_iso: "US",
+    origin_postal_code: "90210",
+    profile_type: "manual",
+    domestic_handling_fee: 0,
+    international_handling_fee: 500
+  },
+  {
+    shipping_profile_id: 111222333445,
+    title: "Express Shipping",
+    user_id: 987654321,
+    min_processing_days: 1,
+    max_processing_days: 2,
+    processing_days_display_label: "1-2 business days",
+    origin_country_iso: "US",
+    origin_postal_code: "90210",
+    profile_type: "manual",
+    domestic_handling_fee: 500,
+    international_handling_fee: 1000
+  },
+  {
+    shipping_profile_id: 111222333446,
+    title: "Free Shipping",
+    user_id: 987654321,
+    min_processing_days: 5,
+    max_processing_days: 7,
+    processing_days_display_label: "5-7 business days",
+    origin_country_iso: "US",
+    origin_postal_code: "90210",
+    profile_type: "manual",
+    domestic_handling_fee: 0,
+    international_handling_fee: 0
+  }
+];
+
+// Mock production partners (for POD)
+export const mockProductionPartners = [
+  {
+    production_partner_id: 999888777,
+    partner_name: "PrintGenius",
+    location: "United States"
+  },
+  {
+    production_partner_id: 999888778,
+    partner_name: "CraftMaker Pro",
+    location: "United States"
+  }
+];
+
+// Additional mock images for testing
+export const mockImages = [
+  {
+    listing_image_id: 12345678901,
+    hex_code: "#4A90E2",
+    red: 74,
+    green: 144,
+    blue: 226,
+    hue: 212,
+    saturation: 73,
+    brightness: 89,
+    is_black_and_white: false,
+    creation_timestamp: Math.floor(Date.now() / 1000) - 2592000,
+    listing_id: 1234567890,
+    rank: 1,
+    url_75x75: "https://via.placeholder.com/75x75/4A90E2/FFFFFF?text=Mug+1",
+    url_170x135: "https://via.placeholder.com/170x135/4A90E2/FFFFFF?text=Coffee+Mug+1",
+    url_570xN: "https://via.placeholder.com/570xN/4A90E2/FFFFFF?text=Handmade+Ceramic+Coffee+Mug",
+    url_fullxfull: "https://via.placeholder.com/800x800/4A90E2/FFFFFF?text=Beautiful+Ceramic+Mug+Blue+Glaze",
+    full_height: 800,
+    full_width: 800,
+    alt_text: "Handmade ceramic coffee mug with beautiful blue glaze finish, perfect for morning coffee"
+  },
+  {
+    listing_image_id: 12345678902,
+    hex_code: "#3498DB",
+    red: 52,
+    green: 152,
+    blue: 219,
+    hue: 204,
+    saturation: 70,
+    brightness: 86,
+    is_black_and_white: false,
+    creation_timestamp: Math.floor(Date.now() / 1000) - 2592000,
+    listing_id: 1234567890,
+    rank: 2,
+    url_75x75: "https://via.placeholder.com/75x75/3498DB/FFFFFF?text=Mug+2",
+    url_170x135: "https://via.placeholder.com/170x135/3498DB/FFFFFF?text=Coffee+Mug+2",
+    url_570xN: "https://via.placeholder.com/570xN/3498DB/FFFFFF?text=Ceramic+Mug+Detail",
+    url_fullxfull: "https://via.placeholder.com/800x800/3498DB/FFFFFF?text=Artisan+Pottery+Mug",
+    full_height: 800,
+    full_width: 800,
+    alt_text: "Close-up of artisan ceramic mug showing unique blue glaze pattern and craftsmanship"
+  },
+  {
+    listing_image_id: 12345678903,
+    hex_code: "#5DADE2",
+    red: 93,
+    green: 173,
+    blue: 226,
+    hue: 204,
+    saturation: 69,
+    brightness: 89,
+    is_black_and_white: false,
+    creation_timestamp: Math.floor(Date.now() / 1000) - 2592000,
+    listing_id: 1234567890,
+    rank: 3,
+    url_75x75: "https://via.placeholder.com/75x75/5DADE2/FFFFFF?text=Mug+3",
+    url_170x135: "https://via.placeholder.com/170x135/5DADE2/FFFFFF?text=Coffee+Mug+3",
+    url_570xN: "https://via.placeholder.com/570xN/5DADE2/FFFFFF?text=Handcrafted+Mug",
+    url_fullxfull: "https://via.placeholder.com/800x800/5DADE2/FFFFFF?text=Kitchen+Pottery+Mug",
+    full_height: 800,
+    full_width: 800,
+    alt_text: "Handcrafted blue ceramic mug in natural kitchen setting, dishwasher and microwave safe"
+  }
+];
+
+// Mock videos
+export const mockVideos = [
+  {
+    video_id: 987654321,
+    listing_id: 1234567890,
+    thumbnail_url: "https://via.placeholder.com/640x360/4A90E2/FFFFFF?text=Video+Thumbnail",
+    duration: 30,
+    width: 1920,
+    height: 1080,
+    file_size: 5242880,
+    creation_timestamp: Math.floor(Date.now() / 1000) - 2592000
+  }
+];
+
+// Helper function to simulate API delays
+export const simulateDelay = async (ms: number = 500): Promise<void> => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
+
+// Helper function to simulate API errors
+export const simulateError = (errorRate: number = 0.1): boolean => {
+  return Math.random() < errorRate;
+};
+
+// Mock image upload handler
+export const handleMockImageUpload = (listingId: number, imageData: any): any => {
+  const newImageId = Math.floor(Math.random() * 1000000000) + 10000000000;
+  const newImage = {
+    listing_image_id: newImageId,
+    hex_code: "#CCCCCC",
+    red: 204,
+    green: 204,
+    blue: 204,
+    hue: 0,
+    saturation: 0,
+    brightness: 80,
+    is_black_and_white: false,
+    creation_timestamp: Math.floor(Date.now() / 1000),
+    listing_id: listingId,
+    rank: imageData.rank || 1,
+    url_75x75: imageData.url_75x75 || `https://via.placeholder.com/75x75/CCCCCC/000000?text=New+Image`,
+    url_170x135: imageData.url_170x135 || `https://via.placeholder.com/170x135/CCCCCC/000000?text=New+Image`,
+    url_570xN: imageData.url_570xN || `https://via.placeholder.com/570xN/CCCCCC/000000?text=New+Image`,
+    url_fullxfull: imageData.url_fullxfull || `https://via.placeholder.com/800x800/CCCCCC/000000?text=New+Image`,
+    full_height: imageData.full_height || 800,
+    full_width: imageData.full_width || 800,
+    alt_text: imageData.alt_text || ""
+  };
+  
+  // Find listing and add image
+  const listing = mockListings.find(l => l.listing_id === listingId);
+  if (listing) {
+    listing.images.push(newImage);
+  }
+  
+  return newImage;
+};
+
+// Mock image delete handler
+export const handleMockImageDelete = (listingId: number, imageId: number): boolean => {
+  const listing = mockListings.find(l => l.listing_id === listingId);
+  if (listing) {
+    const imageIndex = listing.images.findIndex(img => img.listing_image_id === imageId);
+    if (imageIndex !== -1) {
+      listing.images.splice(imageIndex, 1);
+      return true;
+    }
+  }
+  return false;
+};
+
+// Mock image reorder handler
+export const handleMockImageReorder = (listingId: number, imageIds: number[]): boolean => {
+  const listing = mockListings.find(l => l.listing_id === listingId);
+  if (listing) {
+    const reorderedImages: any[] = [];
+    imageIds.forEach((imageId, index) => {
+      const image = listing.images.find(img => img.listing_image_id === imageId);
+      if (image) {
+        image.rank = index + 1;
+        reorderedImages.push(image);
+      }
+    });
+    listing.images = reorderedImages;
+    return true;
+  }
+  return false;
+};
+
+// Mock listing creation handler
+export const handleMockListingCreate = (listingData: any): any => {
+  const newListingId = Math.floor(Math.random() * 1000000000) + 1000000000;
+  const newListing = {
+    listing_id: newListingId,
+    user_id: 987654321,
+    shop_id: 12345678,
+    title: listingData.title || "New Listing",
+    description: listingData.description || "",
+    state: listingData.state || "active",
+    creation_timestamp: Math.floor(Date.now() / 1000),
+    ending_timestamp: Math.floor(Date.now() / 1000) + 86400 * 365,
+    original_creation_timestamp: Math.floor(Date.now() / 1000),
+    last_modified_timestamp: Math.floor(Date.now() / 1000),
+    price: listingData.price || { amount: 1000, divisor: 100, currency_code: "USD" },
+    quantity: listingData.quantity || 1,
+    tags: listingData.tags || [],
+    materials: listingData.materials || [],
+    shop_section_id: listingData.shop_section_id || null,
+    featured_rank: 0,
+    url: `https://www.etsy.com/listing/${newListingId}/new-listing`,
+    views: 0,
+    num_favorers: 0,
+    processing_min: listingData.processing_min || 3,
+    processing_max: listingData.processing_max || 5,
+    who_made: listingData.who_made || "i_did",
+    is_supply: false,
+    when_made: listingData.when_made || "2020s",
+    item_weight: listingData.item_weight || null,
+    item_weight_unit: listingData.item_weight_unit || null,
+    item_length: listingData.item_length || null,
+    item_width: listingData.item_width || null,
+    item_height: listingData.item_height || null,
+    item_dimensions_unit: listingData.item_dimensions_unit || null,
+    is_private: false,
+    style: listingData.style || [],
+    non_taxable: false,
+    is_customizable: listingData.is_customizable || false,
+    is_digital: listingData.is_digital || false,
+    file_data: "",
+    should_auto_renew: listingData.should_auto_renew || false,
+    language: "en-US",
+    has_variations: false,
+    taxonomy_id: listingData.taxonomy_id || 1,
+    used_manufacturer: false,
+    is_vintage: false,
+    images: [],
+    videos: [],
+    shop_name: "TestCraftStudio"
+  };
+  
+  mockListings.unshift(newListing);
+  return newListing;
+};
+
+// Mock video upload handler
+export const handleMockVideoUpload = (listingId: number, videoData: any): any => {
+  const newVideoId = Math.floor(Math.random() * 1000000000) + 900000000;
+  const newVideo = {
+    video_id: newVideoId,
+    listing_id: listingId,
+    thumbnail_url: videoData.thumbnail_url || `https://via.placeholder.com/640x360/CCCCCC/000000?text=Video`,
+    duration: videoData.duration || 30,
+    width: videoData.width || 1920,
+    height: videoData.height || 1080,
+    file_size: videoData.file_size || 5242880,
+    creation_timestamp: Math.floor(Date.now() / 1000)
+  };
+  
+  const listing = mockListings.find(l => l.listing_id === listingId);
+  if (listing) {
+    listing.videos.push(newVideo);
+  }
+  
+  return newVideo;
+};
+
+// Mock video delete handler
+export const handleMockVideoDelete = (listingId: number, videoId: number): boolean => {
+  const listing = mockListings.find(l => l.listing_id === listingId);
+  if (listing) {
+    const videoIndex = listing.videos.findIndex(vid => vid.video_id === videoId);
+    if (videoIndex !== -1) {
+      listing.videos.splice(videoIndex, 1);
+      return true;
+    }
+  }
+  return false;
+};
