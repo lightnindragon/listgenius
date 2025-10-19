@@ -72,11 +72,12 @@ ListGenius is an AI-powered platform that helps Etsy sellers create SEO-optimize
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    NEXT_PUBLIC_ENV=development
    
-   # Etsy Integration (optional for MVP)
-   ETSY_CLIENT_ID=your_etsy_client_id
-   ETSY_CLIENT_SECRET=your_etsy_client_secret
+   # Etsy Integration
+   ETSY_MOCK_MODE=true  # Set to false when ready for real API
+   ETSY_CLIENT_ID=your_etsy_keystring
+   ETSY_CLIENT_SECRET=your_etsy_shared_secret
    ETSY_REDIRECT_URI=http://localhost:3000/api/etsy/oauth
-   ETSY_API_BASE_URL=https://openapi.etsy.com/v3
+   ETSY_API_BASE=https://openapi.etsy.com/v3
    ETSY_SANDBOX_MODE=true
    
    # Security
@@ -90,6 +91,76 @@ ListGenius is an AI-powered platform that helps Etsy sellers create SEO-optimize
 
 5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
+
+## Etsy Integration
+
+ListGenius includes comprehensive Etsy integration that supports both **mock mode** (for development/testing) and **real API mode** (once your Etsy app is approved).
+
+### Mock Mode (Default)
+
+By default, the app runs in mock mode with `ETSY_MOCK_MODE=true`. This allows you to:
+- Test all Etsy features without real API credentials
+- Import and manage mock listings
+- Upload and reorder images
+- Generate AI alt text for images
+- Test the complete workflow before going live
+
+Mock data includes:
+- 3 sample Etsy listings with images
+- Shop sections and shipping profiles
+- Realistic API delays and responses
+
+### Switching to Real Etsy API
+
+When your Etsy app is approved:
+
+1. **Update environment variables**:
+   ```env
+   ETSY_MOCK_MODE=false
+   ETSY_CLIENT_ID=your_actual_keystring
+   ETSY_CLIENT_SECRET=your_actual_shared_secret
+   ```
+
+2. **OAuth Flow**: Users connect their Etsy shop via Settings → Etsy Connection
+
+3. **Features Available**:
+   - Import real listings from connected Etsy shop
+   - Edit and rewrite listing content with AI
+   - Upload/reorder/delete listing images
+   - Generate SEO-optimized alt text with GPT-4o Vision
+   - Publish updates directly back to Etsy
+   - Create new listings and publish to Etsy
+
+### Image Management Features
+
+- **Drag-and-drop reordering**: Change image order visually
+- **AI alt text generation**: GPT-4o Vision analyzes images and generates SEO-friendly alt text
+- **Bulk upload**: Upload multiple images at once
+- **Alt text editing**: Edit alt text inline with character counter (250 char limit)
+- **Image preview**: See thumbnails with rank indicators
+
+### API Routes
+
+All Etsy integration routes automatically switch between mock and real data:
+
+- `GET /api/etsy/listings` - Fetch listings
+- `GET /api/etsy/listings/[id]` - Get listing details
+- `PUT /api/etsy/listings/[id]` - Update listing
+- `GET /api/etsy/listings/[id]/images` - Get listing images
+- `POST /api/etsy/listings/[id]/images` - Upload image
+- `PUT /api/etsy/listings/[id]/images` - Reorder images
+- `PUT /api/etsy/listings/[id]/images/[imageId]` - Update image alt text
+- `DELETE /api/etsy/listings/[id]/images/[imageId]` - Delete image
+- `GET /api/etsy/shop/sections` - Get shop sections
+- `GET /api/etsy/shop/shipping` - Get shipping profiles
+- `POST /api/generate-alt-text` - Generate AI alt text for images
+
+### Components
+
+- **ImageManager**: Comprehensive image management with drag-drop, upload, delete
+- **AIAltTextGenerator**: Standalone alt text generation with GPT-4o Vision
+- **RewriteModal**: Edit listings with image management
+- **My Listings**: View and manage all Etsy listings
 
 ## Manual Testing Checklist
 
