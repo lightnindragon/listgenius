@@ -15,7 +15,13 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
-    const metadata = user.publicMetadata as any;
+    const metadata = user.publicMetadata as any || {};
+
+    logger.info('Raw user metadata from Clerk', { 
+      userId, 
+      rawMetadata: JSON.stringify(metadata, null, 2),
+      metadataKeys: Object.keys(metadata)
+    });
 
     const response = {
       plan: metadata.plan || 'free',

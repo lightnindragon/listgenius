@@ -106,17 +106,25 @@ export async function incrementDailyGenCount(userId: string): Promise<number> {
     const currentCount = await getDailyGenCount(userId);
     const newCount = currentCount + 1;
     
-    const metadata = user.publicMetadata as UserMetadata;
+    const metadata = user.publicMetadata as UserMetadata || {};
     const updatedMetadata: UserMetadata = {
       ...metadata,
       dailyGenCount: newCount,
       lastResetDate: new Date().toISOString().split('T')[0]
     };
     
+    logger.info('About to update user metadata', { 
+      userId, 
+      currentMetadata: JSON.stringify(metadata, null, 2),
+      updatedMetadata: JSON.stringify(updatedMetadata, null, 2)
+    });
+    
     // Actually update the user metadata using clerkClient
     await clerkClient.users.updateUserMetadata(userId, {
       publicMetadata: updatedMetadata
     });
+    
+    logger.info('User metadata update completed', { userId });
     
     logger.info('Daily generation count incremented', { 
       userId, 
