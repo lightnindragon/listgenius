@@ -190,6 +190,11 @@ export async function resetDailyCountersIfNeeded(userId: string): Promise<void> 
         lastResetDate: today
       };
       
+      // Actually save the reset metadata
+      await clerkClient.users.updateUserMetadata(userId, {
+        publicMetadata: updatedMetadata
+      });
+      
       logger.info('Daily counters reset for new day', { userId, date: today });
     }
   } catch (error) {
