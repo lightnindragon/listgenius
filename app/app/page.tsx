@@ -7,6 +7,8 @@ import { GeneratorForm } from '@/components/GeneratorForm';
 import { OutputPanel } from '@/components/OutputPanel';
 import { PlanGate } from '@/components/PlanGate';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
+import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
+import { GenerationCounter } from '@/components/GenerationCounter';
 import { ListingOutput, GenerateRequest, APIResponse } from '@/types';
 
 export default function AppPage() {
@@ -14,18 +16,42 @@ export default function AppPage() {
   const { toasts, toast, removeToast } = useToast();
   const [output, setOutput] = useState<ListingOutput | null>(null);
   const [loading, setLoading] = useState(false);
-  const [userPreferences, setUserPreferences] = useState<{ tone?: string; niche?: string }>({});
+  const [userPreferences, setUserPreferences] = useState<{ tone?: string; niche?: string; audience?: string }>({});
 
   // Load user preferences on mount
   useEffect(() => {
     if (user && isLoaded) {
-      // In a real app, you'd fetch this from Clerk metadata
-      setUserPreferences({
-        tone: 'Professional',
-        niche: 'Digital Products'
-      });
+      loadUserPreferences();
     }
   }, [user, isLoaded]);
+
+  // Refresh preferences when page becomes visible (e.g., coming back from settings)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user && isLoaded) {
+        loadUserPreferences();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [user, isLoaded]);
+
+  const loadUserPreferences = async () => {
+    try {
+      const response = await fetch('/api/user/metadata');
+      if (response.ok) {
+        const data = await response.json();
+        setUserPreferences({
+          tone: data.preferences?.tone || 'Professional',
+          niche: data.preferences?.niche || '',
+          audience: data.preferences?.audience || ''
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load user preferences:', error);
+    }
+  };
 
   const handleGenerate = async (data: GenerateRequest) => {
     setLoading(true);
@@ -44,12 +70,19 @@ export default function AppPage() {
 
       if (result.success && result.data) {
         setOutput(result.data);
-        toast.success('Listing generated successfully!');
+        emitTopRightToast('Listing generated successfully!', 'success');
+        // Refresh user data to update generation count
+        loadUserPreferences();
+        // Emit event to notify GenerationCounter to refresh
+        window.dispatchEvent(new CustomEvent('generationCompleted'));
+        // Also use localStorage as backup
+        localStorage.setItem('generationCountUpdated', Date.now().toString());
       } else {
-        toast.error(result.error || 'Failed to generate listing');
+        const errorMessage = result.error || 'Failed to generate listing';
+        emitTopRightToast(errorMessage, 'error');
       }
     } catch (error) {
-      toast.error('Network error. Please try again.');
+      emitTopRightToast('Network error. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -109,13 +142,16 @@ export default function AppPage() {
     <div className="min-h-screen bg-gray-50 py-12">
       <Container>
         <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              AI Listing Generator
-            </h1>
-            <p className="text-gray-600">
-              Create SEO-optimized Etsy listings with AI. Generate professional titles, descriptions, and tags.
-            </p>
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                AI Listing Generator
+              </h1>
+              <p className="text-gray-600">
+                Create SEO-optimized Etsy listings with AI. Generate professional titles, descriptions, and tags.
+              </p>
+            </div>
+            <GenerationCounter />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -151,6 +187,9 @@ export default function AppPage() {
 
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onClose={removeToast} />
+      
+      {/* Top Right Toast Notifications */}
+      <TopRightToast />
     </div>
   );
 }

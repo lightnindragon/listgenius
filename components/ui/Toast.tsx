@@ -87,7 +87,7 @@ interface ToastContainerProps {
   onClose: (id: string) => void;
 }
 
-export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onClose }) => {
+export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts = [], onClose }) => {
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2">
       {toasts.slice(0, 3).map((toast, index) => (

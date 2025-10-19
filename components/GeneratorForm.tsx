@@ -10,7 +10,7 @@ import { Plus, X } from 'lucide-react';
 interface GeneratorFormProps {
   onSubmit: (data: GenerateRequest) => void;
   loading: boolean;
-  userPreferences?: { tone?: string; niche?: string };
+  userPreferences?: { tone?: string; niche?: string; audience?: string };
   className?: string;
 }
 
@@ -20,6 +20,7 @@ interface GenerateRequest {
   audience?: string;
   keywords: string[];
   tone?: string;
+  wordCount?: number;
   extras?: {
     pinterestCaption?: boolean;
     etsyMessage?: boolean;
@@ -27,13 +28,30 @@ interface GenerateRequest {
 }
 
 const toneOptions = [
-  'Professional',
-  'Casual',
-  'Luxury',
-  'Playful',
-  'Friendly',
-  'Minimalist',
-  'Creative'
+  { value: 'Professional', description: 'Clear, authoritative, and business-focused' },
+  { value: 'Friendly', description: 'Approachable, helpful, and conversational' },
+  { value: 'Casual', description: 'Relaxed, informal, and easy-going' },
+  { value: 'Formal', description: 'Sophisticated, structured, and polished' },
+  { value: 'Enthusiastic', description: 'Excited, energetic, and passionate' },
+  { value: 'Warm', description: 'Cozy, comforting, and inviting' },
+  { value: 'Creative', description: 'Imaginative, unique, and expressive' },
+  { value: 'Luxury', description: 'Premium, exclusive, and high-end' },
+  { value: 'Playful', description: 'Fun, whimsical, and lighthearted' },
+  { value: 'Minimalist', description: 'Clean, simple, and focused' },
+  { value: 'Artistic', description: 'Aesthetic, expressive, and creative' },
+  { value: 'Rustic', description: 'Natural, earthy, and handcrafted' },
+  { value: 'Modern', description: 'Contemporary, sleek, and current' },
+  { value: 'Vintage', description: 'Retro, nostalgic, and timeless' },
+  { value: 'Elegant', description: 'Refined, sophisticated, and graceful' }
+];
+
+const wordCountOptions = [
+  { value: 200, label: '200 words (Concise)' },
+  { value: 250, label: '250 words (Standard)' },
+  { value: 300, label: '300 words (Detailed)' },
+  { value: 400, label: '400 words (Comprehensive)' },
+  { value: 500, label: '500 words (In-depth)' },
+  { value: 600, label: '600 words (Maximum)' }
 ];
 
 const GeneratorForm: React.FC<GeneratorFormProps> = ({
@@ -45,9 +63,10 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
   const [formData, setFormData] = useState<GenerateRequest>({
     productName: '',
     niche: userPreferences?.niche || '',
-    audience: '',
+    audience: userPreferences?.audience || '',
     keywords: [],
     tone: userPreferences?.tone || '',
+    wordCount: 300,
     extras: {
       pinterestCaption: false,
       etsyMessage: false
@@ -62,7 +81,8 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
       setFormData(prev => ({
         ...prev,
         niche: userPreferences.niche || prev.niche,
-        tone: userPreferences.tone || prev.tone
+        tone: userPreferences.tone || prev.tone,
+        audience: userPreferences.audience || prev.audience
       }));
     }
   }, [userPreferences]);
@@ -187,24 +207,55 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Tone
         </label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {toneOptions.map((tone) => (
-            <button
-              key={tone}
-              type="button"
-              onClick={() => setFormData(prev => ({ ...prev, tone }))}
-              className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-                formData.tone === tone
-                  ? 'bg-blue-600 border-blue-600 text-white shadow-md'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-              }`}
-            >
-              {tone}
-            </button>
-          ))}
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {toneOptions.map((tone) => (
+              <button
+                key={tone.value}
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, tone: tone.value }))}
+                className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
+                  formData.tone === tone.value
+                    ? 'bg-blue-600 border-blue-600 text-white shadow-md'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                }`}
+                title={tone.description}
+              >
+                {tone.value}
+              </button>
+            ))}
+          </div>
+          {formData.tone && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <span className="font-medium">{formData.tone}:</span>{' '}
+                {toneOptions.find(t => t.value === formData.tone)?.description}
+              </p>
+            </div>
+          )}
+          <p className="text-sm text-gray-500">
+            Optional: Choose a tone for your listing
+          </p>
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Description Length
+        </label>
+        <select
+          value={formData.wordCount || 300}
+          onChange={(e) => setFormData(prev => ({ ...prev, wordCount: parseInt(e.target.value) }))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800"
+        >
+          {wordCountOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
         <p className="mt-1 text-sm text-gray-500">
-          Optional: Choose a tone for your listing
+          Choose the length of your product description
         </p>
       </div>
 

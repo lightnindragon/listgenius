@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { getCurrentUser } from '@/lib/clerk';
+import { updateUserPreferences } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
@@ -20,24 +20,12 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const validatedData = preferencesSchema.parse(body);
 
-    const user = await getCurrentUser(userId);
-    if (!user) {
-      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
-    }
-
-    // Update user preferences in metadata
-    const metadata = user.publicMetadata as any;
-    const updatedMetadata = {
-      ...metadata,
-      preferences: {
-        tone: validatedData.tone,
-        niche: validatedData.niche || '',
-        audience: validatedData.audience || '',
-        updatedAt: new Date().toISOString()
-      }
-    };
-
-    await user.update({ publicMetadata: updatedMetadata });
+    // Update user preferences using the clerk library function
+    await updateUserPreferences(userId, {
+      tone: validatedData.tone,
+      niche: validatedData.niche || '',
+      audience: validatedData.audience || ''
+    });
 
     logger.info('User preferences updated', { 
       userId, 

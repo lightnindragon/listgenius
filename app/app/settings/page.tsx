@@ -1,21 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser, useClerk } from '@clerk/nextjs';
+import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Container } from '@/components/ui/Container';
 import { useToast, ToastContainer } from '@/components/ui/Toast';
+import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
+import { getBaseUrl } from '@/lib/utils';
 import { 
-  User, 
-  CreditCard, 
-  Link, 
   Palette, 
-  Target, 
+  Link, 
   Bell, 
   Shield,
-  Check,
-  X,
+  Target,
+  CreditCard,
   ExternalLink,
   Settings as SettingsIcon
 } from 'lucide-react';
@@ -40,7 +39,6 @@ interface UserMetadata {
 
 export default function SettingsPage() {
   const { user } = useUser();
-  const { openUserProfile } = useClerk();
   const { toast, toasts, removeToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
@@ -49,21 +47,35 @@ export default function SettingsPage() {
     niche: '',
     audience: ''
   });
-  const [etsyConnection, setEtsyConnection] = useState<{
-    connected: boolean;
-    shopName?: string;
-    loading: boolean;
-  }>({
+  const [etsyConnection, setEtsyConnection] = useState({
     connected: false,
+    shopName: '',
     loading: true
   });
 
-  const toneOptions = ['Professional', 'Friendly', 'Casual', 'Formal', 'Enthusiastic'];
+  const toneOptions = [
+    { value: 'Professional', description: 'Clear, authoritative, and business-focused' },
+    { value: 'Friendly', description: 'Approachable, helpful, and conversational' },
+    { value: 'Casual', description: 'Relaxed, informal, and easy-going' },
+    { value: 'Formal', description: 'Sophisticated, structured, and polished' },
+    { value: 'Enthusiastic', description: 'Excited, energetic, and passionate' },
+    { value: 'Warm', description: 'Cozy, comforting, and inviting' },
+    { value: 'Creative', description: 'Imaginative, unique, and expressive' },
+    { value: 'Luxury', description: 'Premium, exclusive, and high-end' },
+    { value: 'Playful', description: 'Fun, whimsical, and lighthearted' },
+    { value: 'Minimalist', description: 'Clean, simple, and focused' },
+    { value: 'Artistic', description: 'Aesthetic, expressive, and creative' },
+    { value: 'Rustic', description: 'Natural, earthy, and handcrafted' },
+    { value: 'Modern', description: 'Contemporary, sleek, and current' },
+    { value: 'Vintage', description: 'Retro, nostalgic, and timeless' },
+    { value: 'Elegant', description: 'Refined, sophisticated, and graceful' }
+  ];
+
   const planFeatures = {
-    free: { generations: 3, rewrites: 5, etsyConnection: false },
-    pro: { generations: 'Unlimited', rewrites: 'Unlimited', etsyConnection: true },
-    business: { generations: 'Unlimited', rewrites: 'Unlimited', etsyConnection: true },
-    agency: { generations: 'Unlimited', rewrites: 'Unlimited', etsyConnection: true }
+    free: { generations: 3, rewrites: 3, etsyConnection: false },
+    pro: { generations: 50, rewrites: 25, etsyConnection: true },
+    business: { generations: 200, rewrites: 100, etsyConnection: true },
+    agency: { generations: '∞', rewrites: '∞', etsyConnection: true }
   };
 
   useEffect(() => {
@@ -87,7 +99,8 @@ export default function SettingsPage() {
   const loadUserData = async () => {
     try {
       console.log('Loading user data...');
-      const response = await fetch('/api/user/metadata');
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/api/user/metadata`);
       console.log('Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
@@ -106,7 +119,8 @@ export default function SettingsPage() {
 
   const checkEtsyConnection = async () => {
     try {
-      const response = await fetch('/api/etsy/me');
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/api/etsy/me`);
       if (response.ok) {
         const data = await response.json();
         setEtsyConnection({
@@ -125,7 +139,8 @@ export default function SettingsPage() {
   const handleSavePreferences = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/user/preferences', {
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/api/user/preferences`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(preferences)
@@ -133,12 +148,15 @@ export default function SettingsPage() {
 
       if (response.ok) {
         toast.success('Preferences saved successfully!');
+        emitTopRightToast('Preferences saved successfully!', 'success');
         loadUserData();
       } else {
         toast.error('Failed to save preferences');
+        emitTopRightToast('Failed to save preferences', 'error');
       }
     } catch (error) {
       toast.error('Network error. Please try again.');
+      emitTopRightToast('Network error. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -146,7 +164,8 @@ export default function SettingsPage() {
 
   const handleConnectEtsy = async () => {
     try {
-      const response = await fetch('/api/etsy/oauth', {
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/api/etsy/oauth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -164,7 +183,8 @@ export default function SettingsPage() {
 
   const handleDisconnectEtsy = async () => {
     try {
-      const response = await fetch('/api/etsy/me', {
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/api/etsy/me`, {
         method: 'DELETE'
       });
 
@@ -181,7 +201,8 @@ export default function SettingsPage() {
 
   const handleManageBilling = async () => {
     try {
-      const response = await fetch('/api/stripe/portal', {
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/api/stripe/portal`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -219,46 +240,13 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-          <p className="text-gray-600">Manage your account preferences and connections</p>
+          <p className="text-gray-600">Manage your preferences and integrations</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Settings */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Account Information */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <User className="h-5 w-5 text-blue-600" />
-                <h2 className="text-xl font-semibold text-gray-900">Account Information</h2>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
-                  </label>
-                  <p className="text-gray-900">{user?.emailAddresses[0]?.emailAddress}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name
-                  </label>
-                  <p className="text-gray-900">{user?.fullName}</p>
-                </div>
-
-                <Button
-                  variant="outline"
-                  onClick={() => openUserProfile()}
-                  className="w-full sm:w-auto"
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  Manage Profile
-                </Button>
-              </div>
-            </div>
-
-            {/* Preferences */}
+            {/* Default Preferences */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center gap-3 mb-6">
                 <Palette className="h-5 w-5 text-blue-600" />
@@ -270,20 +258,31 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Default Tone
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {toneOptions.map((tone) => (
-                      <button
-                        key={tone}
-                        onClick={() => setPreferences(prev => ({ ...prev, tone }))}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          preferences.tone === tone
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {tone}
-                      </button>
-                    ))}
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {toneOptions.map((tone) => (
+                        <button
+                          key={tone.value}
+                          onClick={() => setPreferences(prev => ({ ...prev, tone: tone.value }))}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            preferences.tone === tone.value
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                          title={tone.description}
+                        >
+                          {tone.value}
+                        </button>
+                      ))}
+                    </div>
+                    {preferences.tone && (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          <span className="font-medium">{preferences.tone}:</span>{' '}
+                          {toneOptions.find(t => t.value === preferences.tone)?.description}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -294,77 +293,72 @@ export default function SettingsPage() {
                   <Input
                     value={preferences.niche}
                     onChange={(e) => setPreferences(prev => ({ ...prev, niche: e.target.value }))}
-                    placeholder="e.g., Digital Art, Printables, Templates"
+                    placeholder="e.g., Digital Art, Wedding Planning, Home Decor"
                     className="w-full"
                   />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Helps AI understand your product category
+                  </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Target Audience
+                    Default Target Audience
                   </label>
                   <Input
                     value={preferences.audience}
                     onChange={(e) => setPreferences(prev => ({ ...prev, audience: e.target.value }))}
-                    placeholder="e.g., Small business owners, Students, Parents"
+                    placeholder="e.g., Small business owners, Creative professionals"
                     className="w-full"
                   />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Helps AI tailor the tone and language
+                  </p>
                 </div>
 
                 <Button
                   onClick={handleSavePreferences}
                   disabled={loading}
-                  className="w-full sm:w-auto"
+                  className="w-full"
                 >
                   {loading ? 'Saving...' : 'Save Preferences'}
                 </Button>
               </div>
             </div>
 
-            {/* Etsy Connection */}
+            {/* Etsy Integration */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center gap-3 mb-6">
                 <Link className="h-5 w-5 text-blue-600" />
-                <h2 className="text-xl font-semibold text-gray-900">Etsy Connection</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Etsy Integration</h2>
               </div>
               
               {etsyConnection.loading ? (
                 <div className="text-center py-4">
-                  <p className="text-gray-600">Checking connection...</p>
+                  <p className="text-gray-600">Checking Etsy connection...</p>
                 </div>
               ) : etsyConnection.connected ? (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <Check className="h-5 w-5 text-green-600" />
-                    <div>
-                      <p className="font-medium text-green-900">Connected to Etsy</p>
-                      {etsyConnection.shopName && (
-                        <p className="text-sm text-green-700">{etsyConnection.shopName}</p>
-                      )}
+                  <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div>
+                        <p className="font-medium text-green-800">Connected to Etsy</p>
+                        <p className="text-sm text-green-600">{etsyConnection.shopName}</p>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex gap-3">
                     <Button
                       variant="outline"
                       onClick={handleDisconnectEtsy}
-                      className="flex-1"
+                      className="text-red-600 border-red-200 hover:bg-red-50"
                     >
-                      <X className="h-4 w-4 mr-2" />
                       Disconnect
                     </Button>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                    <X className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <p className="font-medium text-gray-900">Not Connected</p>
-                      <p className="text-sm text-gray-600">Connect your Etsy shop to publish listings directly</p>
-                    </div>
-                  </div>
-                  
+                <div className="text-center py-4">
+                  <p className="text-gray-600 mb-4">Connect your Etsy shop to publish listings directly</p>
                   <Button
                     onClick={handleConnectEtsy}
                     className="w-full"
@@ -446,6 +440,15 @@ export default function SettingsPage() {
               <div className="space-y-3">
                 <Button
                   variant="outline"
+                  onClick={() => window.location.href = '/app/profile'}
+                  className="w-full justify-start"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  View Profile
+                </Button>
+                
+                <Button
+                  variant="outline"
                   onClick={() => window.location.href = '/app'}
                   className="w-full justify-start"
                 >
@@ -455,11 +458,19 @@ export default function SettingsPage() {
                 
                 <Button
                   variant="outline"
-                  onClick={() => window.location.href = '/pricing'}
+                  onClick={() => window.location.href = '/app/upgrade'}
                   className="w-full justify-start"
                 >
                   <CreditCard className="h-4 w-4 mr-2" />
                   View Plans
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.href = '/app/billing'}
+                  className="w-full justify-start"
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Manage Billing
                 </Button>
               </div>
             </div>
@@ -469,6 +480,9 @@ export default function SettingsPage() {
       
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onClose={removeToast} />
+
+      {/* Top Right Toast Notifications */}
+      <TopRightToast />
     </Container>
   );
 }

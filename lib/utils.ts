@@ -126,3 +126,24 @@ export function formatPrice(amount: number, currency = 'GBP'): string {
     currency,
   }).format(amount / 100);
 }
+
+/**
+ * Get base URL for API calls
+ */
+export function getBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    // Client-side
+    return window.location.origin;
+  }
+  
+  // Server-side
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  return 'http://localhost:3000';
+}

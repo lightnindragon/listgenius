@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { stripe } from '@/lib/stripe';
-import { getUserWithMetadata } from '@/lib/clerk';
+import { getCurrentUser } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user details
-    const user = await getUserWithMetadata();
+    const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'User not found' },
@@ -31,29 +31,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find or create Stripe customer
-    let customer;
+    // Find existing Stripe customer
     const customers = await stripe.customers.list({
       email: email,
       limit: 1,
     });
 
-    if (customers.data.length > 0) {
-      customer = customers.data[0];
-    } else {
-      // Create new customer if doesn't exist
-      customer = await stripe.customers.create({
-        email: email,
-        metadata: {
-          userId: userId,
-        },
-      });
+    if (customers.data.length === 0) {
+      // No customer exists yet - this is likely a free user who hasn't subscribed
+      return NextResponse.json(
+        { success: false, error: 'No billing account found. Please upgrade to a paid plan first.' },
+        { status: 400 }
+      );
     }
+
+    const customer = customers.data[0];
 
     // Create portal session
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customer.id,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings`,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/app/billing`,
     });
 
     logger.info('Stripe customer portal session created', {
@@ -69,7 +66,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     logger.error('Failed to create Stripe customer portal session', {
-      userId: auth().userId,
       error: error.message,
       stack: error.stack,
     });

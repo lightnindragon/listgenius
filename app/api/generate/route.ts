@@ -61,13 +61,30 @@ export async function POST(request: NextRequest) {
     // Extract focus keywords (ensure long-tail)
     const focusKeywords = extractFocusKeywords(sanitizedData.keywords);
     
+    // Modify prompt template to include extras if requested
+    let modifiedPromptTemplate = promptTemplate.userPromptTemplate;
+    let extrasInstructions = '';
+    
+    if (sanitizedData.extras?.pinterestCaption) {
+      extrasInstructions += '\n**Pinterest Caption:** Generate a compelling Pinterest caption (max 500 characters) that includes relevant hashtags and encourages clicks.';
+    }
+    
+    if (sanitizedData.extras?.etsyMessage) {
+      extrasInstructions += '\n**Etsy Thank You Message:** Generate a warm, personalized thank you message for buyers that includes care instructions and encourages reviews.';
+    }
+    
+    if (extrasInstructions) {
+      modifiedPromptTemplate += extrasInstructions;
+    }
+    
     // Build prompt with variables
-    const prompt = buildPrompt(promptTemplate.userPromptTemplate, {
+    const prompt = buildPrompt(modifiedPromptTemplate, {
       productName: sanitizedData.productName,
       niche: sanitizedData.niche || 'Digital Products',
       audience: sanitizedData.audience || 'Etsy shoppers',
       keywords: focusKeywords.join(', '),
       tone: sanitizedData.tone || 'Professional',
+      wordCount: sanitizedData.wordCount || 300,
       platformRules: JSON.stringify(platformRules, null, 2)
     });
 
@@ -84,13 +101,26 @@ export async function POST(request: NextRequest) {
     const parsedOutput = parseOpenAIResponse(content);
 
     // Validate and sanitize output
+    const sanitizedDescription = sanitizeInput(parsedOutput.description || '');
+    const descriptionWordCount = sanitizedDescription.split(/\s+/).filter(word => word.length > 0).length;
+    const targetWordCount = sanitizedData.wordCount || 300;
+    
+    // Check if description meets minimum word count requirement
+    if (descriptionWordCount < Math.floor(targetWordCount * 0.8)) {
+      logger.warn('Generated description is too short', {
+        targetWords: targetWordCount,
+        actualWords: descriptionWordCount,
+        userId
+      });
+    }
+    
     const validatedOutput = {
       title: sanitizeInput(parsedOutput.title || '').substring(0, 200),
-      description: sanitizeInput(parsedOutput.description || ''),
+      description: sanitizedDescription,
       tags: (parsedOutput.tags || []).slice(0, 13).map(sanitizeTag).filter(Boolean),
       materials: (parsedOutput.materials || []).slice(0, 13).map(sanitizeInput).filter(Boolean),
-      pinterestCaption: sanitizedData.extras?.pinterestCaption ? sanitizeInput(parsedOutput.pinterestCaption || '') : undefined,
-      etsyMessage: sanitizedData.extras?.etsyMessage ? sanitizeInput(parsedOutput.etsyMessage || '') : undefined,
+      pinterestCaption: sanitizedData.extras?.pinterestCaption ? sanitizeInput(parsedOutput.pinterestCaption || 'No Pinterest caption generated') : undefined,
+      etsyMessage: sanitizedData.extras?.etsyMessage ? sanitizeInput(parsedOutput.etsyMessage || 'No Etsy message generated') : undefined,
     };
 
     // Ensure exactly 13 tags and materials
@@ -108,7 +138,8 @@ export async function POST(request: NextRequest) {
     await trackGenerationCreated(userId, {
       model: usedModel,
       tokensUsed,
-      wordCount: validatedOutput.description.split(' ').length,
+      wordCount: descriptionWordCount,
+      targetWordCount: targetWordCount,
       hasExtras: !!(validatedOutput.pinterestCaption || validatedOutput.etsyMessage)
     });
 

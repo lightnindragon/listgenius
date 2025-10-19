@@ -12,8 +12,11 @@ export interface UserMetadata {
   dailyGenCount: number;
   dailyRewriteCount: number;
   lastResetDate: string; // ISO 8601 format (YYYY-MM-DD)
-  tone?: string; // e.g., "Professional", "Casual", "Luxury"
-  niche?: string;
+  preferences?: {
+    tone?: string; // e.g., "Professional", "Casual", "Luxury"
+    niche?: string;
+    audience?: string;
+  };
   etsyTokens?: string; // encrypted JSON string
   etsyShopId?: string;
   etsyRateLimitCount?: number; // track Etsy API calls

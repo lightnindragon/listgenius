@@ -57,6 +57,7 @@ class Analytics {
     model: string;
     tokensUsed: number;
     wordCount: number;
+    targetWordCount?: number;
     hasExtras: boolean;
   }): Promise<void> {
     await this.trackEvent(userId, AnalyticsEvents.GENERATION_CREATED, metadata);
@@ -168,6 +169,7 @@ export async function trackGenerationCreated(userId: string, metadata?: {
   model: string;
   tokensUsed: number;
   wordCount: number;
+  targetWordCount?: number;
   hasExtras: boolean;
 }): Promise<void> {
   return analytics.trackGenerationCreated(userId, metadata);

@@ -27,6 +27,10 @@ export const generateRequestSchema = z.object({
     .max(50, 'Tone must be less than 50 characters')
     .transform(val => val.trim())
     .optional(),
+  wordCount: z.number()
+    .min(200, 'Minimum 200 words required')
+    .max(600, 'Maximum 600 words allowed')
+    .optional(),
   extras: z.object({
     pinterestCaption: z.boolean().optional(),
     etsyMessage: z.boolean().optional()
