@@ -38,7 +38,8 @@ export async function GET() {
       plan: response.plan,
       dailyGenCount: response.dailyGenCount,
       dailyRewriteCount: response.dailyRewriteCount,
-      metadata: metadata
+      metadata: metadata,
+      fullUserMetadata: JSON.stringify(metadata, null, 2)
     });
 
     return NextResponse.json(response);

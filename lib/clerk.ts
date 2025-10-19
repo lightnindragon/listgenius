@@ -116,7 +116,12 @@ export async function incrementDailyGenCount(userId: string): Promise<number> {
     // Actually update the user metadata
     await user.update({ publicMetadata: updatedMetadata });
     
-    logger.info('Daily generation count incremented', { userId, count: newCount });
+    logger.info('Daily generation count incremented', { 
+      userId, 
+      count: newCount, 
+      previousCount: currentCount,
+      updatedMetadata: JSON.stringify(updatedMetadata, null, 2)
+    });
     return newCount;
   } catch (error) {
     logger.error('Failed to increment daily generation count', { userId, error });
