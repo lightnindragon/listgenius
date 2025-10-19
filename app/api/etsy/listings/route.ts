@@ -4,6 +4,7 @@ import { EtsyClient } from '@/lib/etsy';
 import { getEtsyConnection } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
 import { EtsyAPIError } from '@/lib/errors';
+import { mockListings } from '@/lib/mock-etsy-data';
 
 /**
  * Get shop listings
@@ -20,7 +21,9 @@ export async function GET(request: NextRequest) {
 
     // Get Etsy connection
     const etsyConnection = await getEtsyConnection(userId);
-    if (!etsyConnection.hasTokens) {
+    const isMockMode = process.env.ETSY_MOCK_MODE === "true";
+    
+    if (!etsyConnection.hasTokens && !isMockMode) {
       return NextResponse.json(
         { success: false, error: 'Etsy not connected' },
         { status: 400 }
@@ -43,8 +46,20 @@ export async function GET(request: NextRequest) {
       isSandbox 
     });
 
-    // Get listings from Etsy
-    const listings = await etsyClient.getShopListings(limit, offset);
+    let listings;
+    
+    if (isMockMode) {
+      // Use mock listings data
+      listings = {
+        results: mockListings.slice(offset, offset + limit),
+        count: mockListings.length,
+        params: { limit, offset, shop_id: etsyConnection.shopId || 'mock_shop_id' }
+      };
+      logger.info('Using mock listings data', { userId, isMockMode, count: listings.count });
+    } else {
+      // Get listings from Etsy
+      listings = await etsyClient.getShopListings(limit, offset);
+    }
 
     return NextResponse.json({
       success: true,

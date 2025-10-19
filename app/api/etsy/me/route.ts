@@ -4,6 +4,7 @@ import { EtsyClient } from '@/lib/etsy';
 import { getEtsyConnection } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
 import { EtsyAPIError } from '@/lib/errors';
+import { mockShopInfo } from '@/lib/mock-etsy-data';
 
 /**
  * Get Etsy connection status and shop information
@@ -20,8 +21,9 @@ export async function GET(request: NextRequest) {
 
     // Get Etsy connection
     const etsyConnection = await getEtsyConnection(userId);
+    const isMockMode = process.env.ETSY_MOCK_MODE === "true";
     
-    if (!etsyConnection.hasTokens) {
+    if (!etsyConnection.hasTokens && !isMockMode) {
       return NextResponse.json({
         success: true,
         connected: false,
@@ -34,8 +36,16 @@ export async function GET(request: NextRequest) {
     const isSandbox = etsyClient.getSandboxMode();
 
     try {
-      // Get shop information to verify connection is still valid
-      const shopInfo = await etsyClient.getShopInfo();
+      let shopInfo;
+      
+      if (isMockMode) {
+        // Use mock shop data
+        shopInfo = mockShopInfo;
+        logger.info('Using mock shop data', { userId, isMockMode });
+      } else {
+        // Get shop information to verify connection is still valid
+        shopInfo = await etsyClient.getShopInfo();
+      }
 
       logger.info('Etsy connection verified', { 
         userId, 

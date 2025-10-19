@@ -4,6 +4,7 @@ import { EtsyClient } from '@/lib/etsy';
 import { updateEtsyConnection } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
 import { EtsyAPIError } from '@/lib/errors';
+import { mockOAuthResponse, mockShopInfo } from '@/lib/mock-etsy-data';
 import { z } from 'zod';
 
 const oauthCallbackSchema = z.object({
@@ -48,12 +49,24 @@ export async function GET(request: NextRequest) {
 
     const { code: authCode } = validation.data;
 
-    // Exchange code for tokens
-    const tokenData = await EtsyClient.exchangeCodeForToken(authCode);
-    
-    // Get shop information
-    const etsyClient = new EtsyClient(tokenData.access_token, tokenData.refresh_token);
-    const shopInfo = await etsyClient.getShopInfo();
+    // Check if we're in mock mode
+    const isMockMode = process.env.ETSY_MOCK_MODE === "true";
+
+    let tokenData, shopInfo;
+
+    if (isMockMode) {
+      // Use mock data for testing
+      tokenData = mockOAuthResponse;
+      shopInfo = mockShopInfo;
+      logger.info('Using mock Etsy OAuth data', { userId, isMockMode });
+    } else {
+      // Exchange code for tokens
+      tokenData = await EtsyClient.exchangeCodeForToken(authCode);
+      
+      // Get shop information
+      const etsyClient = new EtsyClient(tokenData.access_token, tokenData.refresh_token);
+      shopInfo = await etsyClient.getShopInfo();
+    }
 
     // Store tokens and shop info in user metadata
     const tokensData = {
@@ -112,8 +125,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Etsy is configured
-    if (!process.env.ETSY_CLIENT_ID || !process.env.ETSY_REDIRECT_URI) {
+    const isMockMode = process.env.ETSY_MOCK_MODE === "true";
+
+    // Check if Etsy is configured (skip check in mock mode)
+    if (!isMockMode && (!process.env.ETSY_CLIENT_ID || !process.env.ETSY_REDIRECT_URI)) {
       return NextResponse.json(
         { success: false, error: 'Etsy integration not configured' },
         { status: 500 }
@@ -121,10 +136,16 @@ export async function POST(request: NextRequest) {
     }
 
     const isSandbox = process.env.ETSY_SANDBOX_MODE === "true";
-    logger.info('Initiating Etsy OAuth flow', { userId, isSandbox });
+    logger.info('Initiating Etsy OAuth flow', { userId, isSandbox, isMockMode });
 
-    // Generate authorization URL
-    const authUrl = EtsyClient.getAuthorizationUrl();
+    let authUrl;
+    if (isMockMode) {
+      // Generate mock OAuth URL that redirects back to our callback
+      authUrl = `${process.env.ETSY_REDIRECT_URI}?code=mock_authorization_code_12345&state=mock_state`;
+    } else {
+      // Generate authorization URL
+      authUrl = EtsyClient.getAuthorizationUrl();
+    }
 
     return NextResponse.json({
       success: true,

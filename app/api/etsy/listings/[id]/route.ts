@@ -4,6 +4,7 @@ import { EtsyClient } from '@/lib/etsy';
 import { getEtsyConnection } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
 import { EtsyAPIError } from '@/lib/errors';
+import { mockListings } from '@/lib/mock-etsy-data';
 import { z } from 'zod';
 
 const updateListingSchema = z.object({
@@ -44,7 +45,9 @@ export async function GET(
 
     // Get Etsy connection
     const etsyConnection = await getEtsyConnection(userId);
-    if (!etsyConnection.hasTokens) {
+    const isMockMode = process.env.ETSY_MOCK_MODE === "true";
+    
+    if (!etsyConnection.hasTokens && !isMockMode) {
       return NextResponse.json(
         { success: false, error: 'Etsy not connected' },
         { status: 400 }
@@ -62,8 +65,22 @@ export async function GET(
       isSandbox 
     });
 
-    // Get listing from Etsy
-    const listing = await etsyClient.getListing(listingId);
+    let listing;
+    
+    if (isMockMode) {
+      // Use mock listing data
+      listing = mockListings.find(l => l.listing_id === listingId);
+      if (!listing) {
+        return NextResponse.json(
+          { success: false, error: 'Listing not found' },
+          { status: 404 }
+        );
+      }
+      logger.info('Using mock listing data', { userId, isMockMode, listingId });
+    } else {
+      // Get listing from Etsy
+      listing = await etsyClient.getListing(listingId);
+    }
 
     return NextResponse.json({
       success: true,
@@ -119,7 +136,9 @@ export async function PUT(
 
     // Get Etsy connection
     const etsyConnection = await getEtsyConnection(userId);
-    if (!etsyConnection.hasTokens) {
+    const isMockMode = process.env.ETSY_MOCK_MODE === "true";
+    
+    if (!etsyConnection.hasTokens && !isMockMode) {
       return NextResponse.json(
         { success: false, error: 'Etsy not connected' },
         { status: 400 }
@@ -150,8 +169,30 @@ export async function PUT(
       isSandbox 
     });
 
-    // Update listing on Etsy
-    const updatedListing = await etsyClient.updateListing(listingId, updateData);
+    let updatedListing;
+    
+    if (isMockMode) {
+      // Use mock update response
+      const mockListing = mockListings.find(l => l.listing_id === listingId);
+      if (!mockListing) {
+        return NextResponse.json(
+          { success: false, error: 'Listing not found' },
+          { status: 404 }
+        );
+      }
+      
+      // Simulate update by merging data
+      updatedListing = {
+        ...mockListing,
+        ...updateData,
+        last_modified_timestamp: Math.floor(Date.now() / 1000)
+      };
+      
+      logger.info('Using mock listing update', { userId, isMockMode, listingId, updateFields: Object.keys(updateData) });
+    } else {
+      // Update listing on Etsy
+      updatedListing = await etsyClient.updateListing(listingId, updateData);
+    }
 
     return NextResponse.json({
       success: true,
