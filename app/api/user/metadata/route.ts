@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
     }
 
-    const user = await getCurrentUser(userId);
+    const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
@@ -33,7 +33,13 @@ export async function GET() {
       }
     };
 
-    logger.info('User metadata retrieved', { userId, plan: response.plan });
+    logger.info('User metadata retrieved', { 
+      userId, 
+      plan: response.plan,
+      dailyGenCount: response.dailyGenCount,
+      dailyRewriteCount: response.dailyRewriteCount,
+      metadata: metadata
+    });
 
     return NextResponse.json(response);
   } catch (error) {
