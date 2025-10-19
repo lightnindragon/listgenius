@@ -77,7 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
               className={cn(
                 'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-brand-50 text-brand-700 border border-brand-200'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
               )}
             >
@@ -99,7 +99,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
               className={cn(
                 'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-brand-50 text-brand-700 border border-brand-200'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
               )}
             >
