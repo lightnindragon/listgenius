@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { EtsyClient } from '@/lib/etsy';
-import { getUserEtsyConnection } from '@/lib/clerk';
+import { getEtsyConnection } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
 import { mockListings } from '@/lib/mock-etsy-data';
 
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(url.searchParams.get('limit') || '25');
     const offset = parseInt(url.searchParams.get('offset') || '0');
 
-    const etsyConnection = await getUserEtsyConnection(userId);
+    const etsyConnection = await getEtsyConnection(userId);
     const isMockMode = process.env.ETSY_MOCK_MODE === "true";
 
     if (!etsyConnection.hasTokens && !isMockMode) {
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const etsyConnection = await getUserEtsyConnection(userId);
+    const etsyConnection = await getEtsyConnection(userId);
     const isMockMode = process.env.ETSY_MOCK_MODE === "true";
 
     if (!etsyConnection.hasTokens && !isMockMode) {
