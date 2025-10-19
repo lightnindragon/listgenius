@@ -28,7 +28,6 @@ interface UserPreferences {
 interface UserMetadata {
   plan: string;
   dailyGenCount: number;
-  dailyRewriteCount: number;
   preferences?: UserPreferences;
   etsyConnection?: {
     shopId: string;
@@ -72,10 +71,10 @@ export default function SettingsPage() {
   ];
 
   const planFeatures = {
-    free: { generations: 3, rewrites: 3, etsyConnection: false },
-    pro: { generations: 50, rewrites: 25, etsyConnection: true },
-    business: { generations: 200, rewrites: 100, etsyConnection: true },
-    agency: { generations: '∞', rewrites: '∞', etsyConnection: true }
+    free: { generations: 3, etsyConnection: false },
+    pro: { generations: 50, etsyConnection: true },
+    business: { generations: 200, etsyConnection: true },
+    agency: { generations: '∞', etsyConnection: true }
   };
 
   useEffect(() => {
@@ -400,10 +399,6 @@ export default function SettingsPage() {
                     <span className="font-medium text-gray-900">{features.generations}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-800">Daily Rewrites:</span>
-                    <span className="font-medium text-gray-900">{features.rewrites}</span>
-                  </div>
-                  <div className="flex justify-between">
                     <span className="text-gray-800">Etsy Connection:</span>
                     <span className="font-medium text-gray-900">{features.etsyConnection ? 'Yes' : 'No'}</span>
                   </div>
@@ -415,10 +410,6 @@ export default function SettingsPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-800">Generations:</span>
                       <span className="font-medium text-gray-900">{userMetadata?.dailyGenCount || 0}/{typeof features.generations === 'number' ? features.generations : '∞'}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-800">Rewrites:</span>
-                      <span className="font-medium text-gray-900">{userMetadata?.dailyRewriteCount || 0}/{typeof features.rewrites === 'number' ? features.rewrites : '∞'}</span>
                     </div>
                   </div>
                 </div>

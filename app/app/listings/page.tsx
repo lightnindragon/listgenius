@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { RewriteModal } from '@/components/RewriteModal';
 import { Link, RefreshCw, Edit, Plus, ExternalLink, Eye, DollarSign, Calendar } from 'lucide-react';
 import { getBaseUrl } from '@/lib/utils';
 
@@ -45,6 +46,8 @@ export default function ListingsPage() {
   const [etsyConnection, setEtsyConnection] = useState<EtsyConnection>({ connected: false });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [rewriteModalOpen, setRewriteModalOpen] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<EtsyListing | null>(null);
 
   // Load Etsy connection status
   useEffect(() => {
@@ -105,6 +108,22 @@ export default function ListingsPage() {
     setRefreshing(true);
     await loadListings();
     setRefreshing(false);
+  };
+
+  const handleRewriteClick = (listing: EtsyListing) => {
+    setSelectedListing(listing);
+    setRewriteModalOpen(true);
+  };
+
+  const handleRewriteModalClose = () => {
+    setRewriteModalOpen(false);
+    setSelectedListing(null);
+  };
+
+  const handleListingUpdated = () => {
+    // Refresh listings when a listing is updated
+    loadListings();
+    emitTopRightToast('Listing updated successfully!', 'success');
   };
 
   const handleConnectEtsy = async () => {
@@ -339,12 +358,10 @@ export default function ListingsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          asChild
+                          onClick={() => handleRewriteClick(listing)}
                         >
-                          <Link href={`/app/rewrite?listingId=${listing.listing_id}`}>
-                            <Edit className="h-3 w-3 mr-1" />
-                            Rewrite
-                          </Link>
+                          <Edit className="h-3 w-3 mr-1" />
+                          Rewrite
                         </Button>
                         <Button
                           size="sm"
@@ -370,6 +387,14 @@ export default function ListingsPage() {
         </div>
       </div>
       <TopRightToast />
+      
+      {/* Rewrite Modal */}
+      <RewriteModal
+        isOpen={rewriteModalOpen}
+        onClose={handleRewriteModalClose}
+        listing={selectedListing}
+        onListingUpdated={handleListingUpdated}
+      />
     </DashboardLayout>
   );
 }

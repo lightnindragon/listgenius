@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
   FileText, 
-  RefreshCw, 
   List, 
   User, 
   Settings, 
@@ -29,11 +28,6 @@ const navigation = [
     name: 'Generator',
     href: '/app/generator',
     icon: FileText,
-  },
-  {
-    name: 'Rewrite',
-    href: '/app/rewrite',
-    icon: RefreshCw,
   },
   {
     name: 'My Listings',

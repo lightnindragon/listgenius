@@ -5,7 +5,6 @@ import { useUser } from '@clerk/nextjs';
 import { getBaseUrl } from '@/lib/utils';
 import { 
   FileText, 
-  RefreshCw, 
   Calendar, 
   TrendingUp,
   Zap,
@@ -15,7 +14,6 @@ import {
 interface UserMetadata {
   plan: string;
   dailyGenCount: number;
-  dailyRewriteCount: number;
   lastResetDate: string;
 }
 
@@ -51,15 +49,15 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className }) => 
   const getPlanFeatures = (plan: string) => {
     switch (plan) {
       case 'free':
-        return { dailyGenerations: 3, dailyRewrites: 1, name: 'Free' };
+        return { dailyGenerations: 3, name: 'Free' };
       case 'pro':
-        return { dailyGenerations: 50, dailyRewrites: 20, name: 'Pro' };
+        return { dailyGenerations: 50, name: 'Pro' };
       case 'business':
-        return { dailyGenerations: 200, dailyRewrites: 100, name: 'Business' };
+        return { dailyGenerations: 200, name: 'Business' };
       case 'agency':
-        return { dailyGenerations: 1000, dailyRewrites: 500, name: 'Agency' };
+        return { dailyGenerations: 1000, name: 'Agency' };
       default:
-        return { dailyGenerations: 3, dailyRewrites: 1, name: 'Free' };
+        return { dailyGenerations: 3, name: 'Free' };
     }
   };
 
@@ -92,14 +90,6 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className }) => 
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       description: 'AI listings generated'
-    },
-    {
-      title: 'Rewrites Today',
-      value: `${userMetadata?.dailyRewriteCount || 0}/${features.dailyRewrites}`,
-      icon: RefreshCw,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      description: 'Listings rewritten'
     },
     {
       title: 'Current Plan',
@@ -147,7 +137,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className }) => 
       {/* Quick Actions */}
       <div className="bg-white p-6 rounded-lg border border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <a 
             href="/app/generator" 
             className="flex items-center p-4 rounded-lg border border-gray-200 hover:border-brand-300 hover:bg-brand-50 transition-colors group"
@@ -160,24 +150,13 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className }) => 
           </a>
           
           <a 
-            href="/app/rewrite" 
-            className="flex items-center p-4 rounded-lg border border-gray-200 hover:border-brand-300 hover:bg-brand-50 transition-colors group"
-          >
-            <RefreshCw className="h-5 w-5 text-brand-600 mr-3 group-hover:text-brand-700" />
-            <div>
-              <p className="font-medium text-gray-900">Rewrite Existing</p>
-              <p className="text-sm text-gray-600">Instead of creating a new listing, rewrite an existing one</p>
-            </div>
-          </a>
-          
-          <a 
             href="/app/listings" 
             className="flex items-center p-4 rounded-lg border border-gray-200 hover:border-brand-300 hover:bg-brand-50 transition-colors group"
           >
             <TrendingUp className="h-5 w-5 text-brand-600 mr-3 group-hover:text-brand-700" />
             <div>
               <p className="font-medium text-gray-900">Manage Listings</p>
-              <p className="text-sm text-gray-600">View and edit your Etsy listings</p>
+              <p className="text-sm text-gray-600">View, edit, and rewrite your Etsy listings</p>
             </div>
           </a>
         </div>
