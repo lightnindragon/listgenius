@@ -83,7 +83,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ className, onCreateListingClic
             return (
               <button
                 key={item.name}
-                onClick={onCreateListingClick}
+                onClick={() => {
+                  console.log('Create Listing button clicked in sidebar');
+                  if (onCreateListingClick) {
+                    onCreateListingClick();
+                  } else {
+                    console.error('onCreateListingClick is not defined');
+                  }
+                }}
                 className={cn(
                   'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors w-full text-left',
                   'text-gray-700 hover:bg-gray-50 hover:text-gray-900'

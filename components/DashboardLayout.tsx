@@ -9,6 +9,8 @@ interface DashboardLayoutProps {
 }
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, onCreateListingClick }) => {
+  console.log('DashboardLayout - onCreateListingClick:', typeof onCreateListingClick);
+  
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
