@@ -140,7 +140,7 @@ export default function AppPage() {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout onCreateListingClick={() => {}}>
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 flex items-center justify-between">
           <div>

@@ -216,7 +216,7 @@ export default function ListingsPage() {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout onCreateListingClick={() => {}}>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">

@@ -11,11 +11,13 @@ import {
   User, 
   Settings, 
   CreditCard,
-  BarChart3
+  BarChart3,
+  Plus
 } from 'lucide-react';
 
 interface SidebarProps {
   className?: string;
+  onCreateListingClick?: () => void;
 }
 
 const navigation = [
@@ -28,6 +30,12 @@ const navigation = [
     name: 'Generator',
     href: '/app/generator',
     icon: FileText,
+  },
+  {
+    name: 'Create Listing',
+    href: '#create-listing',
+    icon: Plus,
+    isModal: true,
   },
   {
     name: 'My Listings',
@@ -54,7 +62,7 @@ const bottomNavigation = [
   },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ className, onCreateListingClick }) => {
   const pathname = usePathname();
 
   return (
@@ -70,6 +78,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
       <nav className="flex-1 px-4 py-6 space-y-2">
         {navigation.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/app' && pathname.startsWith(item.href));
+          
+          if (item.isModal) {
+            return (
+              <button
+                key={item.name}
+                onClick={onCreateListingClick}
+                className={cn(
+                  'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors w-full text-left',
+                  'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                <span>{item.name}</span>
+              </button>
+            );
+          }
+          
           return (
             <Link
               key={item.name}

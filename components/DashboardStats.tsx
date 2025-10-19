@@ -6,10 +6,8 @@ import { getBaseUrl } from '@/lib/utils';
 import { 
   FileText, 
   Calendar, 
-  TrendingUp,
   Zap,
-  Clock,
-  Plus
+  Clock
 } from 'lucide-react';
 import { CreateListingModal } from './CreateListingModal';
 
@@ -21,13 +19,14 @@ interface UserMetadata {
 
 interface DashboardStatsProps {
   className?: string;
+  createModalOpen: boolean;
+  setCreateModalOpen: (open: boolean) => void;
 }
 
-export const DashboardStats: React.FC<DashboardStatsProps> = ({ className }) => {
+export const DashboardStats: React.FC<DashboardStatsProps> = ({ className, createModalOpen, setCreateModalOpen }) => {
   const { user } = useUser();
   const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
   const [loading, setLoading] = useState(true);
-  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -142,44 +141,6 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className }) => 
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a 
-            href="/app/generator" 
-            className="flex items-center p-4 rounded-lg border border-gray-200 hover:border-brand-300 hover:bg-brand-50 transition-colors group"
-          >
-            <FileText className="h-5 w-5 text-brand-600 mr-3 group-hover:text-brand-700" />
-            <div>
-              <p className="font-medium text-gray-900">Generate New Listing</p>
-              <p className="text-sm text-gray-600">Create AI-powered Etsy listings</p>
-            </div>
-          </a>
-          
-          <button
-            onClick={() => setCreateModalOpen(true)}
-            className="flex items-center p-4 rounded-lg border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-colors group text-left w-full"
-          >
-            <Plus className="h-5 w-5 text-green-600 mr-3 group-hover:text-green-700" />
-            <div>
-              <p className="font-medium text-gray-900">Create & Publish</p>
-              <p className="text-sm text-gray-600">Generate and publish directly to Etsy</p>
-            </div>
-          </button>
-          
-          <a 
-            href="/app/listings" 
-            className="flex items-center p-4 rounded-lg border border-gray-200 hover:border-brand-300 hover:bg-brand-50 transition-colors group"
-          >
-            <TrendingUp className="h-5 w-5 text-brand-600 mr-3 group-hover:text-brand-700" />
-            <div>
-              <p className="font-medium text-gray-900">Manage Listings</p>
-              <p className="text-sm text-gray-600">View, edit, and rewrite your Etsy listings</p>
-            </div>
-          </a>
-        </div>
-      </div>
 
       {/* Create Listing Modal */}
       <CreateListingModal
