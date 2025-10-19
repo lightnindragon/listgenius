@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { EtsyClient } from '@/lib/etsy-client';
+import { EtsyClient } from '@/lib/etsy';
 import { getUserEtsyConnection } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
 import { mockListings } from '@/lib/mock-etsy-data';
