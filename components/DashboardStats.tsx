@@ -28,6 +28,8 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className, creat
   const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
   const [loading, setLoading] = useState(true);
 
+  console.log('DashboardStats render - createModalOpen:', createModalOpen);
+
   useEffect(() => {
     loadUserData();
   }, []);

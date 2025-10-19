@@ -8,6 +8,7 @@ export default function DashboardPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const handleCreateListingClick = () => {
+    console.log('Create listing button clicked');
     setCreateModalOpen(true);
   };
 
