@@ -150,11 +150,9 @@ export default function SettingsPage() {
         emitTopRightToast('Preferences saved successfully!', 'success');
         loadUserData();
       } else {
-        toast.error('Failed to save preferences');
         emitTopRightToast('Failed to save preferences', 'error');
       }
     } catch (error) {
-      toast.error('Network error. Please try again.');
       emitTopRightToast('Network error. Please try again.', 'error');
     } finally {
       setLoading(false);
@@ -173,10 +171,10 @@ export default function SettingsPage() {
         const data = await response.json();
         window.location.href = data.authUrl;
       } else {
-        toast.error('Failed to initiate Etsy connection');
+        emitTopRightToast('Failed to initiate Etsy connection', 'error');
       }
     } catch (error) {
-      toast.error('Network error. Please try again.');
+      emitTopRightToast('Network error. Please try again.', 'error');
     }
   };
 
@@ -191,10 +189,10 @@ export default function SettingsPage() {
         toast.success('Etsy account disconnected');
         checkEtsyConnection();
       } else {
-        toast.error('Failed to disconnect Etsy account');
+        emitTopRightToast('Failed to disconnect Etsy account', 'error');
       }
     } catch (error) {
-      toast.error('Network error. Please try again.');
+      emitTopRightToast('Network error. Please try again.', 'error');
     }
   };
 
@@ -210,10 +208,10 @@ export default function SettingsPage() {
         const data = await response.json();
         window.location.href = data.url;
       } else {
-        toast.error('Failed to open billing portal');
+        emitTopRightToast('Failed to open billing portal', 'error');
       }
     } catch (error) {
-      toast.error('Network error. Please try again.');
+      emitTopRightToast('Network error. Please try again.', 'error');
     }
   };
 
