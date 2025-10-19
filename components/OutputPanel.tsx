@@ -3,6 +3,7 @@
 import React from 'react';
 import { Container } from '@/components/ui/Container';
 import { CopyButtons } from './CopyButtons';
+import { PublishToEtsyButton } from './PublishToEtsyButton';
 import { formatWordCount } from '@/lib/utils';
 import { SkeletonText, SkeletonTitle } from '@/components/ui/Skeleton';
 
@@ -15,6 +16,7 @@ interface OutputPanelProps {
   etsyMessage?: string;
   loading?: boolean;
   className?: string;
+  listingId?: number; // For updating existing listings
 }
 
 const OutputPanel: React.FC<OutputPanelProps> = ({
@@ -25,7 +27,8 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
   pinterestCaption,
   etsyMessage,
   loading = false,
-  className
+  className,
+  listingId
 }) => {
   if (loading) {
     return (
@@ -150,16 +153,29 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
         )}
       </div>
 
-      <div className="mt-8 pt-6 border-t border-gray-200">
-        <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Copy Content</h4>
-        <CopyButtons
-          title={title}
-          description={description}
-          tags={tags}
-          materials={materials}
-          pinterestCaption={pinterestCaption}
-          etsyMessage={etsyMessage}
-        />
+      <div className="mt-8 pt-6 border-t border-gray-200 space-y-6">
+        <div>
+          <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Copy Content</h4>
+          <CopyButtons
+            title={title}
+            description={description}
+            tags={tags}
+            materials={materials}
+            pinterestCaption={pinterestCaption}
+            etsyMessage={etsyMessage}
+          />
+        </div>
+
+        <div>
+          <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Publish to Etsy</h4>
+          <PublishToEtsyButton
+            title={title || ''}
+            description={description || ''}
+            tags={tags || []}
+            materials={materials}
+            listingId={listingId}
+          />
+        </div>
       </div>
     </div>
   );

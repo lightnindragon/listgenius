@@ -32,7 +32,8 @@ const Header: React.FC = () => {
     { name: 'Pricing', href: '/pricing' },
     ...(isSignedIn ? [
       { name: 'Generator', href: '/app' },
-      { name: 'Rewrite', href: '/app/rewrite' }
+      { name: 'Rewrite', href: '/app/rewrite' },
+      { name: 'My Listings', href: '/app/listings' }
     ] : [])
   ];
 
