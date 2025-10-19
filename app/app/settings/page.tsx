@@ -78,7 +78,7 @@ export default function SettingsPage() {
       console.log('Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
-        console.log('User data loaded:', data);
+        console.log('User data loaded:', JSON.stringify(data, null, 2));
         setUserMetadata(data);
         if (data.preferences) {
           setPreferences(data.preferences);
@@ -197,7 +197,7 @@ export default function SettingsPage() {
     );
   }
 
-  const currentPlan = userMetadata.plan || 'free';
+  const currentPlan = userMetadata?.plan || 'free';
   const features = planFeatures[currentPlan as keyof typeof planFeatures];
 
   return (
@@ -404,11 +404,11 @@ export default function SettingsPage() {
                   <div className="space-y-1">
                     <div className="flex justify-between text-sm">
                       <span>Generations:</span>
-                      <span>{userMetadata.dailyGenCount}/{typeof features.generations === 'number' ? features.generations : '∞'}</span>
+                      <span>{userMetadata?.dailyGenCount || 0}/{typeof features.generations === 'number' ? features.generations : '∞'}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Rewrites:</span>
-                      <span>{userMetadata.dailyRewriteCount}/{typeof features.rewrites === 'number' ? features.rewrites : '∞'}</span>
+                      <span>{userMetadata?.dailyRewriteCount || 0}/{typeof features.rewrites === 'number' ? features.rewrites : '∞'}</span>
                     </div>
                   </div>
                 </div>
