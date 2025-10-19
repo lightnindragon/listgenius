@@ -1,4 +1,4 @@
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { auth, currentUser, clerkClient } from '@clerk/nextjs/server';
 import { UserMetadata } from '@/types';
 import { logger } from './logger';
 
@@ -113,8 +113,10 @@ export async function incrementDailyGenCount(userId: string): Promise<number> {
       lastResetDate: new Date().toISOString().split('T')[0]
     };
     
-    // Actually update the user metadata
-    await user.update({ publicMetadata: updatedMetadata });
+    // Actually update the user metadata using clerkClient
+    await clerkClient.users.updateUserMetadata(userId, {
+      publicMetadata: updatedMetadata
+    });
     
     logger.info('Daily generation count incremented', { 
       userId, 
@@ -147,8 +149,10 @@ export async function incrementDailyRewriteCount(userId: string): Promise<number
       lastResetDate: new Date().toISOString().split('T')[0]
     };
     
-    // Actually update the user metadata
-    await user.update({ publicMetadata: updatedMetadata });
+    // Actually update the user metadata using clerkClient
+    await clerkClient.users.updateUserMetadata(userId, {
+      publicMetadata: updatedMetadata
+    });
     
     logger.info('Daily rewrite count incremented', { userId, count: newCount });
     return newCount;
