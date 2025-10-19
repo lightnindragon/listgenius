@@ -148,7 +148,7 @@ export default function RewritePage() {
               <OutputPanel output={output} />
             ) : (
               <EmptyState
-                icon={RefreshCw}
+                icon={<RefreshCw className="w-full h-full" />}
                 title="No listing rewritten yet"
                 description="Fill in the form and click 'Rewrite Listing' to optimize your existing content"
               />
