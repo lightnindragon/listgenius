@@ -228,7 +228,7 @@ export const ImageManager: React.FC<ImageManagerProps> = ({
     <div className={`space-y-4 ${className}`}>
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">
-          Images ({images.length})
+          Images ({images?.length || 0})
         </h3>
         <div>
           <input

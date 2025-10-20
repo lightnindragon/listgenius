@@ -548,14 +548,16 @@ export default function ManageListingPage() {
                     Upload, reorder, and optimize your listing images. Generate AI alt text for better SEO.
                   </p>
                   
-                  <ImageManager
-                    listingId={parseInt(listingId)}
-                    initialImages={images}
-                    onImagesChange={handleImagesChange}
-                    listingTitle={listing.title}
-                    listingTags={listing.tags}
-                    listingDescription={listing.description}
-                  />
+                  {listing && (
+                    <ImageManager
+                      listingId={parseInt(listingId)}
+                      images={images || []}
+                      onImagesChange={handleImagesChange}
+                      listingTitle={listing.title}
+                      listingTags={listing.tags}
+                      listingDescription={listing.description}
+                    />
+                  )}
                 </div>
               )}
             </div>
