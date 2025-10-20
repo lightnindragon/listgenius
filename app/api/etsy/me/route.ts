@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     const etsyConnection = await getEtsyConnection(userId);
     const isMockMode = process.env.ETSY_MOCK_MODE === "true";
     
+    // In mock mode, always show as connected
     if (!etsyConnection.hasTokens && !isMockMode) {
       return NextResponse.json({
         success: true,
