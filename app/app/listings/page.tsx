@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { RewriteModal } from '@/components/RewriteModal';
-import { Link, RefreshCw, Edit, Plus, ExternalLink, Eye, DollarSign, Calendar } from 'lucide-react';
+import { Link, RefreshCw, Edit, Plus, ExternalLink, Eye, DollarSign, Calendar, Image } from 'lucide-react';
 import { getBaseUrl } from '@/lib/utils';
 
 interface EtsyListing {
@@ -330,6 +330,9 @@ export default function ListingsPage() {
                             </div>
                             <div className="text-sm text-gray-500">
                               {listing.num_favorers} favorites
+                              {listing.images && listing.images.length > 0 && (
+                                <span className="ml-2">• {listing.images.length} image{listing.images.length > 1 ? 's' : ''}</span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -362,6 +365,15 @@ export default function ListingsPage() {
                         >
                           <Edit className="h-3 w-3 mr-1" />
                           Rewrite
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRewriteClick(listing)}
+                          title="Manage images for this listing"
+                        >
+                          <Image className="h-3 w-3 mr-1" />
+                          Images
                         </Button>
                         <Button
                           size="sm"

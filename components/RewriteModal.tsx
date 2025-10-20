@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { KeywordChips } from './KeywordChips';
 import { OutputPanel } from './OutputPanel';
 import { PublishToEtsyButton } from './PublishToEtsyButton';
+import { ImageManager } from './ImageManager';
 import { emitTopRightToast } from '@/components/TopRightToast';
 import { getBaseUrl } from '@/lib/utils';
 import { X, RefreshCw } from 'lucide-react';
@@ -21,6 +22,13 @@ interface EtsyListing {
     amount: number;
     currency_code: string;
   };
+  images?: Array<{
+    listing_image_id: number;
+    url_570xN: string;
+    url_fullxfull: string;
+    rank: number;
+    alt_text?: string;
+  }>;
 }
 
 interface RewriteModalProps {
@@ -86,6 +94,7 @@ export const RewriteModal: React.FC<RewriteModalProps> = ({
   });
   const [output, setOutput] = useState<RewriteOutput | null>(null);
   const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState<any[]>([]);
 
   // Populate form when listing changes
   useEffect(() => {
@@ -100,6 +109,7 @@ export const RewriteModal: React.FC<RewriteModalProps> = ({
         keywords: listing.tags || [],
         tone: 'Professional'
       });
+      setImages(listing.images || []);
       setOutput(null);
     }
   }, [listing]);
@@ -167,6 +177,10 @@ export const RewriteModal: React.FC<RewriteModalProps> = ({
       ...prev,
       keywords: prev.keywords.filter(k => k !== keyword)
     }));
+  };
+
+  const handleImagesChange = (newImages: any[]) => {
+    setImages(newImages);
   };
 
   if (!isOpen || !listing) return null;
@@ -342,6 +356,16 @@ export const RewriteModal: React.FC<RewriteModalProps> = ({
                   loading={false}
                   listingId={listing.listing_id}
                 />
+                
+                {/* Image Management Section */}
+                <div>
+                  <h4 className="text-md font-semibold text-gray-900 mb-3">Manage Images</h4>
+                  <ImageManager
+                    listingId={listing.listing_id}
+                    initialImages={images}
+                    onImagesChange={handleImagesChange}
+                  />
+                </div>
               </div>
             ) : (
               <div className="text-center py-12">

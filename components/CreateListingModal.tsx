@@ -6,6 +6,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Textarea } from './ui/Textarea';
 import { KeywordChips } from './KeywordChips';
+import { ImageManager } from './ImageManager';
 import { Plus, X, Upload } from 'lucide-react';
 import { emitTopRightToast } from './TopRightToast';
 import { getBaseUrl } from '@/lib/utils';
@@ -49,6 +50,8 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
   const [output, setOutput] = useState<ListingOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [images, setImages] = useState<any[]>([]);
+  const [createdListingId, setCreatedListingId] = useState<number | null>(null);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,19 +123,9 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
       const result = await response.json();
 
       if (response.ok && result.success) {
+        setCreatedListingId(result.data.listing_id);
         emitTopRightToast('Listing created successfully on Etsy!', 'success');
-        onListingCreated();
-        onClose();
-        setOutput(null);
-        setFormData({
-          productName: '',
-          description: '',
-          keywords: [],
-          tone: 'Professional',
-          niche: '',
-          audience: '',
-          wordCount: 300
-        });
+        // Don't close modal yet - let user manage images
       } else {
         const errorMessage = result.error || 'Failed to create listing on Etsy';
         emitTopRightToast(errorMessage, 'error');
@@ -163,6 +156,8 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
 
   const handleClose = () => {
     setOutput(null);
+    setImages([]);
+    setCreatedListingId(null);
     setFormData({
       productName: '',
       description: '',
@@ -172,7 +167,12 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
       audience: '',
       wordCount: 300
     });
+    onListingCreated();
     onClose();
+  };
+
+  const handleImagesChange = (newImages: any[]) => {
+    setImages(newImages);
   };
 
   if (!isOpen) return null;
@@ -354,23 +354,51 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   </div>
                 </div>
 
-                <Button
-                  onClick={handlePublishToEtsy}
-                  disabled={publishing}
-                  className="w-full bg-green-600 hover:bg-green-700"
-                >
-                  {publishing ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Publishing to Etsy...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Publish to Etsy
-                    </>
-                  )}
-                </Button>
+                {!createdListingId ? (
+                  <Button
+                    onClick={handlePublishToEtsy}
+                    disabled={publishing}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    {publishing ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Publishing to Etsy...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Publish to Etsy
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-green-800 font-medium">
+                        ✓ Listing created successfully! Now add images to your listing.
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Manage Images
+                      </label>
+                      <ImageManager
+                        listingId={createdListingId}
+                        initialImages={images}
+                        onImagesChange={handleImagesChange}
+                      />
+                    </div>
+                    
+                    <Button
+                      onClick={handleClose}
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                    >
+                      Finish & Close
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
