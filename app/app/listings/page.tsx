@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { RewriteModal } from '@/components/RewriteModal';
-import { Link, RefreshCw, Edit, Plus, ExternalLink, Eye, DollarSign, Calendar, Image } from 'lucide-react';
+import { Link, RefreshCw, Edit, Plus, ExternalLink, Eye, DollarSign, Calendar, Settings } from 'lucide-react';
 import { getBaseUrl } from '@/lib/utils';
 
 interface EtsyListing {
@@ -115,13 +115,13 @@ export default function ListingsPage() {
     setRewriteModalOpen(true);
   };
 
-  const handleImagesClick = (listing: EtsyListing) => {
+  const handleManageClick = (listing: EtsyListing) => {
     if (!etsyConnection.connected) {
       emitTopRightToast('Please connect to your Etsy shop first. Go to Settings → Etsy Integration to connect.', 'error');
       return;
     }
-    setSelectedListing(listing);
-    setRewriteModalOpen(true);
+    // Navigate to the manage listing page
+    window.location.href = `/app/listings/${listing.listing_id}/manage`;
   };
 
   const handleRewriteModalClose = () => {
@@ -370,19 +370,11 @@ export default function ListingsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleRewriteClick(listing)}
+                          onClick={() => handleManageClick(listing)}
+                          title="Manage listing content and images"
                         >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Rewrite
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRewriteClick(listing)}
-                          title="Manage images for this listing"
-                        >
-                          <Image className="h-3 w-3 mr-1" />
-                          Images
+                          <Settings className="h-3 w-3 mr-1" />
+                          Manage Listing
                         </Button>
                         <Button
                           size="sm"
