@@ -115,6 +115,15 @@ export default function ListingsPage() {
     setRewriteModalOpen(true);
   };
 
+  const handleImagesClick = (listing: EtsyListing) => {
+    if (!etsyConnection.connected) {
+      emitTopRightToast('Please connect to your Etsy shop first. Go to Settings → Etsy Integration to connect.', 'error');
+      return;
+    }
+    setSelectedListing(listing);
+    setRewriteModalOpen(true);
+  };
+
   const handleRewriteModalClose = () => {
     setRewriteModalOpen(false);
     setSelectedListing(null);
