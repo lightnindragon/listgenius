@@ -94,7 +94,7 @@ export default function ListingsPage() {
       
       const data = await response.json();
       if (data.success) {
-        setListings(data.data.results || []);
+        setListings(data.data.listings || []);
       }
     } catch (error) {
       console.error('Error loading listings:', error);
