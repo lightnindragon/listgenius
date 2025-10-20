@@ -109,10 +109,10 @@ export const mockListings = [
         creation_timestamp: Math.floor(Date.now() / 1000) - 2592000,
         listing_id: 1234567890,
         rank: 1,
-        url_75x75: "https://via.placeholder.com/75x75/4A90E2/FFFFFF?text=Mug",
-        url_170x135: "https://via.placeholder.com/170x135/4A90E2/FFFFFF?text=Coffee+Mug",
-        url_570xN: "https://via.placeholder.com/570xN/4A90E2/FFFFFF?text=Handmade+Ceramic+Coffee+Mug",
-        url_fullxfull: "https://via.placeholder.com/800x800/4A90E2/FFFFFF?text=Beautiful+Ceramic+Mug+Blue+Glaze",
+        url_75x75: "https://picsum.photos/75/75?random=1",
+        url_170x135: "https://picsum.photos/170/135?random=1",
+        url_570xN: "https://picsum.photos/570/400?random=1",
+        url_fullxfull: "https://picsum.photos/800/800?random=1",
         full_height: 800,
         full_width: 800
       }
@@ -182,10 +182,10 @@ export const mockListings = [
         creation_timestamp: Math.floor(Date.now() / 1000) - 1728000,
         listing_id: 1234567891,
         rank: 1,
-        url_75x75: "https://via.placeholder.com/75x75/8B4513/FFFFFF?text=Board",
-        url_170x135: "https://via.placeholder.com/170x135/8B4513/FFFFFF?text=Cutting+Board",
-        url_570xN: "https://via.placeholder.com/570xN/8B4513/FFFFFF?text=Vintage+Wooden+Cutting+Board",
-        url_fullxfull: "https://via.placeholder.com/800x800/8B4513/FFFFFF?text=Premium+Oak+Cutting+Board",
+        url_75x75: "https://picsum.photos/75/75?random=2",
+        url_170x135: "https://picsum.photos/170/135?random=2",
+        url_570xN: "https://picsum.photos/570/400?random=2",
+        url_fullxfull: "https://picsum.photos/800/800?random=2",
         full_height: 800,
         full_width: 800
       }
@@ -255,10 +255,10 @@ export const mockListings = [
         creation_timestamp: Math.floor(Date.now() / 1000) - 864000,
         listing_id: 1234567892,
         rank: 1,
-        url_75x75: "https://via.placeholder.com/75x75/F5F5DC/000000?text=Macrame",
-        url_170x135: "https://via.placeholder.com/170x135/F5F5DC/000000?text=Wall+Hanging",
-        url_570xN: "https://via.placeholder.com/570xN/F5F5DC/000000?text=Handwoven+Macrame+Wall+Hanging",
-        url_fullxfull: "https://via.placeholder.com/800x800/F5F5DC/000000?text=Boho+Macrame+Wall+Decor",
+        url_75x75: "https://picsum.photos/75/75?random=3",
+        url_170x135: "https://picsum.photos/170/135?random=3",
+        url_570xN: "https://picsum.photos/570/400?random=3",
+        url_fullxfull: "https://picsum.photos/800/800?random=3",
         full_height: 800,
         full_width: 800
       }
