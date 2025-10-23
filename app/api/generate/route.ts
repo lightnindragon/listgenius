@@ -101,14 +101,35 @@ export async function POST(request: NextRequest) {
 
     // Validate and sanitize output
     const sanitizedDescription = sanitizeInput(parsedOutput.description || '');
+    const sanitizedTitle = sanitizeInput(parsedOutput.title || '');
+    
+    // Count words accurately
     const descriptionWordCount = sanitizedDescription.split(/\s+/).filter(word => word.length > 0).length;
+    const titleWordCount = sanitizedTitle.split(/\s+/).filter(word => word.length > 0).length;
     const targetWordCount = sanitizedData.wordCount || 300;
     
-    // Check if description meets minimum word count requirement
-    if (descriptionWordCount < Math.floor(targetWordCount * 0.8)) {
-      logger.warn('Generated description is too short', {
+    // Validate title word count (must be exactly 15 words)
+    if (titleWordCount !== 15) {
+      logger.warn('Generated title word count is incorrect', {
+        targetWords: 15,
+        actualWords: titleWordCount,
+        title: sanitizedTitle,
+        userId
+      });
+    }
+    
+    // Validate description word count (must be within 5% of target)
+    const wordCountTolerance = Math.floor(targetWordCount * 0.05);
+    const minWords = targetWordCount - wordCountTolerance;
+    const maxWords = targetWordCount + wordCountTolerance;
+    
+    if (descriptionWordCount < minWords || descriptionWordCount > maxWords) {
+      logger.warn('Generated description word count is outside tolerance', {
         targetWords: targetWordCount,
         actualWords: descriptionWordCount,
+        tolerance: wordCountTolerance,
+        minWords,
+        maxWords,
         userId
       });
     }

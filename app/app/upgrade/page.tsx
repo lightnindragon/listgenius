@@ -97,10 +97,12 @@ export default function UpgradePage() {
       price: 0,
       period: 'forever',
       features: [
-        '3 daily generations',
-        'Basic tone options',
-        'Standard support',
-        'AI-powered listing generation'
+        '6 generations per month',
+        'Professional tone only',
+        '200 words max per listing',
+        'Save generated listings',
+        'AI-powered listing generation',
+        'Standard support'
       ],
       icon: Star,
       color: 'text-gray-600',
@@ -114,12 +116,12 @@ export default function UpgradePage() {
       price: pricing.pro,
       period: 'month',
       features: [
-        '50 daily generations',
-        'All tone options',
-        'My Listings management',
-        'Templates & Drafts',
-        'Priority support',
-        'Custom preferences'
+        'Unlimited generations',
+        'All 15 tone options',
+        '200-600 words per listing',
+        'Save generated listings',
+        'AI-powered listing generation',
+        'Priority support'
       ],
       icon: Zap,
       color: 'text-blue-600',
@@ -134,14 +136,12 @@ export default function UpgradePage() {
       price: pricing.business,
       period: 'month',
       features: [
-        '200 daily generations',
-        'All tone options',
-        'My Listings management',
-        'Templates & Drafts',
-        'SEO & Keywords tools',
-        'Analytics dashboard',
-        'Priority support',
-        'Custom preferences'
+        'Unlimited generations',
+        'All 15 tone options',
+        '200-600 words per listing',
+        'Save generated listings',
+        'AI-powered listing generation',
+        'Priority support'
       ],
       icon: Building,
       color: 'text-purple-600',
@@ -362,7 +362,7 @@ export default function UpgradePage() {
                   </div>
                   <div className="text-gray-600">Generations Today</div>
                   <div className="text-sm text-gray-500 mt-1">
-                    of {currentPlan === 'free' ? '3' : currentPlan === 'pro' ? '50' : currentPlan === 'business' ? '200' : '∞'}
+                    of {currentPlan === 'free' ? '6' : '∞'}
                   </div>
                 </div>
                 <div className="text-center">
@@ -371,7 +371,7 @@ export default function UpgradePage() {
                   </div>
                   <div className="text-gray-600">Rewrites Today</div>
                   <div className="text-sm text-gray-500 mt-1">
-                    of {currentPlan === 'free' ? '3' : currentPlan === 'pro' ? '25' : currentPlan === 'business' ? '100' : '∞'}
+                    of {currentPlan === 'free' ? '1' : '∞'}
                   </div>
                 </div>
                 <div className="text-center">
@@ -403,7 +403,7 @@ export default function UpgradePage() {
               </div>
               <div>
                 <h4 className="font-semibold text-gray-900 mb-2">Is there a free trial?</h4>
-                <p className="text-gray-600">Our free plan gives you 3 generations per day to try out all features. No credit card required.</p>
+                <p className="text-gray-600">Our free plan gives you 6 generations per month to try out all features. No credit card required.</p>
               </div>
               <div>
                 <h4 className="font-semibold text-gray-900 mb-2">Can I cancel anytime?</h4>

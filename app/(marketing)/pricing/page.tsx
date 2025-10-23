@@ -69,14 +69,17 @@ export default function PricingPage() {
       period: 'forever',
       description: 'Perfect for testing and small shops',
       features: [
-        '3 daily generations',
-        'Basic tone options',
-        'Standard support',
+        '6 generations per month',
+        'Professional tone only',
+        '200 words max per listing',
+        'Save generated listings',
         'AI-powered listing generation',
+        'Standard support'
       ],
       limitations: [
-        'Limited to 3 generations per day',
-        'Basic features only'
+        'Limited to 6 generations per month',
+        'Professional tone only',
+        '200 words maximum per listing'
       ],
       cta: 'Get Started Free',
       ctaLink: '/app/generator',
@@ -89,12 +92,12 @@ export default function PricingPage() {
       period: 'per month',
       description: 'For growing businesses',
       features: [
-        '50 daily generations',
-        'All tone options',
-        'My Listings management',
-        'Templates & Drafts',
-        'Priority support',
-        'Custom preferences'
+        'Unlimited generations',
+        'All 15 tone options',
+        '200-600 words per listing',
+        'Save generated listings',
+        'AI-powered listing generation',
+        'Priority support'
       ],
       limitations: [],
       cta: 'Upgrade to Pro',
@@ -108,14 +111,12 @@ export default function PricingPage() {
       period: 'per month',
       description: 'For established businesses',
       features: [
-        '200 daily generations',
-        'All tone options',
-        'My Listings management',
-        'Templates & Drafts',
-        'SEO & Keywords tools',
-        'Analytics dashboard',
-        'Priority support',
-        'Custom preferences'
+        'Unlimited generations',
+        'All 15 tone options',
+        '200-600 words per listing',
+        'Save generated listings',
+        'AI-powered listing generation',
+        'Priority support'
       ],
       limitations: [],
       cta: 'Upgrade to Business',
@@ -250,53 +251,46 @@ export default function PricingPage() {
               </thead>
               <tbody>
                 <tr className="border-b border-gray-100">
-                  <td className="py-4 px-6 text-gray-900">Daily generations</td>
-                  <td className="text-center py-4 px-6 text-gray-600">3</td>
+                  <td className="py-4 px-6 text-gray-900">Monthly generations</td>
+                  <td className="text-center py-4 px-6 text-gray-600">6</td>
                   <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
                   <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
                   <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
                 </tr>
                 <tr className="border-b border-gray-100">
-                  <td className="py-4 px-6 text-gray-900">Daily rewrites</td>
-                  <td className="text-center py-4 px-6 text-gray-600">1</td>
-                  <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
-                  <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
-                  <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
+                  <td className="py-4 px-6 text-gray-900">Tone options</td>
+                  <td className="text-center py-4 px-6 text-gray-600">Professional only</td>
+                  <td className="text-center py-4 px-6 text-green-600">All 15 tones</td>
+                  <td className="text-center py-4 px-6 text-green-600">All 15 tones</td>
+                  <td className="text-center py-4 px-6 text-green-600">All 15 tones</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-6 text-gray-900">Word count options</td>
+                  <td className="text-center py-4 px-6 text-gray-600">200 words max</td>
+                  <td className="text-center py-4 px-6 text-green-600">200-600 words</td>
+                  <td className="text-center py-4 px-6 text-green-600">200-600 words</td>
+                  <td className="text-center py-4 px-6 text-green-600">200-600 words</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-6 text-gray-900">Save generated listings</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
                 </tr>
                 <tr className="border-b border-gray-100">
                   <td className="py-4 px-6 text-gray-900">Etsy publishing</td>
                   <td className="text-center py-4 px-6 text-red-500">❌</td>
-                  <td className="text-center py-4 px-6 text-green-600">✅</td>
-                  <td className="text-center py-4 px-6 text-green-600">✅</td>
-                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-red-500">❌</td>
+                  <td className="text-center py-4 px-6 text-red-500">❌</td>
+                  <td className="text-center py-4 px-6 text-red-500">❌</td>
                 </tr>
                 <tr className="border-b border-gray-100">
                   <td className="py-4 px-6 text-gray-900">Bulk generation</td>
                   <td className="text-center py-4 px-6 text-red-500">❌</td>
                   <td className="text-center py-4 px-6 text-red-500">❌</td>
-                  <td className="text-center py-4 px-6 text-green-600">50 items</td>
-                  <td className="text-center py-4 px-6 text-green-600">200 items</td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="py-4 px-6 text-gray-900">History tracking</td>
-                  <td className="text-center py-4 px-6 text-red-500">❌</td>
-                  <td className="text-center py-4 px-6 text-green-600">✅</td>
-                  <td className="text-center py-4 px-6 text-green-600">✅</td>
-                  <td className="text-center py-4 px-6 text-green-600">✅</td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="py-4 px-6 text-gray-900">Tone presets</td>
-                  <td className="text-center py-4 px-6 text-red-500">❌</td>
-                  <td className="text-center py-4 px-6 text-green-600">✅</td>
-                  <td className="text-center py-4 px-6 text-green-600">✅</td>
-                  <td className="text-center py-4 px-6 text-green-600">✅</td>
-                </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="py-4 px-6 text-gray-900">Multi-shop support</td>
                   <td className="text-center py-4 px-6 text-red-500">❌</td>
                   <td className="text-center py-4 px-6 text-red-500">❌</td>
-                  <td className="text-center py-4 px-6 text-red-500">❌</td>
-                  <td className="text-center py-4 px-6 text-green-600">✅</td>
                 </tr>
                 <tr>
                   <td className="py-4 px-6 text-gray-900">Support</td>

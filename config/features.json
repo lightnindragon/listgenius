@@ -1,11 +1,11 @@
 {
   "free": { 
-    "generatePerDay": 3, 
+    "generatePerDay": 6, 
     "rewritePerDay": 1, 
     "etsyPublish": false, 
     "bulkGenerate": false, 
     "bulkPublish": false, 
-    "history": false, 
+    "history": true, 
     "tonePresets": false 
   },
   "pro": { 

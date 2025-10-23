@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useUser } from '@clerk/nextjs';
-import { getBaseUrl } from '@/lib/utils';
 import { isEnabled } from '@/lib/flags';
 import { 
   FileText, 
@@ -11,12 +10,7 @@ import {
   Clock
 } from 'lucide-react';
 import { CreateListingModal } from './CreateListingModal';
-
-interface UserMetadata {
-  plan: string;
-  dailyGenCount: number;
-  lastResetDate: string;
-}
+import { useUserMetadata } from '@/contexts/UserMetadataContext';
 
 interface DashboardStatsProps {
   className?: string;
@@ -26,35 +20,14 @@ interface DashboardStatsProps {
 
 export const DashboardStats: React.FC<DashboardStatsProps> = ({ className, createModalOpen, setCreateModalOpen }) => {
   const { user } = useUser();
-  const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { userMetadata, loading, refreshUserMetadata } = useUserMetadata();
 
   console.log('DashboardStats render - createModalOpen:', createModalOpen);
-
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const baseUrl = getBaseUrl();
-      const response = await fetch(`${baseUrl}/api/user/metadata`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUserMetadata(data);
-      }
-    } catch (error) {
-      console.error('Failed to load user data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getPlanFeatures = (plan: string) => {
     switch (plan) {
       case 'free':
-        return { dailyGenerations: 3, name: 'Free' };
+        return { dailyGenerations: 6, name: 'Free' };
       case 'pro':
         return { dailyGenerations: 50, name: 'Pro' };
       case 'business':
@@ -62,13 +35,13 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className, creat
       case 'agency':
         return { dailyGenerations: 1000, name: 'Agency' };
       default:
-        return { dailyGenerations: 3, name: 'Free' };
+        return { dailyGenerations: 6, name: 'Free' };
     }
   };
 
   const handleListingCreated = () => {
     // Refresh user data to update any counters
-    loadUserData();
+    refreshUserMetadata();
   };
 
   if (loading) {

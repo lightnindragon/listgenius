@@ -32,11 +32,11 @@ export async function checkAndIncrementGeneration(): Promise<{
     return { ok: true, plan };
   }
 
-  // Free plan: 3/month
-  const cap = PLAN_CONFIG.free.maxGenerationsPerMonth as number;
-  if (used >= cap) {
-    return { ok: false, plan, remaining: 0, error: 'Free plan limit reached (3/month). Upgrade to Pro for unlimited generations.' };
-  }
+    // Free plan: 6/month
+    const cap = PLAN_CONFIG.free.maxGenerationsPerMonth as number;
+    if (used >= cap) {
+      return { ok: false, plan, remaining: 0, error: 'Free plan limit reached (6/month). Upgrade to Pro for unlimited generations.' };
+    }
 
   usage[monthKey] = used + 1;
   await clerkClient.users.updateUserMetadata(userId, { 

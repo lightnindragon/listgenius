@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Trash2, Copy, ExternalLink } from 'lucide-react';
+import { Trash2, Copy, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface SavedGeneration {
@@ -20,6 +20,7 @@ interface SavedGeneration {
 export default function SavedGenerationsClient() {
   const [generations, setGenerations] = useState<SavedGeneration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchGenerations();
@@ -79,6 +80,18 @@ export default function SavedGenerationsClient() {
     toast.success('Copied to clipboard');
   };
 
+  const toggleExpanded = (id: string) => {
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -103,89 +116,149 @@ export default function SavedGenerationsClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="space-y-4">
         <h1 className="text-2xl font-bold text-gray-900">Saved Generations</h1>
-        <Button asChild className="bg-blue-600 text-white hover:bg-blue-700">
+        <Button 
+          asChild 
+          size="sm"
+          className="bg-blue-600 text-white hover:bg-blue-700 md:size-md"
+        >
           <a href="/app/generator">Generate New</a>
         </Button>
       </div>
 
-      <div className="grid gap-6">
-        {generations.map((generation) => (
-          <Card key={generation.id} className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                  {generation.title}
-                </h3>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  {generation.tone && (
-                    <span>Tone: {generation.tone}</span>
-                  )}
-                  {generation.wordCount && (
-                    <span>Words: {generation.wordCount}</span>
-                  )}
-                  <span>Saved: {new Date(generation.createdAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(generation.description)}
-                  className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => deleteGeneration(generation.id)}
-                  className="bg-red-600 text-white hover:bg-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Description</h4>
-                <p className="text-gray-700 text-sm leading-relaxed">
-                  {generation.description}
-                </p>
-              </div>
-
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Tags</h4>
-                <div className="flex flex-wrap gap-2">
-                  {generation.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md"
+      <div className="space-y-4">
+        {generations.map((generation) => {
+          const isExpanded = expandedItems.has(generation.id);
+          
+          return (
+            <Card key={generation.id} className="overflow-hidden">
+              {/* Accordion Header */}
+              <button
+                onClick={() => toggleExpanded(generation.id)}
+                className="w-full p-4 text-left hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate">
+                      {generation.title}
+                    </h3>
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      {generation.tone && (
+                        <span>Tone: {generation.tone}</span>
+                      )}
+                      {generation.wordCount && (
+                        <span>Words: {generation.wordCount}</span>
+                      )}
+                      <span>Saved: {new Date(generation.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 ml-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyToClipboard(generation.description);
+                      }}
+                      className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                     >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Materials</h4>
-                <div className="flex flex-wrap gap-2">
-                  {generation.materials.map((material, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-md"
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteGeneration(generation.id);
+                      }}
+                      className="bg-red-600 text-white hover:bg-red-700"
                     >
-                      {material}
-                    </span>
-                  ))}
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    {isExpanded ? (
+                      <ChevronDown className="h-5 w-5 text-gray-400" />
+                    ) : (
+                      <ChevronRight className="h-5 w-5 text-gray-400" />
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </Card>
-        ))}
+              </button>
+
+              {/* Accordion Content */}
+              {isExpanded && (
+                <div className="px-4 pb-4 border-t border-gray-100">
+                  <div className="pt-4 space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-gray-900">Description</h4>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(generation.description)}
+                          className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {generation.description}
+                      </p>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-gray-900">Tags</h4>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(generation.tags.join(', '))}
+                          className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {generation.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-gray-900">Materials</h4>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(generation.materials.join(', '))}
+                          className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {generation.materials.map((material, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-md"
+                          >
+                            {material}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

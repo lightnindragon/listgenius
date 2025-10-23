@@ -296,7 +296,7 @@ When reporting issues, include:
 5. Enjoy expanded features immediately
 
 #### Plan Features
-- **Free**: 3 daily generations, basic keyword research
+- **Free**: 6 daily generations, basic keyword research
 - **Pro**: 100 daily generations, advanced tools, competitor tracking
 - **Enterprise**: Unlimited generations, API access, priority support
 

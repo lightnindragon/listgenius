@@ -23,7 +23,7 @@ export async function canGenerate(userId: string): Promise<boolean> {
     
     // Free plan: check daily limit
     const dailyCount = await getDailyGenCount(userId);
-    return dailyCount < 3;
+    return dailyCount < 6;
   } catch (error) {
     logger.error('Failed to check generation rate limit', { userId, error });
     
@@ -68,11 +68,11 @@ export async function incrementGenerationCount(userId: string): Promise<void> {
       return;
     }
     
-    // Free plan: check limit first
-    const canGenerateNow = await canGenerate(userId);
-    if (!canGenerateNow) {
-      throw new RateLimitError('Daily generation limit exceeded (3/day for free plan)');
-    }
+      // Free plan: check limit first
+      const canGenerateNow = await canGenerate(userId);
+      if (!canGenerateNow) {
+        throw new RateLimitError('Daily generation limit exceeded (6/day for free plan)');
+      }
     
     await incrementDailyGenCount(userId);
     logger.info('Generation count incremented', { userId, plan });
@@ -161,11 +161,11 @@ function checkMemoryRateLimit(userId: string, type: 'generate' | 'rewrite'): boo
     return true;
   }
   
-  if (type === 'generate') {
-    return data.genCount < 3;
-  } else {
-    return data.rewriteCount < 1;
-  }
+    if (type === 'generate') {
+      return data.genCount < 6;
+    } else {
+      return data.rewriteCount < 1;
+    }
 }
 
 function incrementMemoryRateLimit(userId: string, type: 'generate' | 'rewrite'): void {

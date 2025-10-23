@@ -93,7 +93,6 @@ export const navigationCategories: NavigationCategory[] = [
         name: 'Saved Listings',
         href: '/app/saved',
         icon: Save,
-        planRequired: 'pro', // Available for Pro and Business users
       },
       {
         name: 'Templates',

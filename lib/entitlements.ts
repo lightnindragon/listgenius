@@ -8,10 +8,10 @@ export const PLAN_CONFIG: Record<Plan, {
   canAccessRewrites: boolean;
 }> = {
   free: {
-    maxGenerationsPerMonth: 3,
+    maxGenerationsPerMonth: 6,
     allowedTones: ['Professional'],
     allowedWordCounts: [200],
-    canSaveGenerations: false,
+    canSaveGenerations: true,
     canAccessRewrites: false,
   },
   pro: {

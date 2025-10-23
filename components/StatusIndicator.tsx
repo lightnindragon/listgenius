@@ -1,98 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { AlertCircle, CheckCircle, Clock, Zap, RotateCcw } from 'lucide-react';
 import { getBaseUrl } from '@/lib/utils';
 import { isEnabled } from '@/lib/flags';
+import { useUserMetadata } from '@/contexts/UserMetadataContext';
 
 interface StatusIndicatorProps {
   className?: string;
 }
 
-interface UserMetadata {
-  plan: 'free' | 'pro' | 'business' | 'agency';
-  dailyGenCount: number;
-  dailyRewriteCount: number;
-  lastResetDate: string;
-}
-
 export function StatusIndicator({ className }: StatusIndicatorProps) {
   const { user, isSignedIn } = useUser();
-  const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { userMetadata, loading, refreshUserMetadata } = useUserMetadata();
   const [isResetting, setIsResetting] = useState(false);
-
-  // Load user metadata
-  useEffect(() => {
-    if (!isSignedIn) {
-      setLoading(false);
-      return;
-    }
-
-    const loadUserData = async () => {
-      try {
-        const baseUrl = getBaseUrl();
-        const response = await fetch(`${baseUrl}/api/user/metadata`);
-        if (response.ok) {
-          const data = await response.json();
-          setUserMetadata(data);
-        } else {
-          console.error('Failed to load user metadata:', response.status, response.statusText);
-        }
-      } catch (error) {
-        console.error('Failed to load user metadata:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUserData();
-
-    // Set up periodic refresh every 5 seconds to catch any missed updates
-    const refreshInterval = setInterval(() => {
-      loadUserData();
-    }, 5000);
-
-    // Listen for generation events to refresh data
-    const handleGenerationEvent = () => {
-      console.log('StatusIndicator: GenerationCompleted event received, refreshing data...');
-      loadUserData();
-    };
-
-    // Listen for reset events
-    const handleResetEvent = () => {
-      console.log('StatusIndicator: ResetCompleted event received, refreshing data...');
-      loadUserData();
-    };
-
-    // Listen for page visibility changes (when user comes back to tab)
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        loadUserData();
-      }
-    };
-
-    // Listen for storage events (cross-tab communication)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'generationCountUpdated' || e.key === 'resetCompleted') {
-        loadUserData();
-      }
-    };
-
-    window.addEventListener('generationCompleted', handleGenerationEvent);
-    window.addEventListener('resetCompleted', handleResetEvent);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      clearInterval(refreshInterval);
-      window.removeEventListener('generationCompleted', handleGenerationEvent);
-      window.removeEventListener('resetCompleted', handleResetEvent);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [isSignedIn]);
 
   // Reset daily counters (development only)
   const handleResetCounters = async () => {
@@ -105,12 +27,8 @@ export function StatusIndicator({ className }: StatusIndicatorProps) {
       });
 
       if (response.ok) {
-        // Reload user data
-        const metadataResponse = await fetch(`${baseUrl}/api/user/metadata`);
-        if (metadataResponse.ok) {
-          const data = await metadataResponse.json();
-          setUserMetadata(data);
-        }
+        // Refresh user data using context
+        await refreshUserMetadata();
         // Emit event to notify other components
         window.dispatchEvent(new CustomEvent('resetCompleted'));
         // Also use localStorage as backup

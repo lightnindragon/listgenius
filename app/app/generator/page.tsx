@@ -13,12 +13,14 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { ListingOutput, GenerateRequest, APIResponse } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Save, Download } from 'lucide-react';
+import { useUserMetadata } from '@/contexts/UserMetadataContext';
 
 export default function AppPage() {
   const { user, isLoaded } = useUser();
   const { toasts, toast, removeToast } = useToast();
   const [output, setOutput] = useState<ListingOutput | null>(null);
   const [loading, setLoading] = useState(false);
+  const { userMetadata, refreshUserMetadata } = useUserMetadata();
   const [userPreferences, setUserPreferences] = useState<{ tone?: string; niche?: string; audience?: string }>({});
   const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'business'>('free');
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
@@ -26,45 +28,20 @@ export default function AppPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
 
-  // Load user preferences on mount
+  // Load user preferences from context
   useEffect(() => {
-    if (user && isLoaded) {
-      loadUserPreferences();
+    if (userMetadata) {
+      setUserPreferences({
+        tone: userMetadata.preferences?.tone || 'Professional',
+        niche: userMetadata.preferences?.niche || '',
+        audience: userMetadata.preferences?.audience || ''
+      });
+      
+      // Set user plan
+      const plan = userMetadata.plan || 'free';
+      setUserPlan(plan === 'pro' || plan === 'business' ? 'pro' : 'free');
     }
-  }, [user, isLoaded]);
-
-
-  // Refresh preferences when page becomes visible (e.g., coming back from settings)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && user && isLoaded) {
-        loadUserPreferences();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [user, isLoaded]);
-
-  const loadUserPreferences = async () => {
-    try {
-      const response = await fetch('/api/user/metadata');
-      if (response.ok) {
-        const data = await response.json();
-        setUserPreferences({
-          tone: data.preferences?.tone || 'Professional',
-          niche: data.preferences?.niche || '',
-          audience: data.preferences?.audience || ''
-        });
-        
-        // Set user plan
-        const plan = data.plan || 'free';
-        setUserPlan(plan === 'pro' ? 'pro' : 'free');
-      }
-    } catch (error) {
-      console.error('Failed to load user preferences:', error);
-    }
-  };
+  }, [userMetadata]);
 
 
   const handleSaveAsTemplate = async (formData: any) => {
@@ -189,7 +166,7 @@ export default function AppPage() {
         setOutput(result.data);
         emitTopRightToast('Listing generated successfully!', 'success');
         // Refresh user data to update generation count
-        loadUserPreferences();
+        await refreshUserMetadata();
         // Emit event to notify GenerationCounter to refresh
         window.dispatchEvent(new CustomEvent('generationCompleted'));
         // Also use localStorage as backup

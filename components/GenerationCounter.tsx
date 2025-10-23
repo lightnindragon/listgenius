@@ -1,96 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useUser } from '@clerk/nextjs';
 import { AlertCircle, Clock, Zap } from 'lucide-react';
-import { getBaseUrl } from '@/lib/utils';
+import { useUserMetadata } from '@/contexts/UserMetadataContext';
 
 interface GenerationCounterProps {
   className?: string;
 }
 
-interface UserMetadata {
-  plan: 'free' | 'pro' | 'business' | 'agency';
-  dailyGenCount: number;
-  dailyRewriteCount: number;
-  lastResetDate: string;
-}
-
 export function GenerationCounter({ className }: GenerationCounterProps) {
   const { user, isSignedIn } = useUser();
-  const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Load user metadata
-  useEffect(() => {
-    if (!isSignedIn) {
-      setLoading(false);
-      return;
-    }
-
-    const loadUserData = async () => {
-      try {
-        const baseUrl = getBaseUrl();
-        const response = await fetch(`${baseUrl}/api/user/metadata`);
-        if (response.ok) {
-          const data = await response.json();
-          setUserMetadata(data);
-        } else {
-          console.error('Failed to load user metadata:', response.status, response.statusText);
-        }
-      } catch (error) {
-        console.error('Failed to load user metadata:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUserData();
-
-    // Set up periodic refresh every 5 seconds to catch any missed updates
-    const refreshInterval = setInterval(() => {
-      loadUserData();
-    }, 5000);
-
-    // Listen for generation events to refresh data
-    const handleGenerationEvent = () => {
-      console.log('GenerationCompleted event received, refreshing data...');
-      loadUserData();
-    };
-
-    // Listen for reset events
-    const handleResetEvent = () => {
-      console.log('ResetCompleted event received, refreshing data...');
-      loadUserData();
-    };
-
-    // Listen for page visibility changes (when user comes back to tab)
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        loadUserData();
-      }
-    };
-
-    // Listen for storage events (cross-tab communication)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'generationCountUpdated' || e.key === 'resetCompleted') {
-        loadUserData();
-      }
-    };
-
-    window.addEventListener('generationCompleted', handleGenerationEvent);
-    window.addEventListener('resetCompleted', handleResetEvent);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      clearInterval(refreshInterval);
-      window.removeEventListener('generationCompleted', handleGenerationEvent);
-      window.removeEventListener('resetCompleted', handleResetEvent);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [isSignedIn]);
+  const { userMetadata, loading } = useUserMetadata();
 
   // Don't show anything if not signed in or loading
   if (!isSignedIn || loading) {
@@ -116,7 +37,7 @@ export function GenerationCounter({ className }: GenerationCounterProps) {
       } else {
         return {
           icon: Clock,
-          message: `${dailyGenCount}/3 generations today`,
+          message: `${dailyGenCount}/6 generations today`,
           color: 'text-orange-600',
           bgColor: 'bg-orange-50',
           borderColor: 'border-orange-200',

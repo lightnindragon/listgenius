@@ -72,7 +72,7 @@ export default function SettingsPage() {
   ];
 
   const planFeatures = {
-    free: { generations: 3, etsyConnection: false },
+    free: { generations: 6, etsyConnection: false },
     pro: { generations: 50, etsyConnection: true },
     business: { generations: 200, etsyConnection: true },
     agency: { generations: '∞', etsyConnection: true }

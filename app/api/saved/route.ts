@@ -70,7 +70,7 @@ export async function POST(req: Request) {
     if (!PLAN_CONFIG[plan].canSaveGenerations) {
       console.log('POST /api/saved - User does not have save permissions');
       return NextResponse.json({ 
-        error: 'Saving is a Pro feature. Upgrade to save your generations.' 
+        error: 'Saving generations is not available for your current plan.' 
       }, { status: 402 });
     }
     

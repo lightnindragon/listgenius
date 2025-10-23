@@ -3,6 +3,9 @@ import { auth } from '@clerk/nextjs/server';
 import { getCurrentUser } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
 
+// Cache user metadata for 1 minute to reduce API calls
+export const revalidate = 60;
+
 export async function GET() {
   try {
     const { userId } = await auth();
