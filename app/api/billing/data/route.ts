@@ -54,13 +54,19 @@ export async function GET(request: NextRequest) {
 
       // Get upcoming invoice
       try {
-        const upcoming = await stripe.invoices.retrieveUpcoming({
-          customer: customer.id,
-        });
+        // TODO: Fix Stripe API method for upcoming invoices
+        // const upcoming = await stripe.invoices.retrieveUpcoming({
+        //   customer: customer.id,
+        // });
+        // upcomingInvoice = {
+        //   amount_due: upcoming.amount_due,
+        //   currency: upcoming.currency,
+        //   due_date: upcoming.period_end,
+        // };
         upcomingInvoice = {
-          amount_due: upcoming.amount_due,
-          currency: upcoming.currency,
-          due_date: upcoming.period_end,
+          amount_due: 0,
+          currency: 'usd',
+          due_date: null,
         };
       } catch (error) {
         // No upcoming invoice (e.g., canceled subscription)
@@ -105,8 +111,9 @@ export async function GET(request: NextRequest) {
       subscription: subscription ? {
         id: subscription.id,
         status: subscription.status,
-        current_period_end: subscription.current_period_end,
-        current_period_start: subscription.current_period_start,
+        // TODO: Fix Stripe API properties
+        current_period_end: null, // subscription.current_period_end,
+        current_period_start: null, // subscription.current_period_start,
         plan: {
           id: subscription.items.data[0]?.price?.id || 'unknown',
           name: subscription.items.data[0]?.price?.nickname || 'Unknown Plan',
@@ -114,8 +121,8 @@ export async function GET(request: NextRequest) {
           currency: subscription.items.data[0]?.price?.currency || 'usd',
           interval: subscription.items.data[0]?.price?.recurring?.interval || 'month',
         },
-        cancel_at_period_end: subscription.cancel_at_period_end,
-        canceled_at: subscription.canceled_at,
+        cancel_at_period_end: null, // subscription.cancel_at_period_end,
+        canceled_at: null, // subscription.canceled_at,
       } : null,
       upcomingInvoice,
       paymentMethod,

@@ -6,11 +6,13 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { KeywordChips } from './KeywordChips';
 import { Plus, X } from 'lucide-react';
+import { PLAN_CONFIG } from '@/lib/entitlements';
 
 interface GeneratorFormProps {
   onSubmit: (data: GenerateRequest) => void;
   loading: boolean;
   userPreferences?: { tone?: string; niche?: string; audience?: string };
+  plan: 'free' | 'pro' | 'business';
   className?: string;
 }
 
@@ -58,6 +60,7 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
   onSubmit,
   loading,
   userPreferences,
+  plan,
   className
 }) => {
   const [formData, setFormData] = useState<GenerateRequest>({
@@ -65,7 +68,8 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
     niche: userPreferences?.niche || '',
     audience: userPreferences?.audience || '',
     keywords: [],
-    tone: userPreferences?.tone || '',
+    // Force Professional tone for free users, regardless of preferences
+    tone: plan === 'free' ? 'Professional' : (userPreferences?.tone || 'Professional'),
     wordCount: 300,
     extras: {
       pinterestCaption: false,
@@ -76,16 +80,24 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
   const [keywordInput, setKeywordInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Filter options based on plan
+  const allowedTones = PLAN_CONFIG[plan].allowedTones;
+  const allowedWords = PLAN_CONFIG[plan].allowedWordCounts;
+  
+  const filteredToneOptions = toneOptions.filter(tone => allowedTones.includes(tone.value));
+  const filteredWordCountOptions = wordCountOptions.filter(option => allowedWords.includes(option.value));
+
   useEffect(() => {
     if (userPreferences) {
       setFormData(prev => ({
         ...prev,
         niche: userPreferences.niche || prev.niche,
-        tone: userPreferences.tone || prev.tone,
+        // Force Professional tone for free users, regardless of preferences
+        tone: plan === 'free' ? 'Professional' : (userPreferences.tone || prev.tone),
         audience: userPreferences.audience || prev.audience
       }));
     }
-  }, [userPreferences]);
+  }, [userPreferences, plan]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -209,21 +221,39 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
         </label>
         <div className="space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {toneOptions.map((tone) => (
-              <button
-                key={tone.value}
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, tone: tone.value }))}
-                className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-                  formData.tone === tone.value
-                    ? 'bg-blue-600 border-blue-600 text-white shadow-md'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-                }`}
-                title={tone.description}
-              >
-                {tone.value}
-              </button>
-            ))}
+            {toneOptions.map((tone) => {
+              const enabled = allowedTones.includes(tone.value);
+              const isSelected = formData.tone === tone.value;
+              const isLocked = !enabled;
+              
+              return (
+                <button
+                  key={tone.value}
+                  type="button"
+                  disabled={isLocked}
+                  onClick={() => {
+                    if (enabled) {
+                      setFormData(prev => ({ ...prev, tone: tone.value }));
+                    }
+                  }}
+                  className={`px-3 py-2 text-sm rounded-lg border transition-colors relative ${
+                    isSelected
+                      ? 'bg-blue-600 border-blue-600 text-white shadow-md'
+                      : isLocked
+                        ? 'bg-gray-100 border-2 border-dashed border-gray-300 text-gray-400 cursor-not-allowed'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                  }`}
+                  title={isLocked ? 'Pro feature - Upgrade to unlock' : tone.description}
+                >
+                  {tone.value}
+                  {isLocked && (
+                    <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs px-1 rounded-full">
+                      Pro
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
           {formData.tone && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -248,7 +278,7 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
           onChange={(e) => setFormData(prev => ({ ...prev, wordCount: parseInt(e.target.value) }))}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800"
         >
-          {wordCountOptions.map((option) => (
+          {filteredWordCountOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>

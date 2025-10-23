@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Upload, X, GripVertical, Wand2, Loader2 } from 'lucide-react';
+import { Upload, X, GripVertical, Wand2, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { emitTopRightToast } from './TopRightToast';
@@ -13,6 +13,8 @@ interface ImageData {
   url_170x135: string;
   alt_text?: string;
   rank: number;
+  width?: number;
+  height?: number;
 }
 
 interface ImageManagerProps {
@@ -38,6 +40,28 @@ export const ImageManager: React.FC<ImageManagerProps> = ({
   const [generatingAltText, setGeneratingAltText] = useState<{ [key: number]: boolean }>({});
   const [uploading, setUploading] = useState(false);
   const [editingAltText, setEditingAltText] = useState<{ [key: number]: string }>({});
+
+  // Get image size indicator
+  const getImageSizeIndicator = (image: ImageData) => {
+    if (!image.width || !image.height) {
+      return { icon: AlertCircle, color: 'text-gray-500', message: 'Size unknown' };
+    }
+    
+    const isHighRes = image.width >= 2000 || image.height >= 2000;
+    if (isHighRes) {
+      return { 
+        icon: CheckCircle, 
+        color: 'text-green-600', 
+        message: `${image.width}x${image.height} (Recommended)` 
+      };
+    } else {
+      return { 
+        icon: AlertCircle, 
+        color: 'text-orange-600', 
+        message: `${image.width}x${image.height} (Below 2000x2000)` 
+      };
+    }
+  };
 
   // Handle drag start
   const handleDragStart = (index: number) => {
@@ -301,6 +325,20 @@ export const ImageManager: React.FC<ImageManagerProps> = ({
                 <div className="mt-1 text-xs text-center text-gray-500">
                   #{image.rank}
                 </div>
+                <div className="mt-1 flex items-center justify-center space-x-1">
+                  {(() => {
+                    const sizeIndicator = getImageSizeIndicator(image);
+                    const IconComponent = sizeIndicator.icon;
+                    return (
+                      <>
+                        <IconComponent className={`h-3 w-3 ${sizeIndicator.color}`} />
+                        <span className={`text-xs ${sizeIndicator.color}`}>
+                          {sizeIndicator.message}
+                        </span>
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
 
               <div className="flex-1 space-y-2">
@@ -359,9 +397,14 @@ export const ImageManager: React.FC<ImageManagerProps> = ({
         </div>
       )}
 
-      <p className="text-xs text-gray-500">
-        Drag images to reorder. The first image will be your listing's main photo.
-      </p>
+      <div className="space-y-1">
+        <p className="text-xs text-gray-500">
+          Drag images to reorder. The first image will be your listing's main photo.
+        </p>
+        <p className="text-xs text-gray-500">
+          💡 For best results, use images that are 2000x2000 pixels or larger. This improves visibility in Etsy search.
+        </p>
+      </div>
     </div>
   );
 };

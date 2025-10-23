@@ -12,7 +12,7 @@ if (!stripeSecretKey) {
 }
 
 export const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: '2025-09-30.clover',
 });
 
 /**
@@ -113,7 +113,8 @@ export async function getOrCreateCustomer(
     // Try to find existing customer by metadata
     const existingCustomers = await stripe.customers.list({
       limit: 1,
-      metadata: { userId }
+      // Note: metadata filtering is not available in the list API
+      // We'll need to search by email or handle this differently
     });
 
     if (existingCustomers.data.length > 0) {

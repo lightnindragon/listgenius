@@ -1,0 +1,938 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Keyword {
+  id           String                @id @default(cuid())
+  term         String                @unique
+  language     String                @default("en-US")
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  metrics      KeywordMetricsDaily[]
+  rankTracking KeywordRankTracking[]
+  serpSamples  KeywordSerpSample[]
+  similar      KeywordSimilar[]      @relation("KeywordSimilar")
+  userEvents   UserKeywordEvent[]
+}
+
+model KeywordMetricsDaily {
+  id              String   @id @default(cuid())
+  keywordId       String
+  date            DateTime @default(now())
+  activeListings  Int?
+  suggestStrength Float?
+  page1ShopConc   Float?
+  titleExactRate  Float?
+  trendsIdx       Float?
+  demand          Float?
+  competition     Float?
+  seasonality     Float?
+  opportunity     Float?
+  difficulty      Int?
+  keyword         Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@unique([keywordId, date])
+  @@index([date])
+}
+
+model KeywordSimilar {
+  id          String  @id @default(cuid())
+  keywordId   String
+  relatedTerm String
+  relevance   Float
+  source      String
+  keyword     Keyword @relation("KeywordSimilar", fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@unique([keywordId, relatedTerm])
+}
+
+model KeywordSerpSample {
+  id        String   @id @default(cuid())
+  keywordId String
+  listingId BigInt
+  shopId    BigInt
+  position  Int
+  title     String
+  tags      String[]
+  price     Float
+  reviews   Int
+  sampledAt DateTime @default(now())
+  keyword   Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@index([keywordId, sampledAt])
+}
+
+model UserKeywordEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  keywordId String
+  eventType String
+  listingId BigInt?
+  createdAt DateTime @default(now())
+  keyword   Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@index([userId, eventType])
+  @@index([createdAt])
+}
+
+model CompetitorShop {
+  id        String               @id @default(cuid())
+  userId    String
+  shopId    BigInt               @unique
+  shopName  String
+  addedAt   DateTime             @default(now())
+  snapshots CompetitorSnapshot[]
+
+  @@index([userId])
+}
+
+model CompetitorSnapshot {
+  id               String         @id @default(cuid())
+  competitorShopId String
+  date             DateTime       @default(now())
+  activeListings   Int
+  avgPrice         Float?
+  estimatedSales   Int?
+  topKeywords      String[]
+  competitorShop   CompetitorShop @relation(fields: [competitorShopId], references: [id], onDelete: Cascade)
+
+  @@index([competitorShopId, date])
+}
+
+model ListingPerformance {
+  id          String   @id @default(cuid())
+  userId      String
+  listingId   BigInt
+  date        DateTime @default(now())
+  impressions Int      @default(0)
+  visits      Int      @default(0)
+  favorites   Int      @default(0)
+  orders      Int      @default(0)
+  revenue     Float    @default(0)
+
+  @@unique([userId, listingId, date])
+  @@index([userId, date])
+}
+
+model KeywordRankTracking {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId BigInt
+  keywordId String
+  date      DateTime @default(now())
+  position  Int?
+  page      Int?
+  keyword   Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId, keywordId, date])
+  @@index([userId, listingId])
+}
+
+model WeightsConfig {
+  id            String   @id @default(cuid())
+  version       String   @unique
+  isActive      Boolean  @default(false)
+  w1_suggest    Float
+  w2_serp       Float
+  w3_trends     Float
+  c1_listings   Float
+  c2_shopConc   Float
+  c3_titleExact Float
+  s1_variance   Float
+  s2_peak       Float
+  createdAt     DateTime @default(now())
+
+  @@index([isActive])
+}
+
+model InventoryItem {
+  id             String              @id @default(cuid())
+  userId         String
+  sku            String
+  title          String
+  quantity       Int                 @default(0)
+  reserved       Int                 @default(0)
+  available      Int                 @default(0)
+  lastSyncedAt   DateTime?
+  syncStatus     String              @default("synced")
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  platforms      PlatformInventory[]
+  syncConflicts  SyncConflict[]
+  syncOperations SyncOperation[]
+
+  @@unique([userId, sku])
+  @@index([userId, updatedAt])
+  @@index([syncStatus])
+}
+
+model PlatformInventory {
+  id              String        @id @default(cuid())
+  inventoryItemId String
+  platform        String
+  platformId      String
+  listingUrl      String?
+  quantity        Int           @default(0)
+  price           Float?
+  syncEnabled     Boolean       @default(true)
+  lastUpdated     DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  @@unique([inventoryItemId, platform])
+  @@index([platform, platformId])
+}
+
+model SyncOperation {
+  id              String        @id @default(cuid())
+  itemId          String
+  action          String
+  targetPlatforms String[]
+  status          String        @default("pending")
+  error           String?
+  createdAt       DateTime      @default(now())
+  completedAt     DateTime?
+  inventoryItem   InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([itemId, createdAt])
+  @@index([status, createdAt])
+}
+
+model SyncConflict {
+  id            String        @id @default(cuid())
+  userId        String
+  itemId        String
+  conflictType  String
+  conflictData  String
+  resolved      Boolean       @default(false)
+  resolution    String?
+  createdAt     DateTime      @default(now())
+  resolvedAt    DateTime?
+  inventoryItem InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([userId, resolved, createdAt])
+}
+
+model Order {
+  id              String    @id @default(cuid())
+  userId          String
+  customerId      String?
+  platform        String
+  platformOrderId String
+  orderData       String
+  status          String    @default("pending")
+  totalAmount     Float?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  customer        Customer? @relation(fields: [customerId], references: [id])
+
+  @@unique([platform, platformOrderId])
+  @@index([userId, createdAt])
+  @@index([platform, status])
+}
+
+model PlatformConnection {
+  id           String    @id @default(cuid())
+  userId       String
+  platform     String
+  accessToken  String?
+  refreshToken String?
+  shopId       String?
+  shopName     String?
+  connectedAt  DateTime  @default(now())
+  lastSyncedAt DateTime?
+  syncEnabled  Boolean   @default(true)
+
+  @@unique([userId, platform])
+  @@index([userId])
+  @@index([platform])
+}
+
+model EmailCampaign {
+  id               String    @id @default(cuid())
+  userId           String
+  name             String
+  type             String
+  status           String    @default("draft")
+  subject          String
+  content          String
+  template         String?
+  recipientSegment String
+  scheduledAt      DateTime?
+  sentAt           DateTime?
+  sent             Int       @default(0)
+  delivered        Int       @default(0)
+  opened           Int       @default(0)
+  clicked          Int       @default(0)
+  unsubscribed     Int       @default(0)
+  bounced          Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  abTests          ABTest[]
+
+  @@index([userId, status])
+  @@index([userId, type])
+  @@index([scheduledAt])
+}
+
+model EmailSequence {
+  id          String              @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  trigger     String
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  emails      EmailSequenceStep[]
+
+  @@index([userId, isActive])
+}
+
+model EmailSequenceStep {
+  id            String        @id @default(cuid())
+  sequenceId    String
+  stepOrder     Int
+  delayDays     Int           @default(0)
+  delayHours    Int           @default(0)
+  subject       String
+  content       String
+  template      String?
+  sent          Int           @default(0)
+  opened        Int           @default(0)
+  clicked       Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  emailSequence EmailSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+
+  @@index([sequenceId, stepOrder])
+}
+
+model CustomerSegment {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  description   String?
+  criteria      String
+  customerCount Int      @default(0)
+  isDynamic     Boolean  @default(true)
+  lastUpdated   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isDynamic, lastUpdated])
+}
+
+model Customer {
+  id                   String    @id @default(cuid())
+  userId               String
+  email                String
+  firstName            String?
+  lastName             String?
+  totalOrders          Int       @default(0)
+  totalSpent           Float     @default(0)
+  averageOrderValue    Float     @default(0)
+  firstOrderDate       DateTime?
+  lastOrderDate        DateTime?
+  emailOpens           Int       @default(0)
+  emailClicks          Int       @default(0)
+  lastEmailOpen        DateTime?
+  lastEmailClick       DateTime?
+  tags                 String[]
+  location             String?
+  newsletterSubscribed Boolean   @default(true)
+  isVip                Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  orders               Order[]
+
+  @@unique([userId, email])
+  @@index([userId, totalOrders])
+  @@index([userId, totalSpent])
+  @@index([userId, lastOrderDate])
+}
+
+model Message {
+  id             String    @id @default(cuid())
+  userId         String
+  recipientId    String?
+  recipientEmail String
+  type           String
+  subject        String
+  content        String
+  status         String    @default("draft")
+  scheduledAt    DateTime?
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  template       String?
+  variables      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([userId, status])
+  @@index([userId, recipientEmail])
+  @@index([scheduledAt])
+}
+
+model MessageTemplate {
+  id         String   @id @default(cuid())
+  userId     String
+  name       String
+  type       String
+  subject    String
+  content    String
+  variables  String[]
+  isDefault  Boolean  @default(false)
+  usageCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId, type])
+}
+
+model MessageCampaign {
+  id                String   @id @default(cuid())
+  userId            String
+  name              String
+  templateId        String
+  recipientSegment  String
+  scheduledAt       DateTime
+  status            String   @default("draft")
+  messagesSent      Int      @default(0)
+  messagesDelivered Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([scheduledAt])
+}
+
+model ABTest {
+  id            String        @id @default(cuid())
+  campaignId    String
+  variantA      String
+  variantB      String
+  splitRatio    Float         @default(0.5)
+  winner        String?
+  status        String        @default("running")
+  startDate     DateTime      @default(now())
+  endDate       DateTime?
+  sentA         Int           @default(0)
+  sentB         Int           @default(0)
+  openedA       Int           @default(0)
+  openedB       Int           @default(0)
+  clickedA      Int           @default(0)
+  clickedB      Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  emailCampaign EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, status])
+  @@index([startDate])
+}
+
+model FinancialReport {
+  id          String   @id @default(cuid())
+  userId      String
+  reportType  String
+  periodStart DateTime
+  periodEnd   DateTime
+  data        String
+  generatedAt DateTime @default(now())
+
+  @@index([userId, reportType])
+  @@index([userId, periodStart])
+}
+
+model TaxReport {
+  id            String   @id @default(cuid())
+  userId        String
+  taxYear       Int
+  quarter       Int?
+  totalRevenue  Float
+  totalExpenses Float
+  netIncome     Float
+  taxOwed       Float
+  deductions    String
+  generatedAt   DateTime @default(now())
+
+  @@index([userId, taxYear])
+  @@index([userId, taxYear, quarter])
+}
+
+model FinancialForecast {
+  id           String   @id @default(cuid())
+  userId       String
+  forecastType String
+  periodStart  DateTime
+  periodEnd    DateTime
+  predictions  String
+  methodology  String
+  generatedAt  DateTime @default(now())
+
+  @@index([userId, forecastType])
+  @@index([userId, periodStart])
+}
+
+model Expense {
+  id              String          @id @default(cuid())
+  userId          String
+  date            DateTime
+  amount          Float
+  currency        String          @default("USD")
+  description     String
+  categoryId      String
+  subcategory     String?
+  vendor          String
+  paymentMethodId String
+  receiptUrl      String?
+  tags            String[]
+  isBusiness      Boolean         @default(true)
+  isReimbursable  Boolean         @default(true)
+  status          String          @default("pending")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  category        ExpenseCategory @relation(fields: [categoryId], references: [id])
+  paymentMethod   PaymentMethod   @relation(fields: [paymentMethodId], references: [id])
+
+  @@index([userId, date])
+  @@index([userId, categoryId])
+  @@index([userId, status])
+}
+
+model ExpenseCategory {
+  id                   String    @id @default(cuid())
+  userId               String?
+  name                 String
+  description          String?
+  parentCategory       String?
+  taxDeductible        Boolean   @default(true)
+  defaultPaymentMethod String?
+  budget               Float?
+  color                String    @default("#3B82F6")
+  expenses             Expense[]
+
+  @@index([userId])
+}
+
+model PaymentMethod {
+  id       String    @id @default(cuid())
+  userId   String?
+  name     String
+  type     String
+  account  String?
+  isActive Boolean   @default(true)
+  expenses Expense[]
+
+  @@index([userId])
+}
+
+model ExpenseReport {
+  id                String    @id @default(cuid())
+  userId            String
+  name              String
+  periodStart       DateTime
+  periodEnd         DateTime
+  expenses          String[]
+  totalAmount       Float
+  totalReimbursable Float
+  status            String    @default("draft")
+  submittedAt       DateTime?
+  approvedAt        DateTime?
+  createdAt         DateTime  @default(now())
+
+  @@index([userId, status])
+  @@index([userId, periodStart])
+}
+
+model ExpenseBudget {
+  id         String @id @default(cuid())
+  userId     String
+  categoryId String
+  budget     Float
+  period     String
+
+  @@unique([userId, categoryId, period])
+  @@index([userId, period])
+}
+
+model ContentCalendarEvent {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  description String
+  platform    String
+  accountId   String
+  contentType String
+  status      String    @default("draft")
+  scheduledAt DateTime
+  publishedAt DateTime?
+  content     String
+  engagement  String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId, platform])
+  @@index([userId, scheduledAt])
+  @@index([status])
+}
+
+model ContentTheme {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  color       String   @default("#3B82F6")
+  tags        String[]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model ContentTemplate {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  platform    String
+  contentType String
+  template    String
+  variables   String[]
+  category    String
+  isPublic    Boolean  @default(false)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, platform])
+  @@index([userId, category])
+}
+
+model ContentBatch {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  description   String?
+  platforms     String[]
+  scheduledDate DateTime
+  status        String   @default("draft")
+  posts         String[]
+  createdAt     DateTime @default(now())
+
+  @@index([userId, scheduledDate])
+  @@index([status])
+}
+
+model InfluencerProfile {
+  id              String   @id @default(cuid())
+  userId          String
+  platform        String
+  username        String
+  displayName     String
+  bio             String?
+  profilePicture  String?
+  followers       Int      @default(0)
+  engagementRate  Float    @default(0)
+  category        String
+  location        String?
+  contactEmail    String?
+  contactPhone    String?
+  ratePerPost     Float?
+  ratePerStory    Float?
+  ratePerVideo    Float?
+  isVerified      Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  tags            String[]
+  recentPosts     Int      @default(0)
+  averageLikes    Float    @default(0)
+  averageComments Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId, platform])
+  @@index([platform, category])
+  @@index([followers])
+  @@index([engagementRate])
+}
+
+model InfluencerCampaign {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  description    String
+  budget         Float
+  startDate      DateTime
+  endDate        DateTime
+  platforms      String[]
+  targetAudience String
+  requirements   String
+  deliverables   String
+  status         String   @default("draft")
+  influencers    String
+  metrics        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([startDate, endDate])
+}
+
+model InfluencerOutreach {
+  id           String    @id @default(cuid())
+  userId       String
+  campaignId   String
+  influencerId String
+  status       String    @default("draft")
+  message      String
+  sentAt       DateTime?
+  openedAt     DateTime?
+  repliedAt    DateTime?
+  response     String?
+  createdAt    DateTime  @default(now())
+
+  @@index([userId, campaignId])
+  @@index([influencerId])
+  @@index([status])
+}
+
+model MLModel {
+  id           String   @id @default(cuid())
+  name         String
+  type         String
+  status       String   @default("training")
+  accuracy     Float    @default(0)
+  precision    Float?
+  recall       Float?
+  f1Score      Float?
+  lastTrained  DateTime @default(now())
+  features     String[]
+  parameters   String
+  trainingData String?
+  performance  String?
+
+  @@index([type])
+  @@index([status])
+}
+
+model MLTrainingData {
+  id          String   @id @default(cuid())
+  userId      String
+  listingId   String?
+  input       String
+  output      String
+  performance String?
+  timestamp   DateTime @default(now())
+
+  @@index([userId])
+  @@index([listingId])
+  @@index([timestamp])
+}
+
+model AIModelUsage {
+  id             String   @id @default(cuid())
+  userId         String
+  model          String
+  prompt         String
+  response       String
+  tokens         Int
+  cost           Float
+  processingTime Int
+  confidence     Float?
+  timestamp      DateTime @default(now())
+
+  @@index([userId])
+  @@index([model])
+  @@index([timestamp])
+}
+
+model PromptTemplate {
+  id          String   @id @default(cuid())
+  userId      String?
+  name        String
+  description String?
+  category    String
+  template    String
+  variables   String[]
+  examples    String?
+  performance String
+  isPublic    Boolean  @default(false)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, category])
+  @@index([category])
+  @@index([isPublic])
+}
+
+model PromptChain {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  steps       String
+  totalTokens Int
+  totalCost   Float
+  successRate Float
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model ForecastData {
+  id         String   @id @default(cuid())
+  userId     String
+  type       String
+  period     String
+  data       String
+  confidence Float
+  accuracy   Float?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, type])
+  @@index([type, period])
+}
+
+model MarketTrend {
+  id           String   @id @default(cuid())
+  keyword      String
+  category     String?
+  trend        Float
+  searchVolume Int
+  competition  Float
+  opportunity  Float
+  forecast     String
+  timestamp    DateTime @default(now())
+
+  @@index([keyword])
+  @@index([category])
+  @@index([timestamp])
+}
+
+model CompetitorForecast {
+  id              String   @id @default(cuid())
+  userId          String
+  competitor      String
+  predictedGrowth Float
+  marketShare     Float
+  threats         String[]
+  opportunities   String[]
+  timeline        String
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([competitor])
+}
+
+model InventoryForecast {
+  id               String   @id @default(cuid())
+  userId           String
+  product          String
+  currentStock     Int
+  predictedDemand  String
+  recommendedStock Int
+  reorderPoint     Int
+  leadTime         Int
+  confidence       Float
+  createdAt        DateTime @default(now())
+
+  @@index([userId])
+  @@index([product])
+}
+
+model PricingForecast {
+  id                   String   @id @default(cuid())
+  userId               String
+  product              String
+  currentPrice         Float
+  optimalPrice         Float
+  priceElasticity      Float
+  demandForecast       String
+  competitorPriceTrend Float
+  marketPriceTrend     Float
+  confidence           Float
+  createdAt            DateTime @default(now())
+
+  @@index([userId])
+  @@index([product])
+}
+
+model VisionAnalysis {
+  id              String   @id @default(cuid())
+  userId          String
+  imageUrl        String
+  analysis        String
+  objects         String[]
+  colors          String[]
+  text            String[]
+  emotions        String[]
+  quality         String
+  recommendations String[]
+  confidence      Float
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([imageUrl])
+}
+
+model ListingOptimization {
+  id             String   @id @default(cuid())
+  userId         String
+  listingId      String?
+  originalData   String
+  optimizedData  String
+  improvements   String[]
+  confidence     Float
+  expectedImpact Float
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([listingId])
+}
+
+model ContentRecommendation {
+  id              String   @id @default(cuid())
+  userId          String
+  type            String
+  recommendations String
+  confidence      Float
+  context         String?
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([type])
+}
+
+model RiskAssessment {
+  id            String   @id @default(cuid())
+  userId        String
+  overallRisk   String
+  risks         String
+  opportunities String
+  mitigation    String
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([overallRisk])
+}
+
+model SavedGeneration {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String
+  tags        String
+  materials   String
+  tone        String?
+  wordCount   Int?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}

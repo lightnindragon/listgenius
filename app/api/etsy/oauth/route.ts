@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     if (!validation.success) {
       logger.error('Invalid OAuth callback parameters', { 
         userId, 
-        errors: validation.error.errors 
+        errors: validation.error.issues 
       });
       return NextResponse.redirect(
         new URL('/settings?etsy_error=invalid_callback', request.url)
@@ -52,19 +52,20 @@ export async function GET(request: NextRequest) {
     // Check if we're in mock mode
     const isMockMode = process.env.ETSY_MOCK_MODE === "true";
 
-    let tokenData, shopInfo;
+    let tokenData, shopInfo, etsyClient;
 
     if (isMockMode) {
       // Use mock data for testing
       tokenData = mockOAuthResponse;
       shopInfo = mockShopInfo;
+      etsyClient = new EtsyClient('', ''); // Empty tokens for mock mode
       logger.info('Using mock Etsy OAuth data', { userId, isMockMode });
     } else {
       // Exchange code for tokens
       tokenData = await EtsyClient.exchangeCodeForToken(authCode);
       
       // Get shop information
-      const etsyClient = new EtsyClient(tokenData.access_token, tokenData.refresh_token);
+      etsyClient = new EtsyClient(tokenData.access_token, tokenData.refresh_token);
       shopInfo = await etsyClient.getShopInfo();
     }
 

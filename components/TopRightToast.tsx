@@ -20,7 +20,7 @@ export function TopRightToast({ className }: TopRightToastProps) {
   useEffect(() => {
     const handleToastEvent = (event: CustomEvent) => {
       const newToast: Toast = {
-        id: Date.now().toString(),
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         message: event.detail.message,
         type: event.detail.type,
         timestamp: Date.now()

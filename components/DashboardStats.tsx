@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { getBaseUrl } from '@/lib/utils';
+import { isEnabled } from '@/lib/flags';
 import { 
   FileText, 
   Calendar, 
@@ -145,11 +146,13 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className, creat
 
 
       {/* Create Listing Modal */}
-      <CreateListingModal
-        isOpen={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onListingCreated={handleListingCreated}
-      />
+      {isEnabled('etsy') && (
+        <CreateListingModal
+          isOpen={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          onListingCreated={handleListingCreated}
+        />
+      )}
     </div>
   );
 };

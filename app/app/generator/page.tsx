@@ -11,6 +11,8 @@ import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
 import { GenerationCounter } from '@/components/GenerationCounter';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ListingOutput, GenerateRequest, APIResponse } from '@/types';
+import { Button } from '@/components/ui/Button';
+import { Save, Download } from 'lucide-react';
 
 export default function AppPage() {
   const { user, isLoaded } = useUser();
@@ -18,6 +20,11 @@ export default function AppPage() {
   const [output, setOutput] = useState<ListingOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const [userPreferences, setUserPreferences] = useState<{ tone?: string; niche?: string; audience?: string }>({});
+  const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'business'>('free');
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
+  const [autoSaveInterval, setAutoSaveInterval] = useState<NodeJS.Timeout | null>(null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
 
   // Load user preferences on mount
   useEffect(() => {
@@ -25,6 +32,7 @@ export default function AppPage() {
       loadUserPreferences();
     }
   }, [user, isLoaded]);
+
 
   // Refresh preferences when page becomes visible (e.g., coming back from settings)
   useEffect(() => {
@@ -48,9 +56,117 @@ export default function AppPage() {
           niche: data.preferences?.niche || '',
           audience: data.preferences?.audience || ''
         });
+        
+        // Set user plan
+        const plan = data.plan || 'free';
+        setUserPlan(plan === 'pro' ? 'pro' : 'free');
       }
     } catch (error) {
       console.error('Failed to load user preferences:', error);
+    }
+  };
+
+
+  const handleSaveAsTemplate = async (formData: any) => {
+    try {
+      const response = await fetch('/api/templates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: `${formData.productName || 'Untitled'} Template`,
+          category: 'custom',
+          title: formData.productName || '',
+          description: formData.description || '',
+          tags: formData.keywords || [],
+          price: formData.price,
+          materials: formData.materials || [],
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        emitTopRightToast('Template saved successfully!', 'success');
+      } else {
+        emitTopRightToast('Failed to save template', 'error');
+      }
+    } catch (error) {
+      console.error('Failed to save template:', error);
+      emitTopRightToast('Failed to save template', 'error');
+    }
+  };
+
+  const handleSaveAsDraft = async (formData: any) => {
+    try {
+      const response = await fetch('/api/drafts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.productName || 'Untitled Draft',
+          description: formData.description || '',
+          tags: formData.keywords || [],
+          tone: formData.tone || 'Professional',
+          niche: formData.niche || '',
+          audience: formData.audience || '',
+          wordCount: formData.wordCount || 300,
+          price: formData.price,
+          materials: formData.materials || [],
+          isAutoSaved: false,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setCurrentDraftId(result.data.id);
+        setLastSaved(new Date());
+        emitTopRightToast('Draft saved successfully!', 'success');
+      } else {
+        emitTopRightToast('Failed to save draft', 'error');
+      }
+    } catch (error) {
+      console.error('Failed to save draft:', error);
+      emitTopRightToast('Failed to save draft', 'error');
+    }
+  };
+
+  const handleAutoSave = async (formData: any) => {
+    if (!user || isAutoSaving) return;
+
+    setIsAutoSaving(true);
+    try {
+      const response = await fetch('/api/drafts/auto-save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          listingData: {
+            title: formData.productName || 'Untitled Draft',
+            description: formData.description || '',
+            tags: formData.keywords || [],
+            tone: formData.tone || 'Professional',
+            niche: formData.niche || '',
+            audience: formData.audience || '',
+            wordCount: formData.wordCount || 300,
+            price: formData.price,
+            materials: formData.materials || [],
+          },
+          existingDraftId: currentDraftId,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setCurrentDraftId(result.data.draftId);
+        setLastSaved(new Date(result.data.lastSaved));
+      }
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+    } finally {
+      setIsAutoSaving(false);
     }
   };
 
@@ -150,14 +266,22 @@ export default function AppPage() {
             <p className="text-gray-600">
               Create SEO-optimized Etsy listings with AI. Generate professional titles, descriptions, and tags.
             </p>
+            {lastSaved && (
+              <p className="text-sm text-gray-500 mt-1">
+                Last saved: {lastSaved.toLocaleTimeString()}
+                {isAutoSaving && <span className="ml-2 text-blue-600">Auto-saving...</span>}
+              </p>
+            )}
           </div>
-          <GenerationCounter />
+          <div className="flex items-center space-x-4">
+            <GenerationCounter />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form Column */}
           <div className="space-y-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 Product Information
               </h2>
@@ -165,6 +289,7 @@ export default function AppPage() {
                 onSubmit={handleGenerate}
                 loading={loading}
                 userPreferences={userPreferences}
+                plan={userPlan}
               />
             </div>
           </div>
@@ -183,6 +308,7 @@ export default function AppPage() {
           </div>
         </div>
       </div>
+
 
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onClose={removeToast} />

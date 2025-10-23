@@ -8,8 +8,9 @@ export interface ListingOutput {
 }
 
 export interface UserMetadata {
-  plan: 'free' | 'pro' | 'business' | 'agency';
-  dailyGenCount: number;
+  plan: 'free' | 'pro'; // Remove business/agency
+  genUsage?: Record<string, number>; // monthKey -> count
+  dailyGenCount: number; // keep for backward compat
   dailyRewriteCount: number;
   lastResetDate: string; // ISO 8601 format (YYYY-MM-DD)
   preferences?: {
@@ -32,7 +33,7 @@ export interface EtsyListing {
   state: 'active' | 'draft' | 'inactive';
   url: string;
   images?: EtsyImage[];
-  video?: EtsyVideo;
+  videos?: EtsyVideo[];
 }
 
 export interface EtsyImage {
@@ -49,11 +50,14 @@ export interface EtsyImage {
 
 export interface EtsyVideo {
   video_id: number;
+  listing_id: number;
   url: string;
   thumbnail_url: string;
   duration: number;
   width: number;
   height: number;
+  file_size: number;
+  creation_timestamp: number;
 }
 
 export interface PlanFeatures {

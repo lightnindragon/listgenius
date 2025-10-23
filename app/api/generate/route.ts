@@ -3,8 +3,8 @@ import { auth } from '@clerk/nextjs/server';
 import { generateListing, buildPrompt, parseOpenAIResponse } from '@/lib/openai';
 import { validateRequest } from '@/lib/validators';
 import { generateRequestSchema } from '@/lib/validators';
-import { incrementGenerationCount, canGenerate } from '@/lib/rateLimit';
-import { getUserPlan } from '@/lib/clerk';
+import { checkAndIncrementGeneration } from '@/lib/generation-quota';
+import { PLAN_CONFIG } from '@/lib/entitlements';
 import { trackGenerationCreated } from '@/lib/analytics';
 import { sanitizeInput, sanitizeTag, extractFocusKeywords } from '@/lib/utils';
 import { logger } from '@/lib/logger';
@@ -24,30 +24,30 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = validateRequest(generateRequestSchema, body);
 
-    // Sanitize all user inputs
+    // Check and increment generation quota
+    const quota = await checkAndIncrementGeneration();
+    if (!quota.ok) {
+      return NextResponse.json({ 
+        success: false, 
+        error: quota.error,
+        type: 'QUOTA_EXCEEDED'
+      }, { status: 402 });
+    }
+
+    // Sanitize inputs based on plan
+    const plan = quota.plan;
+    const allowedTones = PLAN_CONFIG[plan].allowedTones;
+    const allowedWords = PLAN_CONFIG[plan].allowedWordCounts;
+
     const sanitizedData = {
       ...validatedData,
       productName: sanitizeInput(validatedData.productName),
       niche: validatedData.niche ? sanitizeInput(validatedData.niche) : undefined,
       audience: validatedData.audience ? sanitizeInput(validatedData.audience) : undefined,
       keywords: validatedData.keywords.map(sanitizeInput),
-      tone: validatedData.tone ? sanitizeInput(validatedData.tone) : undefined,
+      tone: allowedTones.includes(validatedData.tone || '') ? validatedData.tone : allowedTones[0],
+      wordCount: allowedWords.includes(validatedData.wordCount || 0) ? validatedData.wordCount : allowedWords[0],
     };
-
-    // Check rate limits
-    const canGenerateNow = await canGenerate(userId);
-    if (!canGenerateNow) {
-      const plan = await getUserPlan(userId);
-      const errorMessage = plan === 'free' 
-        ? 'Daily generation limit exceeded (3/day for free plan). Upgrade to Pro for unlimited generations.'
-        : 'Rate limit exceeded. Please try again later.';
-      
-      return NextResponse.json({ 
-        success: false, 
-        error: errorMessage,
-        type: 'RATE_LIMIT_ERROR'
-      }, { status: 429 });
-    }
 
     // Load platform rules and prompts
     const platformRulesPath = path.join(process.cwd(), 'config/platforms/etsy.json');
@@ -88,8 +88,7 @@ export async function POST(request: NextRequest) {
       platformRules: JSON.stringify(platformRules, null, 2)
     });
 
-    // Get user plan to determine model
-    const plan = await getUserPlan(userId);
+    // Get model based on plan
     const model = plan === 'free' 
       ? (process.env.OPENAI_MODEL_FREE || 'gpt-4o-mini')
       : (process.env.OPENAI_MODEL_GENERATE || 'gpt-4o');
@@ -131,8 +130,7 @@ export async function POST(request: NextRequest) {
       validatedOutput.materials.push(`material${validatedOutput.materials.length + 1}`);
     }
 
-    // Increment usage counter
-    await incrementGenerationCount(userId);
+    // Quota already incremented in checkAndIncrementGeneration
 
     // Track analytics
     await trackGenerationCreated(userId, {

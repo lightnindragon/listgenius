@@ -22,11 +22,9 @@ const PlanGate: React.FC<PlanGateProps> = ({
   const getPlanInfo = (plan: string) => {
     switch (plan) {
       case 'pro':
-        return { name: 'Pro', price: '£19/mo', color: 'text-blue-600' };
+        return { name: 'Pro', price: `$${process.env.PRO_PRICE_USD || '29'}/mo`, color: 'text-blue-600' };
       case 'business':
-        return { name: 'Business', price: '£39/mo', color: 'text-purple-600' };
-      case 'agency':
-        return { name: 'Agency', price: '£99/mo', color: 'text-gold-600' };
+        return { name: 'Business', price: `$${process.env.BUSINESS_PRICE_USD || '79'}/mo`, color: 'text-purple-600' };
       default:
         return { name: 'Free', price: '£0', color: 'text-gray-600' };
     }

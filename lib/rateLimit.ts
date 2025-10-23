@@ -17,7 +17,7 @@ export async function canGenerate(userId: string): Promise<boolean> {
     const plan = await getUserPlan(userId);
     
     // Paid plans have unlimited generation
-    if (plan === 'pro' || plan === 'business' || plan === 'agency') {
+    if (plan === 'pro' || plan === 'business') {
       return true;
     }
     
@@ -40,7 +40,7 @@ export async function canRewrite(userId: string): Promise<boolean> {
     const plan = await getUserPlan(userId);
     
     // Paid plans have unlimited rewrites
-    if (plan === 'pro' || plan === 'business' || plan === 'agency') {
+    if (plan === 'pro' || plan === 'business') {
       return true;
     }
     
@@ -201,15 +201,15 @@ export async function checkStripeCheckoutLimit(userId: string): Promise<boolean>
   const data = memoryStore.get(key) || { count: 0, firstRequest: now };
   
   // Reset if more than 15 minutes have passed
-  if (now - data.firstRequest > fifteenMinutes) {
-    memoryStore.set(key, { count: 1, firstRequest: now });
+  if ('firstRequest' in data && now - data.firstRequest > fifteenMinutes) {
+    memoryStore.set(key, { count: 1, firstRequest: now } as any);
     return true;
   }
   
   // Check if under limit
-  if (data.count < 5) {
+  if ('count' in data && data.count < 5) {
     data.count++;
-    memoryStore.set(key, data);
+    memoryStore.set(key, data as any);
     return true;
   }
   

@@ -42,91 +42,6 @@ interface Plan {
   stripePriceId?: string;
 }
 
-const plans: Plan[] = [
-  {
-    id: 'free',
-    name: 'Free',
-    description: 'Perfect for getting started',
-    price: 0,
-    period: 'forever',
-    features: [
-      '3 daily generations',
-      '3 daily rewrites',
-      'Basic tone options',
-      'Standard support'
-    ],
-    icon: Star,
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-200'
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    description: 'For growing businesses',
-    price: 29,
-    period: 'month',
-    features: [
-      '50 daily generations',
-      '25 daily rewrites',
-      'All tone options',
-      'Etsy integration',
-      'Priority support',
-      'Custom preferences'
-    ],
-    icon: Zap,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    stripePriceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID
-  },
-  {
-    id: 'business',
-    name: 'Business',
-    description: 'For established businesses',
-    price: 79,
-    period: 'month',
-    features: [
-      '200 daily generations',
-      '100 daily rewrites',
-      'All tone options',
-      'Etsy integration',
-      'Bulk operations',
-      'Advanced analytics',
-      'Priority support',
-      'Custom preferences'
-    ],
-    icon: Building,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-200',
-    popular: true,
-    stripePriceId: process.env.NEXT_PUBLIC_STRIPE_BUSINESS_PRICE_ID
-  },
-  {
-    id: 'agency',
-    name: 'Agency',
-    description: 'For agencies and large teams',
-    price: 199,
-    period: 'month',
-    features: [
-      'Unlimited generations',
-      'Unlimited rewrites',
-      'All tone options',
-      'Etsy integration',
-      'Bulk operations',
-      'Advanced analytics',
-      'White-label options',
-      'Dedicated support',
-      'Custom integrations'
-    ],
-    icon: Crown,
-    color: 'text-yellow-600',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-200',
-    stripePriceId: process.env.NEXT_PUBLIC_STRIPE_AGENCY_PRICE_ID
-  }
-];
 
 export default function UpgradePage() {
   const { user } = useUser();
@@ -134,9 +49,11 @@ export default function UpgradePage() {
   const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [pricing, setPricing] = useState<{pro: number, business: number}>({pro: 29, business: 79});
 
   useEffect(() => {
     loadUserData();
+    loadPricing();
   }, []);
 
   const loadUserData = async () => {
@@ -153,6 +70,87 @@ export default function UpgradePage() {
       setLoading(false);
     }
   };
+
+  const loadPricing = async () => {
+    try {
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/api/pricing`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setPricing({
+            pro: data.data.pro.price,
+            business: data.data.business.price
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading pricing:', error);
+    }
+  };
+
+  const plans: Plan[] = [
+    {
+      id: 'free',
+      name: 'Free',
+      description: 'Perfect for getting started',
+      price: 0,
+      period: 'forever',
+      features: [
+        '3 daily generations',
+        'Basic tone options',
+        'Standard support',
+        'AI-powered listing generation'
+      ],
+      icon: Star,
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-50',
+      borderColor: 'border-gray-200'
+    },
+    {
+      id: 'pro',
+      name: 'Pro',
+      description: 'For growing businesses',
+      price: pricing.pro,
+      period: 'month',
+      features: [
+        '50 daily generations',
+        'All tone options',
+        'My Listings management',
+        'Templates & Drafts',
+        'Priority support',
+        'Custom preferences'
+      ],
+      icon: Zap,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-200',
+      stripePriceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO
+    },
+    {
+      id: 'business',
+      name: 'Business',
+      description: 'For established businesses',
+      price: pricing.business,
+      period: 'month',
+      features: [
+        '200 daily generations',
+        'All tone options',
+        'My Listings management',
+        'Templates & Drafts',
+        'SEO & Keywords tools',
+        'Analytics dashboard',
+        'Priority support',
+        'Custom preferences'
+      ],
+      icon: Building,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      borderColor: 'border-purple-200',
+      popular: true,
+      stripePriceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUSINESS
+    }
+  ];
 
   const handleUpgrade = async (planId: string) => {
     setUpgrading(planId);
@@ -199,7 +197,7 @@ export default function UpgradePage() {
     }
   };
 
-  if (loading) {
+  if (loading || !pricing.pro || !pricing.business) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <Container>
@@ -237,7 +235,7 @@ export default function UpgradePage() {
           </div>
 
           {/* Plans Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {plans.map((plan) => {
               const isCurrentPlan = plan.id === currentPlan;
               const Icon = plan.icon;
@@ -296,49 +294,55 @@ export default function UpgradePage() {
 
                   {/* Action Button */}
                   <div className="mt-auto">
-                    {isCurrentPlan ? (
-                      plan.id === 'free' ? (
-                        <Button
-                          disabled
-                          variant="outline"
-                          className="w-full opacity-50 cursor-not-allowed"
-                        >
-                          <CreditCard className="h-4 w-4 mr-2" />
-                          No Billing (Free Plan)
-                        </Button>
-                      ) : (
-                      <Button
-                        onClick={() => window.location.href = '/app/billing'}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        Manage Billing
-                      </Button>
-                      )
-                    ) : (
-                      <Button
-                        onClick={() => handleUpgrade(plan.id)}
-                        disabled={upgrading === plan.id}
-                        className={`w-full ${
-                          plan.popular 
-                            ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                            : ''
-                        }`}
-                      >
-                        {upgrading === plan.id ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            {plan.price === 0 ? 'Get Started' : 'Upgrade'}
-                            <ArrowRight className="h-4 w-4 ml-2" />
-                          </>
-                        )}
-                      </Button>
-                    )}
+                    {(() => {
+                      if (plan.id === 'free') {
+                        return (
+                          <Button
+                            disabled
+                            variant="outline"
+                            className="w-full opacity-50 cursor-not-allowed"
+                          >
+                            <CreditCard className="h-4 w-4 mr-2" />
+                            No Billing (Free Plan)
+                          </Button>
+                        );
+                      } else if (isCurrentPlan) {
+                        return (
+                          <Button
+                            onClick={() => window.location.href = '/app/billing'}
+                            variant="outline"
+                            className="w-full"
+                          >
+                            <CreditCard className="h-4 w-4 mr-2" />
+                            Manage Billing
+                          </Button>
+                        );
+                      } else {
+                        return (
+                          <Button
+                            onClick={() => handleUpgrade(plan.id)}
+                            disabled={upgrading === plan.id}
+                            className={`w-full ${
+                              plan.popular 
+                                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                            }`}
+                          >
+                            {upgrading === plan.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                Upgrade
+                                <ArrowRight className="h-4 w-4 ml-2" />
+                              </>
+                            )}
+                          </Button>
+                        );
+                      }
+                    })()}
                   </div>
                 </div>
               );

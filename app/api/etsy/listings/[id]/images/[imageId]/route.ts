@@ -8,7 +8,7 @@ import { handleMockImageDelete, simulateDelay, mockImages } from '@/lib/mock-ets
 // PUT - Update specific image (alt text, rank)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; imageId: string } }
+  { params }: { params: Promise<{ id: string; imageId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -16,8 +16,9 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const listingId = parseInt(params.id);
-    const imageId = parseInt(params.imageId);
+    const { id, imageId: imageIdParam } = await params;
+    const listingId = parseInt(id);
+    const imageId = parseInt(imageIdParam);
     
     if (isNaN(listingId) || isNaN(imageId)) {
       return NextResponse.json({ success: false, error: 'Invalid listing or image ID' }, { status: 400 });
@@ -95,7 +96,7 @@ export async function PUT(
 // DELETE - Delete specific image
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; imageId: string } }
+  { params }: { params: Promise<{ id: string; imageId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -103,8 +104,9 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const listingId = parseInt(params.id);
-    const imageId = parseInt(params.imageId);
+    const { id, imageId: imageIdParam } = await params;
+    const listingId = parseInt(id);
+    const imageId = parseInt(imageIdParam);
     
     if (isNaN(listingId) || isNaN(imageId)) {
       return NextResponse.json({ success: false, error: 'Invalid listing or image ID' }, { status: 400 });

@@ -5,12 +5,12 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { logger } from "@/lib/logger";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2025-09-30.clover",
 });
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const sig = headers().get("stripe-signature") as string;
+  const sig = (await headers()).get("stripe-signature") as string;
 
   let event: Stripe.Event;
 
@@ -32,13 +32,12 @@ export async function POST(req: Request) {
     case "invoice.payment_succeeded":
     case "customer.subscription.updated": {
       const subscription = event.data.object as Stripe.Subscription;
-      const email =
-        subscription.customer_email ||
-        (subscription.customer as string)?.toLowerCase();
+      const customer = await stripe.customers.retrieve(subscription.customer as string);
+      const email = (customer as Stripe.Customer).email;
 
       if (email) {
         try {
-          const users = await clerkClient.users.getUserList({ emailAddress: [email] });
+          const users = await (await clerkClient()).users.getUserList({ emailAddress: [email] });
           if (users.data.length > 0) {
             const userId = users.data[0].id;
             const priceNickname = subscription.items.data[0].price.nickname;
@@ -52,7 +51,7 @@ export async function POST(req: Request) {
             
             const plan = planMapping[priceNickname || ''] || 'pro';
             
-            await clerkClient.users.updateUserMetadata(userId, {
+            await (await clerkClient()).users.updateUserMetadata(userId, {
               publicMetadata: { plan },
             });
             
@@ -73,18 +72,17 @@ export async function POST(req: Request) {
 
     case "customer.subscription.deleted": {
       const subscription = event.data.object as Stripe.Subscription;
-      const email =
-        subscription.customer_email ||
-        (subscription.customer as string)?.toLowerCase();
+      const customer = await stripe.customers.retrieve(subscription.customer as string);
+      const email = (customer as Stripe.Customer).email;
 
       if (email) {
         try {
-          const users = await clerkClient.users.getUserList({ emailAddress: [email] });
+          const users = await (await clerkClient()).users.getUserList({ emailAddress: [email] });
           if (users.data.length > 0) {
             const userId = users.data[0].id;
             
             // Downgrade to free plan on cancellation
-            await clerkClient.users.updateUserMetadata(userId, {
+            await (await clerkClient()).users.updateUserMetadata(userId, {
               publicMetadata: { plan: 'free' },
             });
             
@@ -109,7 +107,7 @@ export async function POST(req: Request) {
       
       if (email) {
         try {
-          const users = await clerkClient.users.getUserList({ emailAddress: [email] });
+          const users = await (await clerkClient()).users.getUserList({ emailAddress: [email] });
           if (users.data.length > 0) {
             const userId = users.data[0].id;
             
@@ -125,7 +123,7 @@ export async function POST(req: Request) {
             
             const plan = priceIdMapping[priceId || ''] || 'pro';
             
-            await clerkClient.users.updateUserMetadata(userId, {
+            await (await clerkClient()).users.updateUserMetadata(userId, {
               publicMetadata: { plan },
             });
             

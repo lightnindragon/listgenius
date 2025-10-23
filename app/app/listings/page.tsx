@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { RewriteModal } from '@/components/RewriteModal';
-import { Link, RefreshCw, Edit, Plus, ExternalLink, Eye, DollarSign, Calendar, Settings } from 'lucide-react';
+import { ReplaceTagsModal } from '@/components/ReplaceTagsModal';
+import { Link, RefreshCw, Edit, Plus, ExternalLink, Eye, DollarSign, Calendar, Settings, Tags } from 'lucide-react';
 import { getBaseUrl } from '@/lib/utils';
+import { isEnabled } from '@/lib/flags';
 
 interface EtsyListing {
   listing_id: number;
@@ -46,8 +47,10 @@ export default function ListingsPage() {
   const [etsyConnection, setEtsyConnection] = useState<EtsyConnection>({ connected: false });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [rewriteModalOpen, setRewriteModalOpen] = useState(false);
-  const [selectedListing, setSelectedListing] = useState<EtsyListing | null>(null);
+  const [selectedListings, setSelectedListings] = useState<Set<number>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [showReplaceTagsModal, setShowReplaceTagsModal] = useState(false);
 
   // Load Etsy connection status
   useEffect(() => {
@@ -110,10 +113,6 @@ export default function ListingsPage() {
     setRefreshing(false);
   };
 
-  const handleRewriteClick = (listing: EtsyListing) => {
-    setSelectedListing(listing);
-    setRewriteModalOpen(true);
-  };
 
   const handleManageClick = (listing: EtsyListing) => {
     if (!etsyConnection.connected) {
@@ -124,10 +123,92 @@ export default function ListingsPage() {
     window.location.href = `/app/listings/${listing.listing_id}/manage`;
   };
 
-  const handleRewriteModalClose = () => {
-    setRewriteModalOpen(false);
-    setSelectedListing(null);
+  const handleSelectListing = (listingId: number) => {
+    const newSelected = new Set(selectedListings);
+    if (newSelected.has(listingId)) {
+      newSelected.delete(listingId);
+    } else {
+      newSelected.add(listingId);
+    }
+    setSelectedListings(newSelected);
+    setSelectAll(newSelected.size === listings.length);
   };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedListings(new Set());
+    } else {
+      setSelectedListings(new Set(listings.map(listing => listing.listing_id)));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedListings.size === 0) return;
+    
+    if (!confirm(`Are you sure you want to delete ${selectedListings.size} listing(s)? This action cannot be undone.`)) {
+      return;
+    }
+
+    setBulkActionLoading(true);
+    try {
+      const promises = Array.from(selectedListings).map(listingId =>
+        fetch(`${getBaseUrl()}/api/etsy/listings/${listingId}`, {
+          method: 'DELETE'
+        })
+      );
+
+      const results = await Promise.allSettled(promises);
+      const successful = results.filter(result => result.status === 'fulfilled').length;
+      
+      if (successful > 0) {
+        emitTopRightToast(`${successful} listing(s) deleted successfully`, 'success');
+        setSelectedListings(new Set());
+        setSelectAll(false);
+        loadListings(); // Refresh the list
+      } else {
+        emitTopRightToast('Failed to delete listings', 'error');
+      }
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      emitTopRightToast('An error occurred while deleting listings', 'error');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkSectionUpdate = async (newSection: string) => {
+    if (selectedListings.size === 0) return;
+
+    setBulkActionLoading(true);
+    try {
+      const promises = Array.from(selectedListings).map(listingId =>
+        fetch(`${getBaseUrl()}/api/etsy/listings/${listingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shop_section_id: newSection })
+        })
+      );
+
+      const results = await Promise.allSettled(promises);
+      const successful = results.filter(result => result.status === 'fulfilled').length;
+      
+      if (successful > 0) {
+        emitTopRightToast(`${successful} listing(s) updated successfully`, 'success');
+        setSelectedListings(new Set());
+        setSelectAll(false);
+        loadListings(); // Refresh the list
+      } else {
+        emitTopRightToast('Failed to update listings', 'error');
+      }
+    } catch (error) {
+      console.error('Bulk section update error:', error);
+      emitTopRightToast('An error occurred while updating listings', 'error');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
 
   const handleListingUpdated = () => {
     // Refresh listings when a listing is updated
@@ -224,6 +305,29 @@ export default function ListingsPage() {
     );
   }
 
+  // Check if Etsy integration is enabled
+  if (!isEnabled('etsy')) {
+    return (
+      <DashboardLayout onCreateListingClick={() => {}}>
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Listings</h1>
+            <p className="text-gray-600">
+              Etsy integration is currently disabled.
+            </p>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-8">
+            <EmptyState
+              icon={<Settings className="h-16 w-16 text-gray-400" />}
+              title="Etsy Integration Disabled"
+              description="The Etsy integration feature is currently disabled. Contact your administrator to enable this feature."
+            />
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout onCreateListingClick={() => {}}>
       <div className="max-w-6xl mx-auto">
@@ -259,7 +363,7 @@ export default function ListingsPage() {
         </div>
 
         {/* Listings Table */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
           {loading ? (
             <div className="p-8">
               <div className="animate-pulse space-y-4">
@@ -291,10 +395,78 @@ export default function ListingsPage() {
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="space-y-4">
+              {/* Bulk Actions Toolbar */}
+              {selectedListings.size > 0 && (
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 border border-blue-200 rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <span className="text-sm font-medium text-blue-900">
+                        {selectedListings.size} listing(s) selected
+                      </span>
+                      <div className="flex space-x-2">
+                        <Button
+                          onClick={handleBulkDelete}
+                          disabled={bulkActionLoading}
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 border-red-300 hover:bg-red-50"
+                        >
+                          {bulkActionLoading ? 'Deleting...' : 'Delete Selected'}
+                        </Button>
+                        <Button
+                          onClick={() => setShowReplaceTagsModal(true)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Tags className="h-4 w-4 mr-1" />
+                          Replace Tags
+                        </Button>
+                        <select
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              handleBulkSectionUpdate(e.target.value);
+                              e.target.value = ''; // Reset selection
+                            }
+                          }}
+                          disabled={bulkActionLoading}
+                          className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">Change Section</option>
+                          <option value="jewelry">Jewelry</option>
+                          <option value="home-decor">Home Decor</option>
+                          <option value="art">Art</option>
+                          <option value="clothing">Clothing</option>
+                          <option value="accessories">Accessories</option>
+                        </select>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        setSelectedListings(new Set());
+                        setSelectAll(false);
+                      }}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      Clear Selection
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <input
+                        type="checkbox"
+                        checked={selectAll}
+                        onChange={handleSelectAll}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Listing
                     </th>
@@ -317,7 +489,15 @@ export default function ListingsPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {listings.map((listing) => (
-                    <tr key={listing.listing_id} className="hover:bg-gray-50">
+                    <tr key={listing.listing_id} className="hover:bg-gray-50 transition-colors duration-200">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={selectedListings.has(listing.listing_id)}
+                          onChange={() => handleSelectListing(listing.listing_id)}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-12 w-12">
@@ -395,19 +575,21 @@ export default function ListingsPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>
       </div>
+      
+      <ReplaceTagsModal
+        isOpen={showReplaceTagsModal}
+        onClose={() => setShowReplaceTagsModal(false)}
+        selectedListings={Array.from(selectedListings)}
+        onTagsUpdated={handleListingUpdated}
+      />
+      
       <TopRightToast />
       
-      {/* Rewrite Modal */}
-      <RewriteModal
-        isOpen={rewriteModalOpen}
-        onClose={handleRewriteModalClose}
-        listing={selectedListing}
-        onListingUpdated={handleListingUpdated}
-      />
     </DashboardLayout>
   );
 }

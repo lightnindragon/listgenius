@@ -14,7 +14,7 @@ import {
 // GET - Fetch all images for a listing
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -22,7 +22,8 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const listingId = parseInt(params.id);
+    const { id } = await params;
+    const listingId = parseInt(id);
     if (isNaN(listingId)) {
       return NextResponse.json({ success: false, error: 'Invalid listing ID' }, { status: 400 });
     }
@@ -80,7 +81,7 @@ export async function GET(
 // POST - Upload new image to listing
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -88,7 +89,8 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const listingId = parseInt(params.id);
+    const { id } = await params;
+    const listingId = parseInt(id);
     if (isNaN(listingId)) {
       return NextResponse.json({ success: false, error: 'Invalid listing ID' }, { status: 400 });
     }
@@ -157,7 +159,7 @@ export async function POST(
 // PUT - Reorder images or update image data
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -165,7 +167,8 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const listingId = parseInt(params.id);
+    const { id } = await params;
+    const listingId = parseInt(id);
     if (isNaN(listingId)) {
       return NextResponse.json({ success: false, error: 'Invalid listing ID' }, { status: 400 });
     }

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Sidebar } from '@/components/ui/Sidebar';
+import { isEnabled } from '@/lib/flags';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -11,11 +12,14 @@ interface DashboardLayoutProps {
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, onCreateListingClick }) => {
   console.log('DashboardLayout - onCreateListingClick:', typeof onCreateListingClick);
   
+  // Only pass onCreateListingClick if Etsy is enabled
+  const handleCreateListingClick = isEnabled('etsy') ? onCreateListingClick : undefined;
+  
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
       <div className="w-64 flex-shrink-0">
-        <Sidebar onCreateListingClick={onCreateListingClick} />
+        <Sidebar onCreateListingClick={handleCreateListingClick} />
       </div>
 
       {/* Main Content */}

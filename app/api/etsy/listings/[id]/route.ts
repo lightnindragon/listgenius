@@ -24,7 +24,7 @@ const updateListingSchema = z.object({
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -35,7 +35,8 @@ export async function GET(
       );
     }
 
-    const listingId = parseInt(params.id);
+    const { id } = await params;
+    const listingId = parseInt(id);
     if (isNaN(listingId)) {
       return NextResponse.json(
         { success: false, error: 'Invalid listing ID' },
@@ -91,7 +92,6 @@ export async function GET(
   } catch (error: any) {
     logger.error('Failed to fetch Etsy listing', { 
       userId: (await auth()).userId,
-      listingId: params.id,
       error: error.message,
       stack: error.stack 
     });
@@ -115,7 +115,7 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -126,7 +126,9 @@ export async function PUT(
       );
     }
 
-    const listingId = parseInt(params.id);
+    const { id } = await params;
+
+    const listingId = parseInt(id);
     if (isNaN(listingId)) {
       return NextResponse.json(
         { success: false, error: 'Invalid listing ID' },
@@ -150,7 +152,7 @@ export async function PUT(
     const validation = updateListingSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: validation.error.errors },
+        { success: false, error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -203,7 +205,6 @@ export async function PUT(
   } catch (error: any) {
     logger.error('Failed to update Etsy listing', { 
       userId: (await auth()).userId,
-      listingId: params.id,
       error: error.message,
       stack: error.stack 
     });

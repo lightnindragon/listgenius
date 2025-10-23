@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
@@ -8,6 +8,28 @@ import { Check, Star } from 'lucide-react';
 
 export default function PricingPage() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [pricing, setPricing] = useState<{pro: number, business: number}>({pro: 29, business: 79});
+
+  useEffect(() => {
+    loadPricing();
+  }, []);
+
+  const loadPricing = async () => {
+    try {
+      const response = await fetch('/api/pricing');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setPricing({
+            pro: data.data.pro.price,
+            business: data.data.business.price
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading pricing:', error);
+    }
+  };
 
   const handleCheckout = async (plan: string) => {
     setLoadingPlan(plan);
@@ -43,83 +65,61 @@ export default function PricingPage() {
   const plans = [
     {
       name: 'Free',
-      price: '£0',
+      price: '$0',
       period: 'forever',
       description: 'Perfect for testing and small shops',
       features: [
-        '3 generations per day',
-        '1 rewrite per day',
-        'Basic SEO optimization',
-        'Copy to clipboard',
-        'Community support'
+        '3 daily generations',
+        'Basic tone options',
+        'Standard support',
+        'AI-powered listing generation',
       ],
       limitations: [
-        'No Etsy publishing',
-        'No bulk operations',
-        'No history tracking'
+        'Limited to 3 generations per day',
+        'Basic features only'
       ],
       cta: 'Get Started Free',
-      ctaLink: '/app',
+      ctaLink: '/app/generator',
       ctaVariant: 'outline' as const,
       popular: false
     },
     {
       name: 'Pro',
-      price: '£19',
+      price: `$${pricing.pro}`,
       period: 'per month',
-      description: 'Best for solo sellers and small businesses',
+      description: 'For growing businesses',
       features: [
-        'Unlimited generations',
-        'Unlimited rewrites',
-        'Etsy publishing & updates',
-        'Tone presets',
-        'History tracking',
+        '50 daily generations',
+        'All tone options',
+        'My Listings management',
+        'Templates & Drafts',
         'Priority support',
-        'Advanced SEO features'
+        'Custom preferences'
       ],
       limitations: [],
-      cta: 'Start Pro Trial',
+      cta: 'Upgrade to Pro',
       ctaLink: '/api/stripe/checkout?plan=pro',
       ctaVariant: 'primary' as const,
       popular: true
     },
     {
       name: 'Business',
-      price: '£39',
+      price: `$${pricing.business}`,
       period: 'per month',
-      description: 'Perfect for power sellers and agencies',
+      description: 'For established businesses',
       features: [
-        'Everything in Pro',
-        'Bulk listing generation (50 at once)',
-        'Bulk publishing to Etsy',
-        'CSV export/import',
-        'Advanced analytics',
-        'Priority processing',
-        'Email support'
+        '200 daily generations',
+        'All tone options',
+        'My Listings management',
+        'Templates & Drafts',
+        'SEO & Keywords tools',
+        'Analytics dashboard',
+        'Priority support',
+        'Custom preferences'
       ],
       limitations: [],
-      cta: 'Start Business Trial',
+      cta: 'Upgrade to Business',
       ctaLink: '/api/stripe/checkout?plan=business',
-      ctaVariant: 'primary' as const,
-      popular: false
-    },
-    {
-      name: 'Agency',
-      price: '£99',
-      period: 'per month',
-      description: 'For agencies managing multiple shops',
-      features: [
-        'Everything in Business',
-        'Bulk operations (200 at once)',
-        'Multi-shop management',
-        '3 team seats included',
-        'White-label options',
-        'Custom integrations',
-        'Dedicated support'
-      ],
-      limitations: [],
-      cta: 'Contact Sales',
-      ctaLink: '/api/stripe/checkout?plan=agency',
       ctaVariant: 'primary' as const,
       popular: false
     }
@@ -144,7 +144,7 @@ export default function PricingPage() {
       {/* Pricing Cards */}
       <section className="py-20">
         <Container>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {plans.map((plan) => (
               <div
                 key={plan.name}

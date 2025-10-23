@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { EtsyClient } from '@/lib/etsy';
 import { getEtsyConnection } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
-import { mockListings } from '@/lib/mock-etsy-data';
+import { mockListings, mockShopData } from '@/lib/mock-etsy-data';
 
 // GET - Fetch listings
 export async function GET(request: NextRequest) {
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         };
         logger.info('Using mock listings data', { userId, isMockMode, count: listings.count });
       } else {
-        listings = await etsyClient.getShopListings(limit, offset);
+        listings = await etsyClient.getMyShopListings(limit, offset);
       }
 
       return NextResponse.json({
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, description, tags, materials, price, quantity } = body;
+    const { title, description, tags, materials, price, quantity, isDraft = false, shopSectionId } = body;
 
     if (!title || !description || !tags || !Array.isArray(tags)) {
       return NextResponse.json(
@@ -114,22 +114,55 @@ export async function POST(request: NextRequest) {
         const mockListingId = Math.floor(Math.random() * 10000) + 2000;
         newListing = {
           listing_id: mockListingId,
+          user_id: parseInt(userId, 10),
+          shop_id: mockShopData.shop_id,
           title,
           description,
-          tags,
-          materials: materials || ['Handmade'],
-          price: price || 1999,
+          state: isDraft ? 'draft' : 'active',
+          creation_tsz: Math.floor(Date.now() / 1000),
+          ending_timestamp: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60), // 30 days from now
+          original_creation_timestamp: Math.floor(Date.now() / 1000),
+          last_modified_tsz: Math.floor(Date.now() / 1000),
+          price: {
+            amount: price || 1999,
+            divisor: 100,
+            currency_code: "USD"
+          },
           quantity: quantity || 1,
-          state: 'active',
-          creation_timestamp: Math.floor(Date.now() / 1000),
-          last_modified_timestamp: Math.floor(Date.now() / 1000),
+          tags,
+          materials: materials || [],
+          shop_section_id: shopSectionId || null,
+          featured_rank: 0,
+          url: `https://www.etsy.com/listing/${mockListingId}/mock-listing`,
           views: 0,
           num_favorers: 0,
-          shop_section_id: null,
-          featured_rank: null,
-          url: `https://www.etsy.com/listing/${mockListingId}/mock-listing`,
+          processing_min: 1,
+          processing_max: 3,
+          who_made: "i_did",
+          is_supply: false,
+          when_made: "2020s",
+          item_weight: 0,
+          item_weight_unit: "lb",
+          item_length: 0,
+          item_width: 0,
+          item_height: 0,
+          item_dimensions_unit: "in",
+          is_private: false,
+          style: [],
+          non_taxable: false,
+          is_customizable: false,
+          is_digital: false,
+          file_data: "",
+          should_auto_renew: true,
+          language: "en-US",
+          has_variations: false,
+          taxonomy_id: 0,
+          taxonomy_path: [],
+          used_manufacturer: false,
+          is_vintage: false,
           images: [],
-          videos: []
+          videos: [],
+          shop_name: mockShopData.shop_name
         };
         
         // Add to mock listings array

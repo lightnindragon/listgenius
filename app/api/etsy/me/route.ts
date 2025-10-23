@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { EtsyClient } from '@/lib/etsy';
 import { getEtsyConnection } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
@@ -120,7 +120,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Clear Etsy connection data
-    await user.update({
+    const clerk = await clerkClient();
+    await clerk.users.updateUserMetadata(userId, {
       publicMetadata: {
         ...user.publicMetadata,
         etsyShopId: undefined,

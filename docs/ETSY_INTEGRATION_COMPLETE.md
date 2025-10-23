@@ -178,7 +178,7 @@ The following existing components can be enhanced with ImageManager integration:
 />
 ```
 
-### RewriteModal (components/RewriteModal.tsx)
+### Listing Management Integration
 **Current State**: Listing rewrite with AI regeneration  
 **Enhancement Needed**: Add `<ImageManager />` component  
 **Integration Point**: After line 180 (output section)
@@ -283,7 +283,7 @@ OPENAI_API_KEY=your_openai_key
 
 While the core infrastructure is complete, these enhancements can be added:
 
-1. **UI Polish**: Integrate ImageManager into CreateListingModal and RewriteModal
+1. **UI Polish**: Integrate ImageManager into CreateListingModal and listing management pages
 2. **Bulk Operations**: Multi-listing management
 3. **Advanced Analytics**: Track image performance
 4. **Video Support UI**: Full video upload/management interface
@@ -326,7 +326,7 @@ The remaining work (UI integration of ImageManager into existing modals) is opti
 
 ## Next Steps
 
-1. **Optional**: Integrate ImageManager into CreateListingModal and RewriteModal
+1. **Optional**: Integrate ImageManager into CreateListingModal and listing management pages
 2. **Optional**: Add image preview column to My Listings page
 3. **Required**: Await Etsy app approval
 4. **Required**: Test with real Etsy API once approved

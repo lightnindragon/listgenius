@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // Custom modal implementation (no Dialog component needed)
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -10,6 +10,7 @@ import { ImageManager } from './ImageManager';
 import { Plus, X, Upload } from 'lucide-react';
 import { emitTopRightToast } from './TopRightToast';
 import { getBaseUrl } from '@/lib/utils';
+import { isEnabled } from '@/lib/flags';
 import { ListingOutput } from '@/types';
 
 interface CreateListingModalProps {
@@ -45,13 +46,57 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
     tone: 'Professional',
     niche: '',
     audience: '',
-    wordCount: 300
+    wordCount: 300,
+    price: 1999, // $19.99 in cents
+    quantity: 1,
+    materials: [] as string[],
+    shopSection: '',
+    shippingProfile: '',
+    isDraft: false
   });
   const [output, setOutput] = useState<ListingOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [images, setImages] = useState<any[]>([]);
   const [createdListingId, setCreatedListingId] = useState<number | null>(null);
+  const [shopSections, setShopSections] = useState<Array<{section_id: number, title: string}>>([]);
+  const [shippingProfiles, setShippingProfiles] = useState<Array<{shipping_profile_id: number, title: string}>>([]);
+  const [loadingShopData, setLoadingShopData] = useState(false);
+
+  // Load shop sections and shipping profiles when modal opens
+  useEffect(() => {
+    if (isOpen && isEnabled('etsy')) {
+      loadShopData();
+    }
+  }, [isOpen]);
+
+  const loadShopData = async () => {
+    setLoadingShopData(true);
+    try {
+      const [sectionsResponse, shippingResponse] = await Promise.all([
+        fetch(`${getBaseUrl()}/api/etsy/shop/sections`),
+        fetch(`${getBaseUrl()}/api/etsy/shop/shipping`)
+      ]);
+
+      if (sectionsResponse.ok) {
+        const sectionsData = await sectionsResponse.json();
+        if (sectionsData.success) {
+          setShopSections(sectionsData.data || []);
+        }
+      }
+
+      if (shippingResponse.ok) {
+        const shippingData = await shippingResponse.json();
+        if (shippingData.success) {
+          setShippingProfiles(shippingData.data || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading shop data:', error);
+    } finally {
+      setLoadingShopData(false);
+    }
+  };
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,8 +160,11 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
           description: output.description,
           tags: output.tags,
           materials: output.materials,
-          price: 1999, // $19.99 default
-          quantity: 1
+          price: formData.price,
+          quantity: formData.quantity,
+          shop_section_id: formData.shopSection,
+          shipping_profile_id: formData.shippingProfile,
+          state: formData.isDraft ? 'draft' : 'active'
         })
       });
 
@@ -147,10 +195,26 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
     }
   };
 
-  const handleKeywordRemove = (keyword: string) => {
+  const handleKeywordRemove = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      keywords: prev.keywords.filter(k => k !== keyword)
+      keywords: prev.keywords.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleMaterialAdd = (material: string) => {
+    if (material.trim() && !formData.materials.includes(material.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        materials: [...prev.materials, material.trim()]
+      }));
+    }
+  };
+
+  const handleMaterialRemove = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      materials: prev.materials.filter((_, i) => i !== index)
     }));
   };
 
@@ -158,6 +222,8 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
     setOutput(null);
     setImages([]);
     setCreatedListingId(null);
+    setShopSections([]);
+    setShippingProfiles([]);
     setFormData({
       productName: '',
       description: '',
@@ -165,7 +231,13 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
       tone: 'Professional',
       niche: '',
       audience: '',
-      wordCount: 300
+      wordCount: 300,
+      price: 1999,
+      quantity: 1,
+      materials: [],
+      shopSection: '',
+      shippingProfile: '',
+      isDraft: false
     });
     onListingCreated();
     onClose();
@@ -222,9 +294,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                 </label>
                 <KeywordChips
                   keywords={formData.keywords}
-                  onAdd={handleKeywordAdd}
                   onRemove={handleKeywordRemove}
-                  placeholder="Add keywords (e.g., handmade, unique, gift)"
                 />
               </div>
 
@@ -292,6 +362,109 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   <option value={500}>500 words (Detailed)</option>
                   <option value={600}>600 words (Comprehensive)</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Materials
+                </label>
+                <KeywordChips
+                  keywords={formData.materials}
+                  onRemove={handleMaterialRemove}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Price ($)
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={(formData.price / 100).toFixed(2)}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price: Math.round(parseFloat(e.target.value || '0') * 100) }))}
+                    placeholder="19.99"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Quantity
+                  </label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                    placeholder="1"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Shop Section
+                  </label>
+                  <select
+                    value={formData.shopSection}
+                    onChange={(e) => setFormData(prev => ({ ...prev, shopSection: e.target.value }))}
+                    disabled={loadingShopData}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                  >
+                    <option value="">Select a section (optional)</option>
+                    {shopSections.map((section) => (
+                      <option key={section.section_id} value={section.section_id}>
+                        {section.title}
+                      </option>
+                    ))}
+                    {shopSections.length === 0 && !loadingShopData && (
+                      <option value="" disabled>No sections available</option>
+                    )}
+                  </select>
+                  {loadingShopData && (
+                    <p className="text-xs text-gray-500 mt-1">Loading sections...</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Shipping Profile
+                  </label>
+                  <select
+                    value={formData.shippingProfile}
+                    onChange={(e) => setFormData(prev => ({ ...prev, shippingProfile: e.target.value }))}
+                    disabled={loadingShopData}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                  >
+                    <option value="">Select shipping profile (optional)</option>
+                    {shippingProfiles.map((profile) => (
+                      <option key={profile.shipping_profile_id} value={profile.shipping_profile_id}>
+                        {profile.title}
+                      </option>
+                    ))}
+                    {shippingProfiles.length === 0 && !loadingShopData && (
+                      <option value="" disabled>No profiles available</option>
+                    )}
+                  </select>
+                  {loadingShopData && (
+                    <p className="text-xs text-gray-500 mt-1">Loading profiles...</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.isDraft}
+                    onChange={(e) => setFormData(prev => ({ ...prev, isDraft: e.target.checked }))}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Save as draft (don't publish immediately)
+                  </span>
+                </label>
               </div>
 
               <Button
@@ -386,7 +559,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                       </label>
                       <ImageManager
                         listingId={createdListingId}
-                        initialImages={images}
+                        images={images}
                         onImagesChange={handleImagesChange}
                       />
                     </div>

@@ -256,3 +256,6 @@ export function parseOpenAIResponse(content: string): any {
     throw new OpenAIError('Invalid JSON response from OpenAI');
   }
 }
+
+// Export the openai instance for use in other modules
+export { openai };

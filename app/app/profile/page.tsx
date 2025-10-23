@@ -150,10 +150,8 @@ export default function ProfilePage() {
                   {userMetadata?.plan || 'Free'} Plan
                 </h3>
                 <p className="text-gray-600">
-                  {userMetadata?.plan === 'free' && 'Basic features with daily limits'}
-                  {userMetadata?.plan === 'pro' && 'Enhanced features for growing businesses'}
-                  {userMetadata?.plan === 'business' && 'Advanced features for established businesses'}
-                  {userMetadata?.plan === 'agency' && 'Full features for agencies and large teams'}
+                  {userMetadata?.plan === 'free' && '3 generations per month, Professional tone only'}
+                  {userMetadata?.plan === 'pro' && 'Unlimited generations, all tones, saved generations'}
                 </p>
               </div>
             </div>

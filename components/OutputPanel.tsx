@@ -1,11 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Container } from '@/components/ui/Container';
+import { Button } from '@/components/ui/Button';
 import { CopyButtons } from './CopyButtons';
 import { PublishToEtsyButton } from './PublishToEtsyButton';
 import { formatWordCount } from '@/lib/utils';
+import { isEnabled } from '@/lib/flags';
 import { SkeletonText, SkeletonTitle } from '@/components/ui/Skeleton';
+import { Save, Check } from 'lucide-react';
+import { emitTopRightToast } from './TopRightToast';
 
 interface OutputPanelProps {
   title?: string;
@@ -30,6 +34,47 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
   className,
   listingId
 }) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  const handleSave = async () => {
+    if (!title || !description) {
+      emitTopRightToast('Please generate a listing first', 'error');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/saved', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          tags: tags || [],
+          materials: materials || [],
+          tone: 'Professional', // Default tone
+          wordCount: description.split(' ').length
+        }),
+      });
+
+      if (response.ok) {
+        setIsSaved(true);
+        emitTopRightToast('Listing saved successfully!', 'success');
+        setTimeout(() => setIsSaved(false), 2000);
+      } else {
+        const errorData = await response.json();
+        emitTopRightToast(errorData.error || 'Failed to save listing', 'error');
+      }
+    } catch (error) {
+      console.error('Error saving listing:', error);
+      emitTopRightToast('Failed to save listing', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
   if (loading) {
     return (
       <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
@@ -143,7 +188,7 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
           </div>
         )}
 
-        {etsyMessage && (
+        {etsyMessage && isEnabled('etsy') && (
           <div>
             <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Etsy Thank You Message</h4>
             <div className="bg-gray-50 p-4 rounded-lg">
@@ -167,15 +212,45 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Publish to Etsy</h4>
-          <PublishToEtsyButton
-            title={title || ''}
-            description={description || ''}
-            tags={tags || []}
-            materials={materials}
-            listingId={listingId}
-          />
+          <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Save Generation</h4>
+          <Button
+            onClick={handleSave}
+            loading={isSaving}
+            disabled={isSaving || isSaved || !title || !description}
+            className="w-full"
+            variant="primary"
+          >
+            {isSaving ? (
+              'Saving...'
+            ) : isSaved ? (
+              <>
+                <Check className="h-4 w-4 mr-2" />
+                Saved!
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save Generation
+              </>
+            )}
+          </Button>
+          <p className="mt-2 text-sm text-gray-500">
+            Save this generation to access it later from your saved listings
+          </p>
         </div>
+
+        {isEnabled('etsy') && (
+          <div>
+            <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Publish to Etsy</h4>
+            <PublishToEtsyButton
+              title={title || ''}
+              description={description || ''}
+              tags={tags || []}
+              materials={materials}
+              listingId={listingId}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

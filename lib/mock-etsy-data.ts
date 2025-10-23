@@ -46,7 +46,7 @@ export const mockShopData = {
   review_average: 4.8
 };
 
-export const mockListings = [
+export const mockListings: any[] = [
   {
     listing_id: 1234567890,
     user_id: 987654321,
@@ -512,7 +512,7 @@ export const handleMockImageUpload = (listingId: number, imageData: any): any =>
 export const handleMockImageDelete = (listingId: number, imageId: number): boolean => {
   const listing = mockListings.find(l => l.listing_id === listingId);
   if (listing) {
-    const imageIndex = listing.images.findIndex(img => img.listing_image_id === imageId);
+    const imageIndex = listing.images.findIndex((img: any) => img.listing_image_id === imageId);
     if (imageIndex !== -1) {
       listing.images.splice(imageIndex, 1);
       return true;
@@ -527,7 +527,7 @@ export const handleMockImageReorder = (listingId: number, imageIds: number[]): b
   if (listing) {
     const reorderedImages: any[] = [];
     imageIds.forEach((imageId, index) => {
-      const image = listing.images.find(img => img.listing_image_id === imageId);
+      const image = listing.images.find((img: any) => img.listing_image_id === imageId);
       if (image) {
         image.rank = index + 1;
         reorderedImages.push(image);
@@ -583,6 +583,7 @@ export const handleMockListingCreate = (listingData: any): any => {
     language: "en-US",
     has_variations: false,
     taxonomy_id: listingData.taxonomy_id || 1,
+    taxonomy_path: ["Arts & Entertainment", "Crafts & Hobbies"],
     used_manufacturer: false,
     is_vintage: false,
     images: [],
@@ -610,6 +611,9 @@ export const handleMockVideoUpload = (listingId: number, videoData: any): any =>
   
   const listing = mockListings.find(l => l.listing_id === listingId);
   if (listing) {
+    if (!listing.videos) {
+      listing.videos = [];
+    }
     listing.videos.push(newVideo);
   }
   
@@ -620,7 +624,7 @@ export const handleMockVideoUpload = (listingId: number, videoData: any): any =>
 export const handleMockVideoDelete = (listingId: number, videoId: number): boolean => {
   const listing = mockListings.find(l => l.listing_id === listingId);
   if (listing) {
-    const videoIndex = listing.videos.findIndex(vid => vid.video_id === videoId);
+    const videoIndex = listing.videos.findIndex((vid: any) => vid.video_id === videoId);
     if (videoIndex !== -1) {
       listing.videos.splice(videoIndex, 1);
       return true;

@@ -8,6 +8,7 @@ import { Container } from '@/components/ui/Container';
 import { useToast, ToastContainer } from '@/components/ui/Toast';
 import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
 import { getBaseUrl } from '@/lib/utils';
+import { isEnabled } from '@/lib/flags';
 import { 
   Palette, 
   Link, 
@@ -79,7 +80,9 @@ export default function SettingsPage() {
 
   useEffect(() => {
     loadUserData();
-    checkEtsyConnection();
+    if (isEnabled('etsy')) {
+      checkEtsyConnection();
+    }
   }, []);
 
   // Refresh data when the page becomes visible
@@ -87,7 +90,9 @@ export default function SettingsPage() {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         loadUserData();
-        checkEtsyConnection();
+        if (isEnabled('etsy')) {
+          checkEtsyConnection();
+        }
       }
     };
 
@@ -106,7 +111,12 @@ export default function SettingsPage() {
         console.log('User data loaded:', JSON.stringify(data, null, 2));
         setUserMetadata(data);
         if (data.preferences) {
-          setPreferences(data.preferences);
+          const userPrefs = { ...data.preferences };
+          // Force Professional tone for free users
+          if (data.plan === 'free') {
+            userPrefs.tone = 'Professional';
+          }
+          setPreferences(userPrefs);
         }
       } else {
         console.error('Failed to load user data:', response.status, response.statusText);
@@ -156,6 +166,30 @@ export default function SettingsPage() {
       emitTopRightToast('Network error. Please try again.', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updatePlan = async (plan: 'free' | 'pro' | 'business') => {
+    try {
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/api/dev/update-plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        emitTopRightToast(`Plan updated to ${plan}`, 'success');
+        // Reload user data to reflect the change
+        loadUserData();
+      } else {
+        const errorData = await response.json();
+        console.error('Plan update failed:', errorData);
+        emitTopRightToast(`Failed to update plan: ${errorData.error || 'Unknown error'}`, 'error');
+      }
+    } catch (error) {
+      emitTopRightToast('Network error. Please try again.', 'error');
     }
   };
 
@@ -247,7 +281,7 @@ export default function SettingsPage() {
           {/* Main Settings */}
           <div className="lg:col-span-2 space-y-8">
             {/* Default Preferences */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
                 <Palette className="h-5 w-5 text-blue-600" />
                 <h2 className="text-xl font-semibold text-gray-900">Default Preferences</h2>
@@ -260,20 +294,40 @@ export default function SettingsPage() {
                   </label>
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {toneOptions.map((tone) => (
-                        <button
-                          key={tone.value}
-                          onClick={() => setPreferences(prev => ({ ...prev, tone: tone.value }))}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            preferences.tone === tone.value
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                          title={tone.description}
-                        >
-                          {tone.value}
-                        </button>
-                      ))}
+                      {toneOptions.map((tone) => {
+                        const isFreeUser = userMetadata?.plan === 'free';
+                        const isProfessional = tone.value === 'Professional';
+                        const isLocked = isFreeUser && !isProfessional;
+                        const isSelected = preferences.tone === tone.value;
+                        
+                        return (
+                          <button
+                            key={tone.value}
+                            onClick={() => {
+                              // Only allow tone changes for Pro/Business users or Professional for free users
+                              if (!isFreeUser || isProfessional) {
+                                setPreferences(prev => ({ ...prev, tone: tone.value }));
+                              }
+                            }}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors relative ${
+                              isSelected
+                                ? 'bg-blue-600 text-white'
+                                : isLocked
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-dashed border-gray-300'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                            title={isLocked ? 'Pro feature - Upgrade to unlock' : tone.description}
+                            disabled={isLocked}
+                          >
+                            {tone.value}
+                            {isLocked && (
+                              <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs px-1 rounded-full">
+                                Pro
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                     {preferences.tone && (
                       <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -327,48 +381,50 @@ export default function SettingsPage() {
             </div>
 
             {/* Etsy Integration */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <Link className="h-5 w-5 text-blue-600" />
-                <h2 className="text-xl font-semibold text-gray-900">Etsy Integration</h2>
-              </div>
-              
-              {etsyConnection.loading ? (
-                <div className="text-center py-4">
-                  <p className="text-gray-600">Checking Etsy connection...</p>
+            {isEnabled('etsy') && (
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <Link className="h-5 w-5 text-blue-600" />
+                  <h2 className="text-xl font-semibold text-gray-900">Etsy Integration</h2>
                 </div>
-              ) : etsyConnection.connected ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <div>
-                        <p className="font-medium text-green-800">Connected to Etsy</p>
-                        <p className="text-sm text-green-600">{etsyConnection.shopName}</p>
+                
+                {etsyConnection.loading ? (
+                  <div className="text-center py-4">
+                    <p className="text-gray-600">Checking Etsy connection...</p>
+                  </div>
+                ) : etsyConnection.connected ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div>
+                          <p className="font-medium text-green-800">Connected to Etsy</p>
+                          <p className="text-sm text-green-600">{etsyConnection.shopName}</p>
+                        </div>
                       </div>
+                      <Button
+                        variant="outline"
+                        onClick={handleDisconnectEtsy}
+                        className="text-red-600 border-red-200 hover:bg-red-50"
+                      >
+                        Disconnect
+                      </Button>
                     </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-gray-600 mb-4">Connect your Etsy shop to publish listings directly</p>
                     <Button
-                      variant="outline"
-                      onClick={handleDisconnectEtsy}
-                      className="text-red-600 border-red-200 hover:bg-red-50"
+                      onClick={handleConnectEtsy}
+                      className="w-full"
                     >
-                      Disconnect
+                      <Link className="h-4 w-4 mr-2" />
+                      Connect Etsy Shop
                     </Button>
                   </div>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-gray-600 mb-4">Connect your Etsy shop to publish listings directly</p>
-                  <Button
-                    onClick={handleConnectEtsy}
-                    className="w-full"
-                  >
-                    <Link className="h-4 w-4 mr-2" />
-                    Connect Etsy Shop
-                  </Button>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -396,10 +452,12 @@ export default function SettingsPage() {
                     <span className="text-gray-800">Daily Generations:</span>
                     <span className="font-medium text-gray-900">{features.generations}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-800">Etsy Connection:</span>
-                    <span className="font-medium text-gray-900">{features.etsyConnection ? 'Yes' : 'No'}</span>
-                  </div>
+                  {isEnabled('etsy') && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-800">Etsy Connection:</span>
+                      <span className="font-medium text-gray-900">{features.etsyConnection ? 'Yes' : 'No'}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-4 border-t border-gray-200">
@@ -466,6 +524,48 @@ export default function SettingsPage() {
                 </Button>
               </div>
             </div>
+
+            {/* Development Tools - Only show in developer mode */}
+            {isEnabled('developerMode') && (
+              <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-6">
+                <h3 className="text-lg font-semibold text-yellow-900 mb-4">Development Tools</h3>
+                <p className="text-sm text-yellow-700 mb-4">
+                  Toggle between plans for testing purposes
+                </p>
+                
+                <div className="space-y-2">
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={() => updatePlan('free')}
+                      variant={userMetadata?.plan === 'free' ? 'default' : 'outline'}
+                      size="sm"
+                      className="flex-1"
+                    >
+                      Free
+                    </Button>
+                    <Button
+                      onClick={() => updatePlan('pro')}
+                      variant={userMetadata?.plan === 'pro' ? 'default' : 'outline'}
+                      size="sm"
+                      className="flex-1"
+                    >
+                      Pro
+                    </Button>
+                    <Button
+                      onClick={() => updatePlan('business')}
+                      variant={userMetadata?.plan === 'business' ? 'default' : 'outline'}
+                      size="sm"
+                      className="flex-1"
+                    >
+                      Business
+                    </Button>
+                  </div>
+                  <p className="text-xs text-yellow-600">
+                    Current: <span className="font-medium">{userMetadata?.plan || 'free'}</span>
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -93,7 +93,7 @@ class Analytics {
     toPlan: string;
     amount: number;
   }): Promise<void> {
-    await this.trackEvent(userId, AnalyticsEvents.PLAN_UPGRADED, metadata.data);
+    await this.trackEvent(userId, AnalyticsEvents.PLAN_UPGRADED, metadata);
   }
 
   /**
@@ -173,4 +173,19 @@ export async function trackGenerationCreated(userId: string, metadata?: {
   hasExtras: boolean;
 }): Promise<void> {
   return analytics.trackGenerationCreated(userId, metadata);
+}
+
+/**
+ * Convenience function for tracking API usage
+ */
+export async function trackAPIUsage(userId: string, endpoint: string, metadata?: {
+  method?: string;
+  duration?: number;
+  tokens?: number;
+  cost?: number;
+}): Promise<void> {
+  return analytics.trackEvent(userId, 'api_usage', {
+    endpoint,
+    ...metadata
+  });
 }

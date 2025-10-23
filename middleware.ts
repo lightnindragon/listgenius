@@ -5,7 +5,6 @@ const isProtectedRoute = createRouteMatcher([
   '/settings(.*)',
   '/bulk(.*)',
   '/api/generate(.*)',
-  '/api/rewrite(.*)',
   '/api/etsy(.*)',
   '/api/stripe/checkout(.*)',
   '/api/stripe/portal(.*)'

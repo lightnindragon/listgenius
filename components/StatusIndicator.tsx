@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { AlertCircle, CheckCircle, Clock, Zap, RotateCcw } from 'lucide-react';
 import { getBaseUrl } from '@/lib/utils';
+import { isEnabled } from '@/lib/flags';
 
 interface StatusIndicatorProps {
   className?: string;
@@ -176,7 +177,7 @@ export function StatusIndicator({ className }: StatusIndicatorProps) {
       )}
 
       {/* Development Reset Button */}
-      {process.env.NODE_ENV === 'development' && (
+      {isEnabled('developerMode') && (
         <button
           onClick={handleResetCounters}
           disabled={isResetting}

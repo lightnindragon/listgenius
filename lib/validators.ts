@@ -68,7 +68,7 @@ export const bulkGenerateRequestSchema = z.object({
 // Stripe checkout validation
 export const stripeCheckoutSchema = z.object({
   plan: z.enum(['pro', 'business', 'agency'], {
-    errorMap: () => ({ message: 'Plan must be pro, business, or agency' })
+    message: 'Plan must be pro, business, or agency'
   })
 });
 
@@ -110,7 +110,7 @@ export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown): T {
     return schema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errorMessage = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+      const errorMessage = error.issues.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
       throw new ValidationError(errorMessage);
     }
     throw error;
@@ -125,7 +125,7 @@ export function validateQuery<T>(schema: z.ZodSchema<T>, query: Record<string, s
     return schema.parse(query);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errorMessage = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+      const errorMessage = error.issues.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
       throw new ValidationError(errorMessage);
     }
     throw error;

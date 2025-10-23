@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
         logger.info('Using mock shop sections data', { userId, isMockMode, count: sections.length });
       } else {
         const etsyClient = new EtsyClient();
-        sections = await etsyClient.getShopSections();
+        sections = await etsyClient.getMyShopSections();
       }
 
       return NextResponse.json({

@@ -55,8 +55,8 @@ export const CheckoutButton: React.FC<CheckoutButtonProps> = ({
 
   return (
     <Button
-      variant={variant}
-      size={size}
+      variant={variant === 'link' ? 'ghost' : variant}
+      size={size === 'default' ? 'md' : size === 'icon' ? 'sm' : size}
       className={`w-full ${className}`}
       onClick={handleCheckout}
       disabled={isLoading}

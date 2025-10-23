@@ -2,7 +2,22 @@
 
 ListGenius is an AI-powered platform that helps Etsy sellers create SEO-optimized product listings. Generate professional titles, descriptions, and tags that rank higher and sell more.
 
-## Features
+## Disabled Features
+
+The following features are temporarily disabled and archived in `/disabled-features/`:
+
+- **Translation Services** - Google Translate & DeepL integration
+- **Video Marketing** - YouTube/Vimeo optimization
+- **Social Media** - Instagram, TikTok, Facebook, Pinterest (ALL platforms disabled)
+- **Print-on-Demand** - Printful/Printify integration
+- **Accounting Integration** - QuickBooks/Xero sync
+- **Mobile App** - React Native iOS/Android app
+
+These features can be re-enabled in the future. See `/disabled-features/README.md` for instructions.
+
+## Active Features
+
+ListGenius currently focuses on core Etsy listing optimization:
 
 - 🤖 **AI Listing Generation**: Create optimized titles, descriptions, and tags using GPT-4o
 - 🎯 **Etsy SEO Optimization**: Built-in understanding of Etsy's algorithm and ranking factors
@@ -12,6 +27,9 @@ ListGenius is an AI-powered platform that helps Etsy sellers create SEO-optimize
 - 📱 **Mobile Responsive**: Works perfectly on all devices
 - 🔒 **Secure**: Enterprise-grade security with Clerk authentication
 - 💳 **Stripe Integration**: Seamless subscription management
+- 📈 **Keyword Research**: Advanced keyword tools and rank tracking
+- 🏪 **Shop Analytics**: Competitor analysis and performance tracking
+- 💰 **Financial Tracking**: Internal expense and profit tracking
 
 ## Tech Stack
 
@@ -159,7 +177,7 @@ All Etsy integration routes automatically switch between mock and real data:
 
 - **ImageManager**: Comprehensive image management with drag-drop, upload, delete
 - **AIAltTextGenerator**: Standalone alt text generation with GPT-4o Vision
-- **RewriteModal**: Edit listings with image management
+- **Listing Management**: Edit listings with image management via dedicated pages
 - **My Listings**: View and manage all Etsy listings
 
 ## Manual Testing Checklist
@@ -208,8 +226,7 @@ All Etsy integration routes automatically switch between mock and real data:
 ## API Endpoints
 
 ### Generation
-- `POST /api/generate` - Generate new listing
-- `POST /api/rewrite` - Rewrite existing listing
+- `POST /api/generate` - Generate or rewrite listings
 
 ### Authentication
 - `GET /api/auth/sign-in` - Clerk sign-in page

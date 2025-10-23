@@ -13,13 +13,17 @@ const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY!
 /**
  * Get current user's plan from Clerk metadata
  */
-export async function getUserPlan(userId: string): Promise<'free' | 'pro' | 'business' | 'agency'> {
+export async function getUserPlan(userId: string): Promise<'free' | 'pro'> {
   try {
     const user = await currentUser();
     if (!user) throw new Error('User not found');
     
-    const metadata = user.publicMetadata as UserMetadata;
-    return metadata.plan || 'free';
+    const metadata = user.publicMetadata as unknown as UserMetadata;
+    const plan = metadata.plan as any; // Allow backward compatibility with old plan types
+    
+    // Map old plans to new structure (backward compatibility)
+    if (plan === 'business' || plan === 'agency') return 'pro';
+    return plan === 'pro' ? 'pro' : 'free';
   } catch (error) {
     logger.error('Failed to get user plan', { userId, error });
     return 'free';
@@ -29,12 +33,12 @@ export async function getUserPlan(userId: string): Promise<'free' | 'pro' | 'bus
 /**
  * Update user's plan in Clerk metadata
  */
-export async function updateUserPlan(userId: string, plan: 'free' | 'pro' | 'business' | 'agency'): Promise<void> {
+export async function updateUserPlan(userId: string, plan: 'free' | 'pro'): Promise<void> {
   try {
     const user = await currentUser();
     if (!user) throw new Error('User not found');
     
-    const currentMetadata = user.publicMetadata as UserMetadata || {};
+    const currentMetadata = user.publicMetadata as unknown as UserMetadata || {};
     const updatedMetadata: UserMetadata = {
       ...currentMetadata,
       plan
@@ -42,7 +46,7 @@ export async function updateUserPlan(userId: string, plan: 'free' | 'pro' | 'bus
     
     // Actually update the user metadata using clerkClient
     await clerkClient.users.updateUserMetadata(userId, {
-      publicMetadata: updatedMetadata
+      publicMetadata: updatedMetadata as unknown as UserPublicMetadata
     });
     
     logger.info('User plan updated', { userId, fromPlan: currentMetadata.plan, toPlan: plan });
@@ -60,7 +64,7 @@ export async function getDailyGenCount(userId: string): Promise<number> {
     const user = await currentUser();
     if (!user) return 0;
     
-    const metadata = user.publicMetadata as UserMetadata;
+    const metadata = user.publicMetadata as unknown as UserMetadata;
     const lastResetDate = metadata.lastResetDate;
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     
@@ -91,7 +95,7 @@ export async function getDailyRewriteCount(userId: string): Promise<number> {
     const user = await currentUser();
     if (!user) return 0;
     
-    const metadata = user.publicMetadata as UserMetadata;
+    const metadata = user.publicMetadata as unknown as UserMetadata;
     const lastResetDate = metadata.lastResetDate;
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     
@@ -119,7 +123,7 @@ export async function incrementDailyGenCount(userId: string): Promise<number> {
     const currentCount = await getDailyGenCount(userId);
     const newCount = currentCount + 1;
     
-    const metadata = user.publicMetadata as UserMetadata || {};
+    const metadata = user.publicMetadata as unknown as UserMetadata || {};
     const today = new Date().toISOString().split('T')[0];
     const updatedMetadata: UserMetadata = {
       ...metadata,
@@ -128,9 +132,6 @@ export async function incrementDailyGenCount(userId: string): Promise<number> {
       lastResetDate: metadata.lastResetDate || today,
       // Preserve all other existing metadata
       preferences: metadata.preferences,
-      tone: metadata.tone,
-      niche: metadata.niche,
-      audience: metadata.audience,
       etsyTokens: metadata.etsyTokens,
       etsyShopId: metadata.etsyShopId,
       etsyRateLimitCount: metadata.etsyRateLimitCount,
@@ -145,7 +146,7 @@ export async function incrementDailyGenCount(userId: string): Promise<number> {
     
     // Actually update the user metadata using clerkClient
     await clerkClient.users.updateUserMetadata(userId, {
-      publicMetadata: updatedMetadata
+      publicMetadata: updatedMetadata as unknown as UserPublicMetadata
     });
     
     logger.info('User metadata update completed', { userId });
@@ -174,7 +175,7 @@ export async function incrementDailyRewriteCount(userId: string): Promise<number
     const currentCount = await getDailyRewriteCount(userId);
     const newCount = currentCount + 1;
     
-    const metadata = user.publicMetadata as UserMetadata || {};
+    const metadata = user.publicMetadata as unknown as UserMetadata || {};
     const today = new Date().toISOString().split('T')[0];
     const updatedMetadata: UserMetadata = {
       ...metadata,
@@ -184,9 +185,6 @@ export async function incrementDailyRewriteCount(userId: string): Promise<number
       lastResetDate: metadata.lastResetDate || today,
       // Preserve all other existing metadata
       preferences: metadata.preferences,
-      tone: metadata.tone,
-      niche: metadata.niche,
-      audience: metadata.audience,
       etsyTokens: metadata.etsyTokens,
       etsyShopId: metadata.etsyShopId,
       etsyRateLimitCount: metadata.etsyRateLimitCount,
@@ -195,7 +193,7 @@ export async function incrementDailyRewriteCount(userId: string): Promise<number
     
     // Actually update the user metadata using clerkClient
     await clerkClient.users.updateUserMetadata(userId, {
-      publicMetadata: updatedMetadata
+      publicMetadata: updatedMetadata as unknown as UserPublicMetadata
     });
     
     logger.info('Daily rewrite count incremented', { userId, count: newCount });
@@ -214,7 +212,7 @@ export async function resetDailyCountersIfNeeded(userId: string): Promise<void> 
     const user = await currentUser();
     if (!user) return;
     
-    const metadata = user.publicMetadata as UserMetadata;
+    const metadata = user.publicMetadata as unknown as UserMetadata;
     const lastResetDate = metadata.lastResetDate;
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     
@@ -227,9 +225,6 @@ export async function resetDailyCountersIfNeeded(userId: string): Promise<void> 
         lastResetDate: today,
         // Preserve all other existing metadata
         preferences: metadata.preferences,
-        tone: metadata.tone,
-        niche: metadata.niche,
-        audience: metadata.audience,
         etsyTokens: metadata.etsyTokens,
         etsyShopId: metadata.etsyShopId,
         etsyRateLimitCount: metadata.etsyRateLimitCount,
@@ -238,7 +233,7 @@ export async function resetDailyCountersIfNeeded(userId: string): Promise<void> 
       
       // Actually save the reset metadata
       await clerkClient.users.updateUserMetadata(userId, {
-        publicMetadata: updatedMetadata
+        publicMetadata: updatedMetadata as unknown as UserPublicMetadata
       });
       
       logger.info('Daily counters reset for new day', { userId, date: today });
@@ -256,10 +251,10 @@ export async function getUserPreferences(userId: string): Promise<{ tone?: strin
     const user = await currentUser();
     if (!user) return {};
     
-    const metadata = user.publicMetadata as UserMetadata;
+    const metadata = user.publicMetadata as unknown as UserMetadata;
     return {
-      tone: metadata.tone,
-      niche: metadata.niche
+      tone: metadata.preferences?.tone,
+      niche: metadata.preferences?.niche
     };
   } catch (error) {
     logger.error('Failed to get user preferences', { userId, error });
@@ -275,7 +270,7 @@ export async function updateUserPreferences(userId: string, preferences: { tone?
     const user = await currentUser();
     if (!user) throw new Error('User not found');
     
-    const metadata = user.publicMetadata as UserMetadata || {};
+    const metadata = user.publicMetadata as unknown as UserMetadata || {};
     const updatedMetadata: UserMetadata = {
       ...metadata,
       preferences: {
@@ -287,7 +282,7 @@ export async function updateUserPreferences(userId: string, preferences: { tone?
     
     // Actually update the user metadata using clerkClient
     await clerkClient.users.updateUserMetadata(userId, {
-      publicMetadata: updatedMetadata
+      publicMetadata: updatedMetadata as unknown as UserPublicMetadata
     });
     
     logger.info('User preferences updated', { userId, preferences });
@@ -305,7 +300,7 @@ export async function getEtsyConnection(userId: string): Promise<{ shopId?: stri
     const user = await currentUser();
     if (!user) return { hasTokens: false };
     
-    const metadata = user.publicMetadata as UserMetadata;
+    const metadata = user.publicMetadata as unknown as UserMetadata;
     return {
       shopId: metadata.etsyShopId,
       hasTokens: !!metadata.etsyTokens
@@ -324,7 +319,7 @@ export async function updateEtsyConnection(userId: string, shopId: string, encry
     const user = await currentUser();
     if (!user) throw new Error('User not found');
     
-    const metadata = user.publicMetadata as UserMetadata || {};
+    const metadata = user.publicMetadata as unknown as UserMetadata || {};
     const updatedMetadata: UserMetadata = {
       ...metadata,
       etsyShopId: shopId,
@@ -333,7 +328,7 @@ export async function updateEtsyConnection(userId: string, shopId: string, encry
     
     // Actually update the user metadata using clerkClient
     await clerkClient.users.updateUserMetadata(userId, {
-      publicMetadata: updatedMetadata
+      publicMetadata: updatedMetadata as unknown as UserPublicMetadata
     });
     
     logger.info('Etsy connection updated', { userId, shopId });
