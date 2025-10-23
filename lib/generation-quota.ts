@@ -5,7 +5,7 @@ import { getUserPlanSimple, PLAN_CONFIG, getMonthKey } from './entitlements';
 
 export async function checkAndIncrementGeneration(): Promise<{ 
   ok: boolean; 
-  plan: 'free'|'pro'; 
+  plan: 'free'|'pro'|'business'; 
   remaining?: number;
   error?: string;
 }> {
@@ -20,7 +20,7 @@ export async function checkAndIncrementGeneration(): Promise<{
   const usage = (meta.genUsage ?? {}) as Record<string, number>;
   const used = usage[monthKey] ?? 0;
 
-  if (plan === 'pro') {
+  if (plan === 'pro' || plan === 'business') {
     // Soft safety cap at 1000
     if (used >= 1000) {
       return { ok: false, plan, remaining: 0, error: 'Monthly safety limit reached (1000). Contact support.' };
@@ -45,7 +45,7 @@ export async function checkAndIncrementGeneration(): Promise<{
   return { ok: true, plan, remaining: cap - (used + 1) };
 }
 
-export async function getCurrentMonthUsage(userId: string): Promise<{ used: number; limit: number | 'unlimited'; plan: 'free'|'pro' }> {
+export async function getCurrentMonthUsage(userId: string): Promise<{ used: number; limit: number | 'unlimited'; plan: 'free'|'pro'|'business' }> {
   const user = await clerkClient.users.getUser(userId);
   const plan = await getUserPlanSimple(user);
   const monthKey = getMonthKey();
@@ -55,7 +55,7 @@ export async function getCurrentMonthUsage(userId: string): Promise<{ used: numb
 
   return {
     used,
-    limit: plan === 'pro' ? 'unlimited' : PLAN_CONFIG.free.maxGenerationsPerMonth,
+    limit: (plan === 'pro' || plan === 'business') ? 'unlimited' : PLAN_CONFIG.free.maxGenerationsPerMonth,
     plan
   };
 }
