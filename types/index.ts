@@ -8,7 +8,7 @@ export interface ListingOutput {
 }
 
 export interface UserMetadata {
-  plan: 'free' | 'pro'; // Remove business/agency
+  plan: 'free' | 'pro' | 'business' | 'agency';
   genUsage?: Record<string, number>; // monthKey -> count
   dailyGenCount: number; // keep for backward compat
   dailyRewriteCount: number;

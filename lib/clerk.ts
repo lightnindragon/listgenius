@@ -13,7 +13,7 @@ const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY!
 /**
  * Get current user's plan from Clerk metadata
  */
-export async function getUserPlan(userId: string): Promise<'free' | 'pro'> {
+export async function getUserPlan(userId: string): Promise<'free' | 'pro' | 'business' | 'agency'> {
   try {
     const user = await currentUser();
     if (!user) throw new Error('User not found');
@@ -21,9 +21,9 @@ export async function getUserPlan(userId: string): Promise<'free' | 'pro'> {
     const metadata = user.publicMetadata as unknown as UserMetadata;
     const plan = metadata.plan as any; // Allow backward compatibility with old plan types
     
-    // Map old plans to new structure (backward compatibility)
-    if (plan === 'business' || plan === 'agency') return 'pro';
-    return plan === 'pro' ? 'pro' : 'free';
+    // Return the actual plan type
+    if (plan === 'business' || plan === 'agency' || plan === 'pro') return plan;
+    return 'free';
   } catch (error) {
     logger.error('Failed to get user plan', { userId, error });
     return 'free';
@@ -33,7 +33,7 @@ export async function getUserPlan(userId: string): Promise<'free' | 'pro'> {
 /**
  * Update user's plan in Clerk metadata
  */
-export async function updateUserPlan(userId: string, plan: 'free' | 'pro'): Promise<void> {
+export async function updateUserPlan(userId: string, plan: 'free' | 'pro' | 'business' | 'agency'): Promise<void> {
   try {
     const user = await currentUser();
     if (!user) throw new Error('User not found');
