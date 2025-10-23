@@ -17,14 +17,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, onCr
   
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-64 flex-shrink-0">
+      {/* Sidebar - Hidden on mobile, visible on desktop */}
+      <div className="hidden md:block w-64 flex-shrink-0">
         <Sidebar onCreateListingClick={handleCreateListingClick} />
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-4 md:p-8">
           {children}
         </main>
       </div>
