@@ -193,6 +193,7 @@ export class DesignManager {
 
   /**
    * Optimize design for print-on-demand
+   * DISABLED - Design model is commented out in schema
    */
   async optimizeForPOD(
     designId: string,
@@ -200,24 +201,26 @@ export class DesignManager {
     targetDimensions: { width: number; height: number }
   ): Promise<DesignOptimization> {
     try {
-      const design = await prisma.design.findUnique({
-        where: { id: designId },
-        include: { files: true }
-      });
+      // DISABLED - Design model is commented out in schema
+      // const design = await prisma.design.findUnique({
+      //   where: { id: designId },
+      //   include: { files: true }
+      // });
 
-      if (!design) {
-        throw new Error('Design not found');
-      }
+      // if (!design) {
+      //   throw new Error('Design not found');
+      // }
 
-      const file = design.files[0];
-      const originalSize = file.fileSize;
+      // const file = design.files[0];
+      // const originalSize = file.fileSize;
 
       // Simulate optimization process
+      const originalSize = 1024 * 1024; // Mock size
       const optimizedSize = Math.round(originalSize * 0.7); // 30% compression
       const compressionRatio = (originalSize - optimizedSize) / originalSize;
-      const qualityScore = this.calculateQualityScore(file as unknown as DesignFile, targetDimensions);
+      const qualityScore = 85; // Mock score
 
-      const recommendations = this.generateOptimizationRecommendations(file as unknown as DesignFile, targetDimensions);
+      const recommendations = ['Design optimization is disabled - Design model not available'];
 
       const optimization: DesignOptimization = {
         originalSize,
@@ -227,7 +230,7 @@ export class DesignManager {
         recommendations
       };
 
-      logger.info(`Design optimized for POD: ${designId}`);
+      logger.info(`Design optimized for POD: ${designId} (mock)`);
       return optimization;
     } catch (error) {
       logger.error('Failed to optimize design for POD:', error);
@@ -237,6 +240,7 @@ export class DesignManager {
 
   /**
    * Get user's design library
+   * DISABLED - Design model is commented out in schema
    */
   async getDesignLibrary(
     userId: string,
@@ -245,32 +249,37 @@ export class DesignManager {
     searchTerm?: string
   ): Promise<Design[]> {
     try {
-      const whereClause: any = { userId };
+      // DISABLED - Design model is commented out in schema
+      // const whereClause: any = { userId };
 
-      if (category) {
-        whereClause.category = category;
-      }
+      // if (category) {
+      //   whereClause.category = category;
+      // }
 
-      if (tags && tags.length > 0) {
-        whereClause.tags = {
-          hasSome: tags
-        };
-      }
+      // if (tags && tags.length > 0) {
+      //   whereClause.tags = {
+      //     hasSome: tags
+      //   };
+      // }
 
-      if (searchTerm) {
-        whereClause.OR = [
-          { name: { contains: searchTerm, mode: 'insensitive' } },
-          { description: { contains: searchTerm, mode: 'insensitive' } }
-        ];
-      }
+      // if (searchTerm) {
+      //   whereClause.OR = [
+      //     { name: { contains: searchTerm, mode: 'insensitive' } },
+      //     { description: { contains: searchTerm, mode: 'insensitive' } }
+      //   ];
+      // }
 
-      const designs = await prisma.design.findMany({
-        where: whereClause,
-        include: { files: true },
-        orderBy: { updatedAt: 'desc' }
-      });
+      // const designs = await prisma.design.findMany({
+      //   where: whereClause,
+      //   include: { files: true },
+      //   orderBy: { updatedAt: 'desc' }
+      // });
 
-      return designs as unknown as Design[];
+      // return designs as unknown as Design[];
+
+      // Return empty array for now
+      logger.info(`Design library requested for user ${userId} (disabled)`);
+      return [];
     } catch (error) {
       logger.error('Failed to get design library:', error);
       throw error;
@@ -279,6 +288,7 @@ export class DesignManager {
 
   /**
    * Create design variations
+   * DISABLED - Design model is commented out in schema
    */
   async createDesignVariations(
     designId: string,
@@ -293,51 +303,56 @@ export class DesignManager {
     }>
   ): Promise<Design[]> {
     try {
-      const originalDesign = await prisma.design.findUnique({
-        where: { id: designId },
-        include: { files: true }
-      });
+      // DISABLED - Design model is commented out in schema
+      // const originalDesign = await prisma.design.findUnique({
+      //   where: { id: designId },
+      //   include: { files: true }
+      // });
 
-      if (!originalDesign) {
-        throw new Error('Original design not found');
-      }
+      // if (!originalDesign) {
+      //   throw new Error('Original design not found');
+      // }
 
-      const createdVariations: Design[] = [];
+      // const createdVariations: Design[] = [];
 
-      for (const variation of variations) {
-        // Create variation design
-        const variationDesign = await prisma.design.create({
-          data: {
-            userId: originalDesign.userId,
-            name: `${originalDesign.name} - ${variation.name}`,
-            description: `Variation of ${originalDesign.name}`,
-            category: originalDesign.category,
-            tags: [...originalDesign.tags, 'variation'],
-            thumbnailUrl: originalDesign.thumbnailUrl, // Would be modified
-            isPublic: false,
-            usageCount: 0,
-            files: {
-              create: originalDesign.files.map(file => ({
-                filename: `${variation.name}_${file.filename}`,
-                originalUrl: file.originalUrl,
-                optimizedUrl: file.optimizedUrl,
-                width: file.width,
-                height: file.height,
-                dpi: file.dpi,
-                fileSize: file.fileSize,
-                format: file.format,
-                printAreas: file.printAreas
-              }))
-            }
-          },
-          include: { files: true }
-        });
+      // for (const variation of variations) {
+      //   // Create variation design
+      //   const variationDesign = await prisma.design.create({
+      //     data: {
+      //       userId: originalDesign.userId,
+      //       name: `${originalDesign.name} - ${variation.name}`,
+      //       description: `Variation of ${originalDesign.name}`,
+      //       category: originalDesign.category,
+      //       tags: [...originalDesign.tags, 'variation'],
+      //       thumbnailUrl: originalDesign.thumbnailUrl, // Would be modified
+      //       isPublic: false,
+      //       usageCount: 0,
+      //       files: {
+      //         create: originalDesign.files.map(file => ({
+      //           filename: `${variation.name}_${file.filename}`,
+      //           originalUrl: file.originalUrl,
+      //           optimizedUrl: file.optimizedUrl,
+      //           width: file.width,
+      //           height: file.height,
+      //           dpi: file.dpi,
+      //           fileSize: file.fileSize,
+      //           format: file.format,
+      //           printAreas: file.printAreas
+      //         }))
+      //       }
+      //     },
+      //     include: { files: true }
+      //   });
 
-        createdVariations.push(variationDesign as unknown as Design);
-      }
+      //   createdVariations.push(variationDesign as unknown as Design);
+      // }
 
-      logger.info(`Created ${createdVariations.length} design variations for ${designId}`);
-      return createdVariations;
+      // logger.info(`Created ${createdVariations.length} design variations for ${designId}`);
+      // return createdVariations;
+
+      // Return empty array for now
+      logger.info(`Design variations requested for ${designId} (disabled)`);
+      return [];
     } catch (error) {
       logger.error('Failed to create design variations:', error);
       throw error;
@@ -346,6 +361,7 @@ export class DesignManager {
 
   /**
    * Analyze design performance
+   * DISABLED - Design model is commented out in schema
    */
   async analyzeDesignPerformance(designId: string): Promise<{
     usageCount: number;
@@ -355,23 +371,25 @@ export class DesignManager {
     recommendations: string[];
   }> {
     try {
-      const design = await prisma.design.findUnique({
-        where: { id: designId }
-      });
+      // DISABLED - Design model is commented out in schema
+      // const design = await prisma.design.findUnique({
+      //   where: { id: designId }
+      // });
 
-      if (!design) {
-        throw new Error('Design not found');
-      }
+      // if (!design) {
+      //   throw new Error('Design not found');
+      // }
 
       // Mock analytics data
       const analytics = {
-        usageCount: design.usageCount,
-        revenue: design.usageCount * 15.50, // Mock revenue per use
-        popularity: Math.min(100, design.usageCount * 10), // Mock popularity score
+        usageCount: 0,
+        revenue: 0,
+        popularity: 0,
         bestSellingProducts: ['T-Shirt', 'Mug', 'Poster'],
-        recommendations: this.generateDesignRecommendations(design as unknown as Design)
+        recommendations: ['Design analytics are disabled - Design model not available']
       };
 
+      logger.info(`Design performance analysis requested for ${designId} (disabled)`);
       return analytics;
     } catch (error) {
       logger.error('Failed to analyze design performance:', error);
@@ -381,6 +399,7 @@ export class DesignManager {
 
   /**
    * Export design for specific platform
+   * DISABLED - Design model is commented out in schema
    */
   async exportDesign(
     designId: string,
@@ -393,22 +412,23 @@ export class DesignManager {
     platformRequirements: string[];
   }> {
     try {
-      const design = await prisma.design.findUnique({
-        where: { id: designId },
-        include: { files: true }
-      });
+      // DISABLED - Design model is commented out in schema
+      // const design = await prisma.design.findUnique({
+      //   where: { id: designId },
+      //   include: { files: true }
+      // });
 
-      if (!design) {
-        throw new Error('Design not found');
-      }
+      // if (!design) {
+      //   throw new Error('Design not found');
+      // }
 
       const platformRequirements = this.getPlatformRequirements(platform);
-      const optimized = this.isOptimizedForPlatform(design.files[0] as unknown as DesignFile, platform);
+      // const optimized = this.isOptimizedForPlatform(design.files[0] as unknown as DesignFile, platform);
 
       return {
         downloadUrl: `exported-design-${designId}.png`, // Mock URL
         format: 'PNG',
-        optimized,
+        optimized: false, // Mock value
         platformRequirements
       };
     } catch (error) {
