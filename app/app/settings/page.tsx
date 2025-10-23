@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Container } from '@/components/ui/Container';
 import { useToast, ToastContainer } from '@/components/ui/Toast';
 import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { getBaseUrl } from '@/lib/utils';
 import { isEnabled } from '@/lib/flags';
 import { 
@@ -251,16 +252,14 @@ export default function SettingsPage() {
 
   if (!userMetadata) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <Container>
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <SettingsIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600">Loading settings...</p>
-            </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <SettingsIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <p className="text-gray-600">Loading settings...</p>
           </div>
-        </Container>
-      </div>
+        </div>
+      </DashboardLayout>
     );
   }
 
@@ -268,9 +267,8 @@ export default function SettingsPage() {
   const features = planFeatures[currentPlan as keyof typeof planFeatures];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <Container>
-        <div className="max-w-4xl mx-auto space-y-8">
+    <DashboardLayout>
+      <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
@@ -575,7 +573,6 @@ export default function SettingsPage() {
 
       {/* Top Right Toast Notifications */}
       <TopRightToast />
-      </Container>
-    </div>
+    </DashboardLayout>
   );
 }

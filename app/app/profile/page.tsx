@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useToast, ToastContainer } from '@/components/ui/Toast';
 import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { UserMetadata } from '@/types';
 import { getBaseUrl } from '@/lib/utils';
 
@@ -59,23 +60,18 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <Container>
-          <div className="max-w-4xl mx-auto">
-            <div className="animate-pulse space-y-6">
-              <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-64 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        </Container>
-      </div>
+      <DashboardLayout>
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <Container>
-        <div className="max-w-4xl mx-auto">
+    <DashboardLayout>
+      <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Profile</h1>
@@ -214,7 +210,6 @@ export default function ProfilePage() {
 
         {/* Top Right Toast Notifications */}
         <TopRightToast />
-      </Container>
-    </div>
-  );
-}
+      </DashboardLayout>
+    );
+  }

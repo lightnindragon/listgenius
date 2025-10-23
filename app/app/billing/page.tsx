@@ -6,6 +6,7 @@ import { Container } from '@/components/ui/Container';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { getBaseUrl } from '@/lib/utils';
 import { 
   CreditCard, 
@@ -168,25 +169,22 @@ export default function BillingPage() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <Container>
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="space-y-4">
-              <div className="h-32 bg-gray-200 rounded"></div>
-              <div className="h-24 bg-gray-200 rounded"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-            </div>
+      <DashboardLayout>
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="space-y-4">
+            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-24 bg-gray-200 rounded"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
           </div>
-        </Container>
-      </div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <Container>
-        <div className="max-w-4xl mx-auto">
+    <DashboardLayout>
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Link 
@@ -401,9 +399,8 @@ export default function BillingPage() {
           </div>
         )}
         </div>
-      </Container>
       
       <TopRightToast />
-    </div>
+    </DashboardLayout>
   );
 }

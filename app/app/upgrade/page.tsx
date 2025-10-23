@@ -6,6 +6,7 @@ import { Container } from '@/components/ui/Container';
 import { Button } from '@/components/ui/Button';
 import { useToast, ToastContainer } from '@/components/ui/Toast';
 import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { getBaseUrl } from '@/lib/utils';
 import { 
   Check, 
@@ -199,13 +200,11 @@ export default function UpgradePage() {
 
   if (loading || !pricing.pro || !pricing.business) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <Container>
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        </Container>
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardLayout>
     );
   }
 
@@ -213,9 +212,8 @@ export default function UpgradePage() {
   const currentPlanData = plans.find(plan => plan.id === currentPlan);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <Container>
-        <div className="max-w-6xl mx-auto">
+    <DashboardLayout>
+      <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -418,7 +416,6 @@ export default function UpgradePage() {
 
         {/* Top Right Toast Notifications */}
         <TopRightToast />
-      </Container>
-    </div>
+    </DashboardLayout>
   );
 }
