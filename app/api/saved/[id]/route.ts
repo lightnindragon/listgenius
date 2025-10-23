@@ -26,9 +26,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         "wordCount" = ${body.wordCount || null}
       WHERE id = ${id} AND "userId" = ${userId}
       RETURNING id, "userId", title, description, tags, materials, tone, "wordCount", "createdAt"
-    `;
+    ` as any[];
     
-    if (Array.isArray(result) && result.length === 0) {
+    if (!Array.isArray(result) || result.length === 0) {
       return NextResponse.json({ error: 'Generation not found or unauthorized' }, { status: 404 });
     }
     

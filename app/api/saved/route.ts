@@ -26,9 +26,9 @@ export async function GET() {
       WHERE "userId" = ${userId}
       ORDER BY "createdAt" DESC
       LIMIT 100
-    `;
+    ` as any[];
     
-    console.log('GET /api/saved - Successfully fetched generations:', Array.isArray(generations) ? generations.length : 1);
+    console.log('GET /api/saved - Successfully fetched generations:', generations.length);
     return NextResponse.json({ success: true, data: generations });
   } catch (error) {
     console.error('GET /api/saved - Error fetching saved generations:', error);
@@ -98,9 +98,9 @@ export async function POST(req: Request) {
       INSERT INTO "SavedGeneration" (id, "userId", title, description, tags, materials, tone, "wordCount")
       VALUES (${randomUUID()}, ${userId}, ${body.title}, ${body.description}, ${JSON.stringify(tags)}::jsonb, ${JSON.stringify(materials)}::jsonb, ${body.tone || null}, ${body.wordCount || null})
       RETURNING id, "userId", title, description, tags, materials, tone, "wordCount", "createdAt"
-    `;
+    ` as any[];
     
-    const saved = Array.isArray(result) ? result[0] : result;
+    const saved = result[0];
     console.log('POST /api/saved - Successfully saved generation:', saved);
     return NextResponse.json({ success: true, data: saved });
   } catch (error) {

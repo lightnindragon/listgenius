@@ -7,7 +7,7 @@ const createTransporter = () => {
   // For development, you can use Gmail SMTP
   // Make sure to set up an App Password in your Gmail account
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
@@ -20,7 +20,7 @@ const createTransporter = () => {
 
   // Fallback to Gmail SMTP if no custom SMTP is configured
   if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.GMAIL_USER,
