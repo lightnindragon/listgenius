@@ -1,6 +1,20 @@
+'use client';
+
 import { SignUp } from '@clerk/nextjs';
+import { useEffect } from 'react';
 
 export default function SignUpPage() {
+  useEffect(() => {
+    // Debug: Check if Clerk is loaded
+    console.log('SignUp page loaded');
+    console.log('Clerk publishable key:', process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? 'Present' : 'Missing');
+    
+    // Check for any global errors
+    window.addEventListener('error', (e) => {
+      console.error('Global error on signup page:', e.error);
+    });
+  }, []);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -29,6 +43,8 @@ export default function SignUpPage() {
                 otpCodeFieldInput: 'border border-gray-300 focus:border-brand-500 focus:ring-brand-500',
               }
             }}
+            afterSignUpUrl="/app"
+            redirectUrl="/app"
           />
         </div>
       </div>
