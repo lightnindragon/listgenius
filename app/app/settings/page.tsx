@@ -537,7 +537,7 @@ export default function SettingsPage() {
                   <div className="flex space-x-2">
                     <Button
                       onClick={() => updatePlan('free')}
-                      variant={userMetadata?.plan === 'free' ? 'default' : 'outline'}
+                      variant={userMetadata?.plan === 'free' ? 'primary' : 'outline'}
                       size="sm"
                       className="flex-1"
                     >
@@ -545,7 +545,7 @@ export default function SettingsPage() {
                     </Button>
                     <Button
                       onClick={() => updatePlan('pro')}
-                      variant={userMetadata?.plan === 'pro' ? 'default' : 'outline'}
+                      variant={userMetadata?.plan === 'pro' ? 'primary' : 'outline'}
                       size="sm"
                       className="flex-1"
                     >
@@ -553,7 +553,7 @@ export default function SettingsPage() {
                     </Button>
                     <Button
                       onClick={() => updatePlan('business')}
-                      variant={userMetadata?.plan === 'business' ? 'default' : 'outline'}
+                      variant={userMetadata?.plan === 'business' ? 'primary' : 'outline'}
                       size="sm"
                       className="flex-1"
                     >
