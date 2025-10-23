@@ -48,12 +48,9 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <a 
-                  href="mailto:support@listgenius.com" 
-                  className="text-muted-foreground hover:text-primary text-sm transition-colors"
-                >
+                <Link href="/contact" className="text-muted-foreground hover:text-primary text-sm transition-colors">
                   Contact
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

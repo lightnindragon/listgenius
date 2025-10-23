@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Trash2, Copy, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
+import { Trash2, Copy, ExternalLink, ChevronDown, ChevronRight, Edit3, Check, X, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface SavedGeneration {
@@ -21,6 +21,17 @@ export default function SavedGenerationsClient() {
   const [generations, setGenerations] = useState<SavedGeneration[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  
+  // Edit state for each generation
+  const [editingItems, setEditingItems] = useState<Set<string>>(new Set());
+  const [tempData, setTempData] = useState<Record<string, {
+    title: string;
+    description: string;
+    tags: string[];
+    materials: string[];
+    newTag: string;
+    newMaterial: string;
+  }>>({});
 
   useEffect(() => {
     fetchGenerations();
@@ -92,6 +103,110 @@ export default function SavedGenerationsClient() {
     });
   };
 
+  const startEdit = (generation: SavedGeneration) => {
+    setEditingItems(prev => new Set(prev).add(generation.id));
+    setTempData(prev => ({
+      ...prev,
+      [generation.id]: {
+        title: generation.title,
+        description: generation.description,
+        tags: [...generation.tags],
+        materials: [...generation.materials],
+        newTag: '',
+        newMaterial: ''
+      }
+    }));
+  };
+
+  const cancelEdit = (id: string) => {
+    setEditingItems(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(id);
+      return newSet;
+    });
+    setTempData(prev => {
+      const newData = { ...prev };
+      delete newData[id];
+      return newData;
+    });
+  };
+
+  const saveEdit = async (id: string) => {
+    const tempItem = tempData[id];
+    if (!tempItem) return;
+
+    try {
+      const response = await fetch(`/api/saved/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: tempItem.title,
+          description: tempItem.description,
+          tags: tempItem.tags,
+          materials: tempItem.materials,
+          tone: generations.find(g => g.id === id)?.tone,
+          wordCount: tempItem.description.split(' ').length
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setGenerations(prev => prev.map(gen => 
+          gen.id === id ? { ...gen, ...result.data } : gen
+        ));
+        cancelEdit(id);
+        toast.success('Generation updated successfully');
+      } else {
+        toast.error('Failed to update generation');
+      }
+    } catch (error) {
+      console.error('Failed to update generation:', error);
+      toast.error('Failed to update generation');
+    }
+  };
+
+  const updateTempData = (id: string, field: string, value: any) => {
+    setTempData(prev => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [field]: value
+      }
+    }));
+  };
+
+  const addTag = (id: string) => {
+    const tempItem = tempData[id];
+    if (tempItem && tempItem.newTag.trim() && tempItem.tags.length < 13) {
+      updateTempData(id, 'tags', [...tempItem.tags, tempItem.newTag.trim()]);
+      updateTempData(id, 'newTag', '');
+    }
+  };
+
+  const removeTag = (id: string, index: number) => {
+    const tempItem = tempData[id];
+    if (tempItem) {
+      updateTempData(id, 'tags', tempItem.tags.filter((_, i) => i !== index));
+    }
+  };
+
+  const addMaterial = (id: string) => {
+    const tempItem = tempData[id];
+    if (tempItem && tempItem.newMaterial.trim() && tempItem.materials.length < 13) {
+      updateTempData(id, 'materials', [...tempItem.materials, tempItem.newMaterial.trim()]);
+      updateTempData(id, 'newMaterial', '');
+    }
+  };
+
+  const removeMaterial = (id: string, index: number) => {
+    const tempItem = tempData[id];
+    if (tempItem) {
+      updateTempData(id, 'materials', tempItem.materials.filter((_, i) => i !== index));
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -134,15 +249,27 @@ export default function SavedGenerationsClient() {
           return (
             <Card key={generation.id} className="overflow-hidden">
               {/* Accordion Header */}
-              <button
+              <div
                 onClick={() => toggleExpanded(generation.id)}
-                className="w-full p-4 text-left hover:bg-gray-50 transition-colors"
+                className="w-full p-4 text-left hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate">
-                      {generation.title}
-                    </h3>
+                    {editingItems.has(generation.id) ? (
+                      <div className="mb-2">
+                        <input
+                          type="text"
+                          value={tempData[generation.id]?.title || ''}
+                          onChange={(e) => updateTempData(generation.id, 'title', e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold"
+                          placeholder="Enter title..."
+                        />
+                      </div>
+                    ) : (
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate">
+                        {generation.title}
+                      </h3>
+                    )}
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       {generation.tone && (
                         <span>Tone: {generation.tone}</span>
@@ -154,6 +281,20 @@ export default function SavedGenerationsClient() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 ml-4">
+                    {!editingItems.has(generation.id) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startEdit(generation);
+                        }}
+                        className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                        title="Edit generation"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -183,7 +324,7 @@ export default function SavedGenerationsClient() {
                     )}
                   </div>
                 </div>
-              </button>
+              </div>
 
               {/* Accordion Content */}
               {isExpanded && (
@@ -192,67 +333,191 @@ export default function SavedGenerationsClient() {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-gray-900">Description</h4>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(generation.description)}
-                          className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
+                        {!editingItems.has(generation.id) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(generation.description)}
+                            className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
-                      <p className="text-gray-700 text-sm leading-relaxed">
-                        {generation.description}
-                      </p>
+                      {editingItems.has(generation.id) ? (
+                        <div className="space-y-3">
+                          <textarea
+                            value={tempData[generation.id]?.description || ''}
+                            onChange={(e) => updateTempData(generation.id, 'description', e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            rows={6}
+                            placeholder="Enter description..."
+                          />
+                        </div>
+                      ) : (
+                        <p className="text-gray-700 text-sm leading-relaxed">
+                          {generation.description}
+                        </p>
+                      )}
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-gray-900">Tags</h4>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(generation.tags.join(', '))}
-                          className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {generation.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md"
+                        {!editingItems.has(generation.id) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(generation.tags.join(', '))}
+                            className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                           >
-                            {tag}
-                          </span>
-                        ))}
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
+                      {editingItems.has(generation.id) ? (
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap gap-2">
+                            {tempData[generation.id]?.tags.map((tag, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md flex items-center space-x-1"
+                              >
+                                <span>{tag}</span>
+                                <button
+                                  onClick={() => removeTag(generation.id, index)}
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                          {tempData[generation.id]?.tags.length < 13 && (
+                            <div className="flex space-x-2">
+                              <input
+                                type="text"
+                                value={tempData[generation.id]?.newTag || ''}
+                                onChange={(e) => updateTempData(generation.id, 'newTag', e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && addTag(generation.id)}
+                                className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="Add new tag..."
+                              />
+                              <Button
+                                onClick={() => addTag(generation.id)}
+                                size="sm"
+                                variant="outline"
+                                disabled={!tempData[generation.id]?.newTag.trim()}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {generation.tags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-gray-900">Materials</h4>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(generation.materials.join(', '))}
-                          className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {generation.materials.map((material, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-md"
+                        {!editingItems.has(generation.id) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(generation.materials.join(', '))}
+                            className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                           >
-                            {material}
-                          </span>
-                        ))}
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
+                      {editingItems.has(generation.id) ? (
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap gap-2">
+                            {tempData[generation.id]?.materials.map((material, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-md flex items-center space-x-1"
+                              >
+                                <span>{material}</span>
+                                <button
+                                  onClick={() => removeMaterial(generation.id, index)}
+                                  className="text-green-600 hover:text-green-800"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                          {tempData[generation.id]?.materials.length < 13 && (
+                            <div className="flex space-x-2">
+                              <input
+                                type="text"
+                                value={tempData[generation.id]?.newMaterial || ''}
+                                onChange={(e) => updateTempData(generation.id, 'newMaterial', e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && addMaterial(generation.id)}
+                                className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="Add new material..."
+                              />
+                              <Button
+                                onClick={() => addMaterial(generation.id)}
+                                size="sm"
+                                variant="outline"
+                                disabled={!tempData[generation.id]?.newMaterial.trim()}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {generation.materials.map((material, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-md"
+                            >
+                              {material}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
+                    
+                    {/* Save/Cancel buttons when editing */}
+                    {editingItems.has(generation.id) && (
+                      <div className="pt-4 border-t border-gray-200">
+                        <div className="flex space-x-2">
+                          <Button
+                            onClick={() => saveEdit(generation.id)}
+                            size="sm"
+                            variant="primary"
+                          >
+                            <Check className="h-3 w-3 mr-1" />
+                            Save Changes
+                          </Button>
+                          <Button
+                            onClick={() => cancelEdit(generation.id)}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

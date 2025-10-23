@@ -34,7 +34,7 @@ export default function LandingPage() {
             
             <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed">
               Create SEO-optimized titles, descriptions, and tags that rank higher, convert better, and boost your sales. 
-              <span className="font-semibold text-gray-800"> Join 10,000+ successful Etsy sellers</span> already using ListGenius.
+              <span className="font-semibold text-gray-800"> Join thousands of successful Etsy sellers</span> already using ListGenius.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -79,7 +79,7 @@ export default function LandingPage() {
             <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-12">
               Trusted by Etsy sellers worldwide
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
                   <BarChart3 className="w-8 h-8 text-blue-600" />
@@ -91,7 +91,7 @@ export default function LandingPage() {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
                   <Users className="w-8 h-8 text-green-600" />
                 </div>
-                <div className="text-3xl font-bold text-gray-900 mb-2">500+</div>
+                <div className="text-3xl font-bold text-gray-900 mb-2">Thousands</div>
                 <div className="text-sm text-gray-600">Happy Sellers</div>
               </div>
               <div className="text-center">
@@ -100,13 +100,6 @@ export default function LandingPage() {
                 </div>
                 <div className="text-3xl font-bold text-gray-900 mb-2">85%</div>
                 <div className="text-sm text-gray-600">More Sales</div>
-              </div>
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
-                  <Star className="w-8 h-8 text-orange-600" />
-                </div>
-                <div className="text-3xl font-bold text-gray-900 mb-2">4.9/5</div>
-                <div className="text-sm text-gray-600">User Rating</div>
               </div>
             </div>
           </div>
@@ -125,21 +118,13 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl mb-6 shadow-lg">
                 <Zap className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">AI Generation</h3>
               <p className="text-gray-600 leading-relaxed">Generate complete listings with SEO-optimized titles, descriptions, and tags in seconds.</p>
-            </div>
-
-            <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-xl mb-6 shadow-lg">
-                <Target className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Direct Publishing</h3>
-              <p className="text-gray-600 leading-relaxed">Improve existing listings and publish directly to your Etsy shop with one click.</p>
             </div>
 
             <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
@@ -178,9 +163,9 @@ export default function LandingPage() {
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl text-2xl font-bold mb-8 shadow-lg">
                 <Users className="h-8 w-8" />
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Connect Shop</h3>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Get Started</h3>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Link your Etsy shop (optional) to publish listings directly or just generate content to copy.
+                Sign up for free and start generating optimized listing content immediately. No setup required.
               </p>
             </div>
 
@@ -198,9 +183,9 @@ export default function LandingPage() {
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl text-2xl font-bold mb-8 shadow-lg">
                 <Rocket className="h-8 w-8" />
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Publish & Sell</h3>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Copy & Use</h3>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Get your optimized listing and copy it to Etsy or publish directly from our platform.
+                Copy your optimized listing content and paste it directly into your Etsy shop to start selling.
               </p>
             </div>
           </div>
@@ -327,7 +312,7 @@ export default function LandingPage() {
           <div className="text-center relative z-10">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm font-medium mb-6">
               <Heart className="w-4 h-4 mr-2" />
-              Trusted by 500+ Etsy Sellers
+              Trusted by Thousands of Etsy Sellers
             </div>
             
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
@@ -349,7 +334,7 @@ export default function LandingPage() {
                 </Button>
               </Link>
               <Link href="/pricing">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-blue-600">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-blue-600 bg-transparent">
                   <TrendingUp className="mr-2 h-5 w-5" />
                   View Premium Plans
                 </Button>

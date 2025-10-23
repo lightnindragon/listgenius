@@ -182,6 +182,18 @@ export default function AppPage() {
     }
   };
 
+  const handleContentChange = (content: { title?: string; description?: string; tags?: string[]; materials?: string[] }) => {
+    if (output) {
+      setOutput({
+        ...output,
+        title: content.title || output.title,
+        description: content.description || output.description,
+        tags: content.tags || output.tags,
+        materials: content.materials || output.materials,
+      });
+    }
+  };
+
   if (!isLoaded) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
@@ -281,6 +293,7 @@ export default function AppPage() {
               pinterestCaption={output?.pinterestCaption}
               etsyMessage={output?.etsyMessage}
               loading={loading}
+              onContentChange={handleContentChange}
             />
           </div>
         </div>

@@ -52,7 +52,8 @@ const Header: React.FC = () => {
 
   const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'Pricing', href: '/pricing' }
+    { name: 'Pricing', href: '/pricing' },
+    { name: 'Contact', href: '/contact' }
   ];
 
   const loggedInNavigation = [
