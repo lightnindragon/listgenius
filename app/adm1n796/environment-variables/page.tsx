@@ -304,7 +304,7 @@ export default function EnvironmentVariablesPage() {
           )}
         </div>
 
-        <ToastContainer toasts={toasts} removeToast={removeToast} />
+        <ToastContainer toasts={toasts} onClose={removeToast} />
         <TopRightToast />
       </Container>
     </AdminAuthGuard>
