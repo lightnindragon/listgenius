@@ -22,6 +22,18 @@ export default function SignUpPage() {
     }
   }, []);
 
+  // Get redirect URL from query parameters
+  const getRedirectUrl = () => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirect = urlParams.get('redirect');
+      if (redirect) {
+        return decodeURIComponent(redirect);
+      }
+    }
+    return '/app';
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -50,9 +62,8 @@ export default function SignUpPage() {
                 otpCodeFieldInput: 'border border-gray-300 focus:border-brand-500 focus:ring-brand-500',
               }
             }}
-            afterSignUpUrl="/app"
-            redirectUrl="/app"
-            forceRedirectUrl="/app"
+            afterSignUpUrl={getRedirectUrl()}
+            redirectUrl={getRedirectUrl()}
             signInUrl="/sign-in"
           />
         </div>

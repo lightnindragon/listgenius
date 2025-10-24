@@ -12,6 +12,16 @@ export default function PricingPage() {
 
   useEffect(() => {
     loadPricing();
+    
+    // Check if user came back from sign-up and should proceed to checkout
+    const urlParams = new URLSearchParams(window.location.search);
+    const plan = urlParams.get('plan');
+    if (plan && (plan === 'pro' || plan === 'business')) {
+      // Small delay to ensure the page is fully loaded
+      setTimeout(() => {
+        handleCheckout(plan);
+      }, 1000);
+    }
   }, []);
 
   const loadPricing = async () => {
@@ -46,6 +56,12 @@ export default function PricingPage() {
           cancelUrl: `${window.location.origin}/pricing?subscription=cancelled`,
         }),
       });
+
+      // If user is not authenticated, redirect to sign-up page
+      if (response.status === 401) {
+        window.location.href = `/sign-up?redirect=${encodeURIComponent(`/pricing?plan=${plan.toLowerCase()}`)}`;
+        return;
+      }
 
       const data = await response.json();
 
