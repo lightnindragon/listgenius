@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
     // Quota already incremented in checkAndIncrementGeneration
 
     // Track analytics
-    await trackGeneration(userId, plan, sanitizedData.wordCount || 200, sanitizedData.tone || 'Professional');
+    trackGeneration(userId, plan, sanitizedData.wordCount || 200, sanitizedData.tone || 'Professional');
 
     // Return success response
     const response = {
