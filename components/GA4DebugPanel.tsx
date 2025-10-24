@@ -4,6 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useAnalytics } from '@/contexts/AnalyticsContext';
 import { GA4_MEASUREMENT_ID } from '@/lib/analytics';
 
+// Extend Window interface for GA4 globals
+declare global {
+  interface Window {
+    gtag: (...args: any[]) => void;
+    dataLayer: any[];
+  }
+}
+
 export const GA4DebugPanel: React.FC = () => {
   const analytics = useAnalytics();
   const [gtagAvailable, setGtagAvailable] = useState(false);
