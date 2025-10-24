@@ -183,7 +183,7 @@ export default function EnvironmentVariablesPage() {
       <div className="flex items-center space-x-2">
         <Select
           value={currentValue}
-          onChange={(value) => setEditValues(prev => ({ ...prev, [key]: value }))}
+          onChange={(e) => setEditValues(prev => ({ ...prev, [key]: e.target.value }))}
           className="w-24"
         >
           <option value="true">true</option>
