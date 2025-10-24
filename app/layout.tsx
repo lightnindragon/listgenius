@@ -5,6 +5,7 @@ import { Header } from '@/components/ui/Header';
 import { Footer } from '@/components/ui/Footer';
 import { UserMetadataProvider } from '@/contexts/UserMetadataContext';
 import { AnalyticsProvider } from '@/contexts/AnalyticsContext';
+import { GA4DebugPanel } from '@/components/GA4DebugPanel';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -61,6 +62,7 @@ export default function RootLayout({
                 {children}
               </main>
               <Footer />
+              <GA4DebugPanel />
             </UserMetadataProvider>
           </AnalyticsProvider>
         </body>

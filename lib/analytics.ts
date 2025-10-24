@@ -7,31 +7,7 @@ declare global {
 
 export const GA4_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
 
-// Initialize Google Analytics
-export const initGA = () => {
-  if (!GA4_MEASUREMENT_ID) {
-    console.warn('GA4_MEASUREMENT_ID not found in environment variables');
-    return;
-  }
-
-  // Load Google Analytics script
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`;
-  document.head.appendChild(script);
-
-  // Initialize gtag
-  window.gtag = window.gtag || function() {
-    (window.gtag as any).q = (window.gtag as any).q || [];
-    (window.gtag as any).q.push(arguments);
-  };
-
-  window.gtag('js', new Date());
-  window.gtag('config', GA4_MEASUREMENT_ID, {
-    page_title: document.title,
-    page_location: window.location.href,
-  });
-};
+// Note: GA4 initialization is now handled by AnalyticsContext.tsx using Next.js Script components
 
 // Track page views
 export const trackPageView = (url: string, title?: string) => {

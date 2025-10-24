@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Script from 'next/script';
-import { initGA, trackPageView, trackEvent, GA4_MEASUREMENT_ID } from '@/lib/analytics';
+import { trackPageView, trackEvent, GA4_MEASUREMENT_ID } from '@/lib/analytics';
 
 interface AnalyticsContextType {
   trackEvent: (eventName: string, parameters?: Record<string, any>) => void;
@@ -35,14 +35,24 @@ export const AnalyticsProvider: React.FC<AnalyticsProviderProps> = ({ children }
   const pathname = usePathname();
 
   useEffect(() => {
-    // Initialize GA4
-    if (GA4_MEASUREMENT_ID && typeof window !== 'undefined') {
-      initGA();
-      setIsInitialized(true);
-      console.log('GA4 initialized with measurement ID:', GA4_MEASUREMENT_ID);
-    } else {
-      console.warn('GA4 not initialized - missing measurement ID or running on server');
+    // Check environment variable
+    if (!GA4_MEASUREMENT_ID) {
+      console.error('GA4_MEASUREMENT_ID is not set in environment variables');
+      console.error('Please add NEXT_PUBLIC_GA4_MEASUREMENT_ID=G-XXXXXXXXXX to your .env.local file');
+      return;
     }
+
+    // Check if running in browser
+    if (typeof window === 'undefined') {
+      console.log('GA4 will be initialized on client side');
+      return;
+    }
+
+    console.log('GA4 measurement ID found:', GA4_MEASUREMENT_ID);
+    console.log('GA4 will be initialized via Next.js Script components');
+    
+    // Set initialized to true - the Script components will handle the actual initialization
+    setIsInitialized(true);
   }, []);
 
   useEffect(() => {
@@ -124,17 +134,33 @@ export const AnalyticsProvider: React.FC<AnalyticsProviderProps> = ({ children }
           <Script
             strategy="afterInteractive"
             src={`https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`}
+            onLoad={() => {
+              console.log('GA4 script loaded successfully');
+            }}
+            onError={() => {
+              console.error('Failed to load GA4 script');
+            }}
           />
           <Script
             id="google-analytics"
             strategy="afterInteractive"
             dangerouslySetInnerHTML={{
               __html: `
+                console.log('Initializing GA4 with measurement ID: ${GA4_MEASUREMENT_ID}');
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
+                window.gtag = gtag;
                 gtag('js', new Date());
                 gtag('config', '${GA4_MEASUREMENT_ID}', {
                   page_path: window.location.pathname,
+                  send_page_view: true
+                });
+                console.log('GA4 initialized successfully');
+                
+                // Test event to verify GA4 is working
+                gtag('event', 'ga4_initialized', {
+                  event_category: 'debug',
+                  event_label: 'GA4_test'
                 });
               `,
             }}
