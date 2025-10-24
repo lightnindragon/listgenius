@@ -15,15 +15,22 @@ const memoryStore = new Map<string, { genCount: number; rewriteCount: number; la
 export async function canGenerate(userId: string): Promise<boolean> {
   try {
     const plan = await getUserPlan(userId);
+    const dailyCount = await getDailyGenCount(userId);
     
-    // Paid plans have unlimited generation
-    if (plan === 'pro' || plan === 'business') {
+    // Check limits based on plan
+    if (plan === 'free') {
+      // Free plan: 6 generations per month (we'll use monthly tracking)
+      return true; // Monthly limit is handled in generation-quota.ts
+    } else if (plan === 'pro') {
+      // Pro plan: 50 generations per day
+      return dailyCount < 50;
+    } else if (plan === 'business') {
+      // Business plan: 200 generations per day
+      return dailyCount < 200;
+    } else {
+      // Agency plan: unlimited
       return true;
     }
-    
-    // Free plan: check daily limit
-    const dailyCount = await getDailyGenCount(userId);
-    return dailyCount < 6;
   } catch (error) {
     logger.error('Failed to check generation rate limit', { userId, error });
     
@@ -161,11 +168,12 @@ function checkMemoryRateLimit(userId: string, type: 'generate' | 'rewrite'): boo
     return true;
   }
   
-    if (type === 'generate') {
-      return data.genCount < 6;
-    } else {
-      return data.rewriteCount < 1;
-    }
+  if (type === 'generate') {
+    // Default to free plan limit (6 per month, but we'll use daily for fallback)
+    return data.genCount < 6;
+  } else {
+    return data.rewriteCount < 1;
+  }
 }
 
 function incrementMemoryRateLimit(userId: string, type: 'generate' | 'rewrite'): void {

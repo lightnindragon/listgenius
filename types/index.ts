@@ -12,6 +12,7 @@ export interface UserMetadata {
   genUsage?: Record<string, number>; // monthKey -> count
   dailyGenCount: number; // keep for backward compat
   dailyRewriteCount: number;
+  monthlyGenCount?: number; // current month's generation count
   lastResetDate: string; // ISO 8601 format (YYYY-MM-DD)
   preferences?: {
     tone?: string; // e.g., "Professional", "Casual", "Luxury"
@@ -117,4 +118,60 @@ export interface RewriteRequest {
   audience?: string;
   keywords: string[];
   tone?: string;
+}
+
+// Admin Panel Types
+export interface AdminSession {
+  username: string;
+  iat: number;
+  exp: number;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+  plan: 'free' | 'pro' | 'business' | 'agency';
+  status: 'active' | 'suspended' | 'cancelled';
+  loginCount: number;
+  lastLoginAt: string;
+  lifetimeGenerations: number;
+  dailyGenCount: number;
+  dailyRewriteCount: number;
+  signUpDate: string;
+  stripeCustomerId?: string;
+  subscriptionStatus?: string;
+  customQuota?: number;
+}
+
+export interface AdminAnalytics {
+  totalUsers: number;
+  activeUsers: number;
+  newUsersThisMonth: number;
+  usersByPlan: {
+    free: number;
+    pro: number;
+    business: number;
+    agency: number;
+  };
+  cancelledSubscriptions: number;
+  totalGenerationsThisMonth: number;
+  averageGenerationsPerUser: number;
+  revenueThisMonth: number;
+  userGrowthData: Array<{ date: string; count: number }>;
+  generationTrends: Array<{ date: string; count: number }>;
+}
+
+export interface UserActivity {
+  type: 'login' | 'generation' | 'page_view' | 'plan_change' | 'quota_reset';
+  timestamp: string;
+  details?: any;
+  ip?: string;
+}
+
+export interface LoginHistory {
+  timestamp: string;
+  ip?: string;
+  userAgent?: string;
 }

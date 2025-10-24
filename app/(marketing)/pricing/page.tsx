@@ -92,7 +92,7 @@ export default function PricingPage() {
       period: 'per month',
       description: 'For growing businesses',
       features: [
-        'Unlimited generations',
+        '50 generations per day',
         'All 15 tone options',
         '200-600 words per listing',
         'Save generated listings',
@@ -111,7 +111,7 @@ export default function PricingPage() {
       period: 'per month',
       description: 'For established businesses',
       features: [
-        'Unlimited generations',
+        '200 generations per day',
         'All 15 tone options',
         '200-600 words per listing',
         'Save generated listings',
@@ -251,10 +251,10 @@ export default function PricingPage() {
               </thead>
               <tbody>
                 <tr className="border-b border-gray-100">
-                  <td className="py-4 px-6 text-gray-900">Monthly generations</td>
-                  <td className="text-center py-4 px-6 text-gray-600">6</td>
-                  <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
-                  <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
+                  <td className="py-4 px-6 text-gray-900">Generation limits</td>
+                  <td className="text-center py-4 px-6 text-gray-600">6/month</td>
+                  <td className="text-center py-4 px-6 text-green-600">50/day</td>
+                  <td className="text-center py-4 px-6 text-green-600">200/day</td>
                   <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
                 </tr>
                 <tr className="border-b border-gray-100">

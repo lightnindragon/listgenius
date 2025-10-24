@@ -117,7 +117,7 @@ export default function UpgradePage() {
       price: pricing.pro,
       period: 'month',
       features: [
-        'Unlimited generations',
+        '50 generations per day',
         'All 15 tone options',
         '200-600 words per listing',
         'Save generated listings',
@@ -137,7 +137,7 @@ export default function UpgradePage() {
       price: pricing.business,
       period: 'month',
       features: [
-        'Unlimited generations',
+        '200 generations per day',
         'All 15 tone options',
         '200-600 words per listing',
         'Save generated listings',

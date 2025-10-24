@@ -5,7 +5,7 @@ import { validateRequest } from '@/lib/validators';
 import { generateRequestSchema } from '@/lib/validators';
 import { checkAndIncrementGeneration } from '@/lib/generation-quota';
 import { PLAN_CONFIG } from '@/lib/entitlements';
-import { trackGenerationCreated } from '@/lib/analytics';
+import { trackGeneration } from '@/lib/analytics';
 import { sanitizeInput, sanitizeTag, extractFocusKeywords } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { getErrorResponse } from '@/lib/errors';
@@ -154,13 +154,7 @@ export async function POST(request: NextRequest) {
     // Quota already incremented in checkAndIncrementGeneration
 
     // Track analytics
-    await trackGenerationCreated(userId, {
-      model: usedModel,
-      tokensUsed,
-      wordCount: descriptionWordCount,
-      targetWordCount: targetWordCount,
-      hasExtras: !!(validatedOutput.pinterestCaption || validatedOutput.etsyMessage)
-    });
+    await trackGeneration(userId, 'listing');
 
     // Return success response
     const response = {

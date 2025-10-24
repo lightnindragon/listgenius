@@ -20,15 +20,15 @@ export function GenerationCounter({ className }: GenerationCounterProps) {
 
   const plan = userMetadata?.plan || 'free';
   const dailyGenCount = userMetadata?.dailyGenCount || 0;
-  const dailyRewriteCount = userMetadata?.dailyRewriteCount || 0;
+  const monthlyGenCount = userMetadata?.monthlyGenCount || 0;
 
   // Determine status based on plan and usage
   const getStatusInfo = () => {
     if (plan === 'free') {
-      if (dailyGenCount >= 3) {
+      if (monthlyGenCount >= 6) {
         return {
           icon: AlertCircle,
-          message: 'Daily limit reached (3/3)',
+          message: 'Monthly limit reached (6/6)',
           color: 'text-red-600',
           bgColor: 'bg-red-50',
           borderColor: 'border-red-200',
@@ -37,10 +37,50 @@ export function GenerationCounter({ className }: GenerationCounterProps) {
       } else {
         return {
           icon: Clock,
-          message: `${dailyGenCount}/6 generations today`,
+          message: `${monthlyGenCount}/6 monthly generations`,
           color: 'text-orange-600',
           bgColor: 'bg-orange-50',
           borderColor: 'border-orange-200',
+          showUpgrade: false
+        };
+      }
+    } else if (plan === 'pro') {
+      if (dailyGenCount >= 50) {
+        return {
+          icon: AlertCircle,
+          message: 'Daily limit reached (50/50)',
+          color: 'text-red-600',
+          bgColor: 'bg-red-50',
+          borderColor: 'border-red-200',
+          showUpgrade: false
+        };
+      } else {
+        return {
+          icon: Zap,
+          message: `${dailyGenCount}/50 daily generations`,
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-50',
+          borderColor: 'border-blue-200',
+          showUpgrade: false
+        };
+      }
+    } else if (plan === 'business') {
+      if (dailyGenCount >= 200) {
+        return {
+          icon: AlertCircle,
+          message: 'Daily limit reached (200/200)',
+          color: 'text-red-600',
+          bgColor: 'bg-red-50',
+          borderColor: 'border-red-200',
+          showUpgrade: false
+        };
+      } else {
+        return {
+          icon: Zap,
+          message: `${dailyGenCount}/200 daily generations`,
+          color: 'text-purple-600',
+          bgColor: 'bg-purple-50',
+          borderColor: 'border-purple-200',
           showUpgrade: false
         };
       }
