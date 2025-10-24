@@ -82,7 +82,7 @@ export default function PricingPage() {
         '200 words maximum per listing'
       ],
       cta: 'Get Started Free',
-      ctaLink: '/app/generator',
+      ctaLink: '/sign-up',
       ctaVariant: 'outline' as const,
       popular: false
     },
