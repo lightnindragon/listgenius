@@ -373,9 +373,9 @@ export default function PricingPage() {
             <p className="text-xl text-gray-600 mb-8">
               Join thousands of Etsy sellers who are already optimizing their listings with AI.
             </p>
-            <Link href="/app">
+            <Link href="/sign-up">
               <Button size="lg">
-                Start Free Trial
+                Get Started for Free
               </Button>
             </Link>
           </div>

@@ -38,10 +38,10 @@ export default function LandingPage() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Link href="/app">
+              <Link href="/sign-up">
                 <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
                   <Rocket className="mr-2 h-5 w-5" />
-                  Start Generating Free
+                  Get Started for Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
@@ -326,10 +326,10 @@ export default function LandingPage() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/app">
+              <Link href="/sign-up">
                 <Button size="lg" className="w-full sm:w-auto bg-white text-blue-600 hover:bg-gray-50 shadow-xl">
                   <Rocket className="mr-2 h-5 w-5" />
-                  Start Generating Free
+                  Get Started for Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
