@@ -12,7 +12,8 @@ import {
   TrendingUp, 
   Calendar,
   XCircle,
-  BarChart3
+  BarChart3,
+  Settings
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -108,6 +109,12 @@ export default function AdminDashboard() {
                   <Button variant="outline">
                     <Users className="h-4 w-4 mr-2" />
                     Manage Users
+                  </Button>
+                </Link>
+                <Link href="/adm1n796/environment-variables">
+                  <Button variant="outline">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Environment Variables
                   </Button>
                 </Link>
                 <Button onClick={handleLogout} variant="outline">
@@ -212,11 +219,17 @@ export default function AdminDashboard() {
               {/* Quick Actions */}
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <Link href="/adm1n796/users">
                     <Button className="w-full" variant="outline">
                       <Users className="h-4 w-4 mr-2" />
                       View All Users
+                    </Button>
+                  </Link>
+                  <Link href="/adm1n796/environment-variables">
+                    <Button className="w-full" variant="outline">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Environment Variables
                     </Button>
                   </Link>
                   <Button 
