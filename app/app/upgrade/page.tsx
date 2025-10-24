@@ -8,6 +8,7 @@ import { useToast, ToastContainer } from '@/components/ui/Toast';
 import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getBaseUrl } from '@/lib/utils';
+import { useAnalytics } from '@/contexts/AnalyticsContext';
 import { 
   Check, 
   X, 
@@ -46,6 +47,7 @@ interface Plan {
 
 export default function UpgradePage() {
   const { user } = useUser();
+  const analytics = useAnalytics();
   const { toast, toasts, removeToast } = useToast();
   const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
   const [loading, setLoading] = useState(true);
@@ -155,6 +157,11 @@ export default function UpgradePage() {
 
   const handleUpgrade = async (planId: string) => {
     setUpgrading(planId);
+    
+    // Track upgrade attempt
+    const currentPlan = userMetadata?.plan || 'free';
+    analytics.trackPlanUpgrade(currentPlan, planId);
+    
     try {
       const baseUrl = getBaseUrl();
       const response = await fetch(`${baseUrl}/api/stripe/checkout`, {

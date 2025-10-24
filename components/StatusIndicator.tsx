@@ -49,6 +49,8 @@ export function StatusIndicator({ className }: StatusIndicatorProps) {
   const plan = userMetadata?.plan || 'free';
   const dailyGenCount = userMetadata?.dailyGenCount || 0;
   const dailyRewriteCount = userMetadata?.dailyRewriteCount || 0;
+  
+  console.log('StatusIndicator: Current plan:', plan, 'userMetadata:', userMetadata);
 
   // Only show plan status in header, not generation count
   const getPlanStatus = () => {

@@ -14,6 +14,7 @@ import { ListingOutput, GenerateRequest, APIResponse } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Save, Download } from 'lucide-react';
 import { useUserMetadata } from '@/contexts/UserMetadataContext';
+import { useAnalytics } from '@/contexts/AnalyticsContext';
 
 export default function AppPage() {
   const { user, isLoaded } = useUser();
@@ -21,6 +22,7 @@ export default function AppPage() {
   const [output, setOutput] = useState<ListingOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const { userMetadata, refreshUserMetadata } = useUserMetadata();
+  const analytics = useAnalytics();
   const [userPreferences, setUserPreferences] = useState<{ tone?: string; niche?: string; audience?: string }>({});
   const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'business'>('free');
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
@@ -165,6 +167,14 @@ export default function AppPage() {
       if (result.success && result.data) {
         setOutput(result.data);
         emitTopRightToast('Listing generated successfully!', 'success');
+        
+        // Track listing generation
+        analytics.trackListingGeneration(
+          userPlan,
+          data.wordCount || 200,
+          data.tone || 'Professional'
+        );
+        
         // Refresh user data to update generation count
         await refreshUserMetadata();
         // Emit event to notify GenerationCounter to refresh
@@ -174,9 +184,12 @@ export default function AppPage() {
       } else {
         const errorMessage = result.error || 'Failed to generate listing';
         emitTopRightToast(errorMessage, 'error');
+        analytics.trackError(errorMessage, 'listing_generation');
       }
     } catch (error) {
-      emitTopRightToast('Network error. Please try again.', 'error');
+      const errorMessage = 'Network error. Please try again.';
+      emitTopRightToast(errorMessage, 'error');
+      analytics.trackError(errorMessage, 'network_error');
     } finally {
       setLoading(false);
     }

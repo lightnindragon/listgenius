@@ -4,6 +4,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { Header } from '@/components/ui/Header';
 import { Footer } from '@/components/ui/Footer';
 import { UserMetadataProvider } from '@/contexts/UserMetadataContext';
+import { AnalyticsProvider } from '@/contexts/AnalyticsContext';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -53,13 +54,15 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
         >
-          <UserMetadataProvider>
-            <Header />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
-          </UserMetadataProvider>
+          <AnalyticsProvider>
+            <UserMetadataProvider>
+              <Header />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+            </UserMetadataProvider>
+          </AnalyticsProvider>
         </body>
       </html>
     </ClerkProvider>

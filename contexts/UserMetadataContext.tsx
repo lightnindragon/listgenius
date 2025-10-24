@@ -58,10 +58,12 @@ export function UserMetadataProvider({ children }: UserMetadataProviderProps) {
     try {
       setError(null);
       const baseUrl = getBaseUrl();
+      console.log('UserMetadataContext: Fetching from:', `${baseUrl}/api/user/metadata`);
       const response = await fetch(`${baseUrl}/api/user/metadata`);
       
       if (response.ok) {
         const data = await response.json();
+        console.log('UserMetadataContext: Received data:', data);
         setUserMetadata(data);
         setLastFetch(now);
       } else {
@@ -101,6 +103,12 @@ export function UserMetadataProvider({ children }: UserMetadataProviderProps) {
       fetchUserMetadata(true);
     };
 
+        const handlePlanUpdateEvent = () => {
+          console.log('UserMetadataContext: PlanUpdated event received, refreshing data...');
+          console.log('UserMetadataContext: Current plan before refresh:', userMetadata?.plan);
+          fetchUserMetadata(true);
+        };
+
     // Listen for page visibility changes (when user comes back to tab)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -110,19 +118,21 @@ export function UserMetadataProvider({ children }: UserMetadataProviderProps) {
 
     // Listen for storage events (cross-tab communication)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'generationCountUpdated' || e.key === 'resetCompleted') {
+      if (e.key === 'generationCountUpdated' || e.key === 'resetCompleted' || e.key === 'planUpdated') {
         fetchUserMetadata(true);
       }
     };
 
     window.addEventListener('generationCompleted', handleGenerationEvent);
     window.addEventListener('resetCompleted', handleResetEvent);
+    window.addEventListener('planUpdated', handlePlanUpdateEvent);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
       window.removeEventListener('generationCompleted', handleGenerationEvent);
       window.removeEventListener('resetCompleted', handleResetEvent);
+      window.removeEventListener('planUpdated', handlePlanUpdateEvent);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('storage', handleStorageChange);
     };

@@ -10,6 +10,7 @@ import { TopRightToast, emitTopRightToast } from '@/components/TopRightToast';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getBaseUrl } from '@/lib/utils';
 import { isEnabled } from '@/lib/flags';
+import { useAnalytics } from '@/contexts/AnalyticsContext';
 import { 
   Palette, 
   Link, 
@@ -41,6 +42,7 @@ interface UserMetadata {
 export default function SettingsPage() {
   const { user } = useUser();
   const { toast, toasts, removeToast } = useToast();
+  const analytics = useAnalytics();
   const [loading, setLoading] = useState(false);
   const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
   const [preferences, setPreferences] = useState<UserPreferences>({
@@ -179,12 +181,23 @@ export default function SettingsPage() {
         body: JSON.stringify({ plan })
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        emitTopRightToast(`Plan updated to ${plan}`, 'success');
-        // Reload user data to reflect the change
-        loadUserData();
-      } else {
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Settings: Plan update successful:', data);
+            emitTopRightToast(`Plan updated to ${plan}`, 'success');
+            
+            // Track plan upgrade
+            const currentPlan = userMetadata?.plan || 'free';
+            analytics.trackPlanUpgrade(currentPlan, plan);
+            
+            // Reload user data to reflect the change
+            loadUserData();
+            // Emit event to notify other components
+            console.log('Settings: Dispatching planUpdated event');
+            window.dispatchEvent(new CustomEvent('planUpdated'));
+            // Also use localStorage as backup
+            localStorage.setItem('planUpdated', Date.now().toString());
+          } else {
         const errorData = await response.json();
         console.error('Plan update failed:', errorData);
         emitTopRightToast(`Failed to update plan: ${errorData.error || 'Unknown error'}`, 'error');

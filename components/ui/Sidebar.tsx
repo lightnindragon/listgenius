@@ -9,6 +9,7 @@ import { useUser } from '@clerk/nextjs';
 import { getUserPlanSimple } from '@/lib/entitlements';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { navigationCategories, bottomNavigation, NavigationItem, NavigationCategory } from '@/lib/navigation';
+import { useUserMetadata } from '@/contexts/UserMetadataContext';
 
 interface SidebarProps {
   className?: string;
@@ -19,7 +20,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ className, onCreateListingClick }) => {
   const pathname = usePathname();
   const { user } = useUser();
-  const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'business'>('free');
+  const { userMetadata } = useUserMetadata();
   
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -29,40 +30,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ className, onCreateListingClic
     return initial;
   });
 
-  // Get user plan when user data is available
-  React.useEffect(() => {
-    if (user) {
-      console.log('Sidebar - User object:', user);
-      console.log('Sidebar - User metadata:', user.publicMetadata);
-      console.log('Sidebar - User metadata plan:', user.publicMetadata?.plan);
-      console.log('Sidebar - User metadata plan type:', typeof user.publicMetadata?.plan);
-      
-      // Fetch user plan from API to ensure consistency with server-side
-      fetch('/api/user/plan')
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            console.log('Sidebar - API detected plan:', data.plan);
-            setUserPlan(data.plan);
-          } else {
-            console.error('Sidebar - Failed to get plan from API:', data.error);
-            // Fallback to client-side detection
-            getUserPlanSimple(user).then(plan => {
-              console.log('Sidebar - Fallback detected plan:', plan);
-              setUserPlan(plan);
-            });
-          }
-        })
-        .catch(error => {
-          console.error('Sidebar - Error fetching plan from API:', error);
-          // Fallback to client-side detection
-          getUserPlanSimple(user).then(plan => {
-            console.log('Sidebar - Fallback detected plan:', plan);
-            setUserPlan(plan);
-          });
-        });
-    }
-  }, [user]);
+  // Get user plan from UserMetadataContext
+  const userPlan = userMetadata?.plan || 'free';
+  console.log('Sidebar: Current userPlan:', userPlan, 'userMetadata:', userMetadata);
 
   // Filter navigation items based on feature flags
   const getFilteredNavigationCategories = () => {
