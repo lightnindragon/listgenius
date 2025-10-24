@@ -172,9 +172,10 @@ export async function POST(request: NextRequest) {
 
     // Update environment variable via Vercel API
     try {
-      const target = environment === 'production' ? ['production'] : 
-                    environment === 'preview' ? ['preview'] : 
-                    ['development'];
+      const target: ('production' | 'preview' | 'development')[] = 
+        environment === 'production' ? ['production'] : 
+        environment === 'preview' ? ['preview'] : 
+        ['development'];
       
       await vercelAPI.updateEnvironmentVariable(key, value, target);
       
