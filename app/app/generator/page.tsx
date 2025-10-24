@@ -171,7 +171,7 @@ export default function AppPage() {
         // Track listing generation
         analytics.trackListingGeneration(
           userPlan,
-          data.wordCount || 200,
+          result.data.description.split(' ').length,
           data.tone || 'Professional'
         );
         
