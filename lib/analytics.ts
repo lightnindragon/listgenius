@@ -110,3 +110,65 @@ export const trackEngagement = (action: string, element?: string) => {
     element,
   });
 };
+
+// System analytics for admin dashboard
+export const getSystemAnalytics = async () => {
+  // This is a placeholder implementation
+  // In a real application, you would fetch this data from your database
+  // or analytics service (like GA4 Reporting API)
+  
+  return {
+    userGrowth: [
+      { date: '2025-01-01', users: 100, newUsers: 10 },
+      { date: '2025-01-02', users: 110, newUsers: 15 },
+      { date: '2025-01-03', users: 125, newUsers: 12 },
+    ],
+    totalUsers: 125,
+    activeUsers: 89,
+    totalGenerations: 1250,
+    totalRevenue: 0,
+    conversionRate: 0.05,
+    averageSessionDuration: 8.5,
+    bounceRate: 0.35,
+  };
+};
+
+// Track generation (for API routes)
+export const trackGeneration = (userId: string, plan: string, wordCount: number, tone: string) => {
+  trackEvent('listing_generated', {
+    category: 'listing',
+    user_id: userId,
+    plan,
+    word_count: wordCount,
+    tone,
+    value: 1,
+  });
+};
+
+// Track plan change (for admin)
+export const trackPlanChange = (userId: string, fromPlan: string, toPlan: string, adminId: string) => {
+  trackEvent('plan_changed_admin', {
+    category: 'admin_action',
+    user_id: userId,
+    from_plan: fromPlan,
+    to_plan: toPlan,
+    admin_id: adminId,
+  });
+};
+
+// Get user analytics (for admin dashboard)
+export const getUserAnalytics = async (userId: string) => {
+  // This is a placeholder implementation
+  // In a real application, you would fetch this data from your database
+  
+  return {
+    userId,
+    totalGenerations: 25,
+    totalRewrites: 5,
+    plan: 'pro',
+    joinDate: '2025-01-01',
+    lastActive: '2025-01-15',
+    totalSessions: 45,
+    averageSessionDuration: 12.5,
+  };
+};
