@@ -1,0 +1,42 @@
+{
+  "free": { 
+    "generatePerDay": 6, 
+    "rewritePerDay": 1, 
+    "etsyPublish": false, 
+    "bulkGenerate": false, 
+    "bulkPublish": false, 
+    "history": true, 
+    "tonePresets": false 
+  },
+  "pro": { 
+    "generateUnlimited": true, 
+    "rewriteUnlimited": true, 
+    "etsyPublish": true, 
+    "bulkGenerate": false, 
+    "bulkPublish": false, 
+    "history": true, 
+    "tonePresets": true 
+  },
+  "business": { 
+    "generateUnlimited": true, 
+    "rewriteUnlimited": true, 
+    "etsyPublish": true, 
+    "bulkGenerate": true, 
+    "bulkPublish": true, 
+    "maxBulkSize": 50, 
+    "history": true, 
+    "tonePresets": true 
+  },
+  "agency": { 
+    "generateUnlimited": true, 
+    "rewriteUnlimited": true, 
+    "etsyPublish": true, 
+    "bulkGenerate": true, 
+    "bulkPublish": true, 
+    "maxBulkSize": 200, 
+    "history": true, 
+    "tonePresets": true, 
+    "multiShop": true, 
+    "seats": 3 
+  }
+}

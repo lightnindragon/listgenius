@@ -1,0 +1,668 @@
+import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/prisma';
+import { openai } from '@/lib/openai';
+
+export interface InfluencerProfile {
+  id: string;
+  userId: string;
+  platform: string;
+  username: string;
+  displayName: string;
+  bio: string;
+  profilePicture?: string;
+  followers: number;
+  engagementRate: number;
+  category: string;
+  location?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  ratePerPost?: number;
+  ratePerStory?: number;
+  ratePerVideo?: number;
+  isVerified: boolean;
+  isActive: boolean;
+  tags: string[];
+  recentPosts: number;
+  averageLikes: number;
+  averageComments: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface InfluencerCampaign {
+  id: string;
+  userId: string;
+  name: string;
+  description: string;
+  budget: number;
+  startDate: Date;
+  endDate: Date;
+  platforms: string[];
+  targetAudience: {
+    ageRange: string;
+    interests: string[];
+    location?: string;
+    gender?: string;
+  };
+  requirements: {
+    minFollowers: number;
+    maxFollowers?: number;
+    minEngagementRate: number;
+    categories: string[];
+    location?: string;
+  };
+  deliverables: Array<{
+    type: 'post' | 'story' | 'video' | 'reel';
+    quantity: number;
+    description: string;
+    requirements: string[];
+  }>;
+  status: 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
+  influencers: Array<{
+    influencerId: string;
+    status: 'invited' | 'accepted' | 'declined' | 'completed';
+    deliverables: Array<{
+      type: string;
+      status: 'pending' | 'submitted' | 'approved' | 'rejected';
+      submittedAt?: Date;
+      approvedAt?: Date;
+      content?: string;
+      mediaUrls?: string[];
+    }>;
+    payment: {
+      amount: number;
+      status: 'pending' | 'paid';
+      paidAt?: Date;
+    };
+  }>;
+  metrics: {
+    totalReach: number;
+    totalEngagement: number;
+    totalCost: number;
+    roas: number;
+    cpm: number;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface InfluencerOutreach {
+  id: string;
+  userId: string;
+  campaignId: string;
+  influencerId: string;
+  status: 'draft' | 'sent' | 'opened' | 'replied' | 'accepted' | 'declined';
+  message: string;
+  sentAt?: Date;
+  openedAt?: Date;
+  repliedAt?: Date;
+  response?: string;
+  createdAt: Date;
+}
+
+export interface InfluencerAnalytics {
+  influencerId: string;
+  platform: string;
+  period: {
+    start: Date;
+    end: Date;
+  };
+  metrics: {
+    followers: {
+      current: number;
+      growth: number;
+      growthRate: number;
+    };
+    engagement: {
+      totalLikes: number;
+      totalComments: number;
+      totalShares: number;
+      averageEngagementRate: number;
+      topPosts: Array<{
+        id: string;
+        content: string;
+        engagement: number;
+        reach: number;
+      }>;
+    };
+    demographics: {
+      ageGroups: Array<{ age: string; percentage: number }>;
+      genders: Array<{ gender: string; percentage: number }>;
+      locations: Array<{ location: string; percentage: number }>;
+    };
+    content: {
+      totalPosts: number;
+      averagePostsPerWeek: number;
+      topCategories: Array<{ category: string; count: number }>;
+    };
+  };
+  performance: {
+    qualityScore: number;
+    authenticityScore: number;
+    consistencyScore: number;
+    recommendations: string[];
+  };
+}
+
+export class InfluencerCollaboration {
+  constructor() {
+    logger.info('InfluencerCollaboration initialized');
+  }
+
+  /**
+   * Discover influencers based on criteria
+   */
+  async discoverInfluencers(
+    userId: string,
+    criteria: {
+      platform: string;
+      category: string;
+      minFollowers?: number;
+      maxFollowers?: number;
+      minEngagementRate?: number;
+      location?: string;
+      tags?: string[];
+    }
+  ): Promise<InfluencerProfile[]> {
+    try {
+      const whereClause: any = {
+        platform: criteria.platform,
+        category: criteria.category,
+        isActive: true
+      };
+
+      if (criteria.minFollowers) {
+        whereClause.followers = { gte: criteria.minFollowers };
+      }
+      if (criteria.maxFollowers) {
+        whereClause.followers = { ...whereClause.followers, lte: criteria.maxFollowers };
+      }
+      if (criteria.minEngagementRate) {
+        whereClause.engagementRate = { gte: criteria.minEngagementRate };
+      }
+      if (criteria.location) {
+        whereClause.location = criteria.location;
+      }
+      if (criteria.tags && criteria.tags.length > 0) {
+        whereClause.tags = { hasSome: criteria.tags };
+      }
+
+      const influencers = await prisma.influencerProfile.findMany({
+        where: whereClause,
+        orderBy: { engagementRate: 'desc' },
+        take: 50
+      });
+
+      logger.info(`Found ${influencers.length} influencers matching criteria`);
+      return influencers as unknown as InfluencerProfile[];
+    } catch (error) {
+      logger.error('Failed to discover influencers:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create an influencer campaign
+   */
+  async createCampaign(
+    userId: string,
+    campaignData: {
+      name: string;
+      description: string;
+      budget: number;
+      startDate: Date;
+      endDate: Date;
+      platforms: string[];
+      targetAudience: InfluencerCampaign['targetAudience'];
+      requirements: InfluencerCampaign['requirements'];
+      deliverables: InfluencerCampaign['deliverables'];
+    }
+  ): Promise<InfluencerCampaign> {
+    try {
+      const campaign = await prisma.influencerCampaign.create({
+        data: {
+          userId,
+          name: campaignData.name,
+          description: campaignData.description,
+          budget: campaignData.budget,
+          startDate: campaignData.startDate,
+          endDate: campaignData.endDate,
+          platforms: campaignData.platforms,
+          targetAudience: JSON.stringify(campaignData.targetAudience),
+          requirements: JSON.stringify(campaignData.requirements),
+          deliverables: JSON.stringify(campaignData.deliverables),
+          status: 'draft',
+          influencers: JSON.stringify([]),
+          metrics: JSON.stringify({
+            totalReach: 0,
+            totalEngagement: 0,
+            totalCost: 0,
+            roas: 0,
+            cpm: 0
+          })
+        }
+      });
+
+      logger.info(`Influencer campaign created: ${campaign.id}`);
+      return campaign as unknown as InfluencerCampaign;
+    } catch (error) {
+      logger.error('Failed to create influencer campaign:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send outreach message to influencer
+   */
+  async sendOutreach(
+    userId: string,
+    campaignId: string,
+    influencerId: string,
+    message: string
+  ): Promise<InfluencerOutreach> {
+    try {
+      // Generate personalized outreach message using AI
+      const personalizedMessage = await this.generatePersonalizedOutreach(
+        message,
+        influencerId,
+        campaignId
+      );
+
+      const outreach = await prisma.influencerOutreach.create({
+        data: {
+          userId,
+          campaignId,
+          influencerId,
+          status: 'sent',
+          message: personalizedMessage,
+          sentAt: new Date()
+        }
+      });
+
+      // Update campaign to include influencer
+      await this.addInfluencerToCampaign(campaignId, influencerId);
+
+      logger.info(`Outreach sent to influencer: ${influencerId}`);
+      return outreach as unknown as InfluencerOutreach;
+    } catch (error) {
+      logger.error('Failed to send outreach:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate personalized outreach message
+   */
+  async generatePersonalizedOutreach(
+    baseMessage: string,
+    influencerId: string,
+    campaignId: string
+  ): Promise<string> {
+    try {
+      const influencer = await prisma.influencerProfile.findUnique({
+        where: { id: influencerId }
+      });
+
+      const campaign = await prisma.influencerCampaign.findUnique({
+        where: { id: campaignId }
+      });
+
+      if (!influencer || !campaign) {
+        throw new Error('Influencer or campaign not found');
+      }
+
+      const prompt = `Create a personalized outreach message for an influencer collaboration.
+
+Influencer Details:
+- Name: ${influencer.displayName}
+- Username: @${influencer.username}
+- Platform: ${influencer.platform}
+- Followers: ${influencer.followers.toLocaleString()}
+- Category: ${influencer.category}
+- Bio: ${influencer.bio}
+
+Campaign Details:
+- Name: ${campaign.name}
+- Description: ${campaign.description}
+- Budget: $${campaign.budget}
+
+Base Message: ${baseMessage}
+
+Create a personalized, professional message that:
+1. Shows you've researched their profile
+2. Explains the collaboration opportunity
+3. Highlights mutual benefits
+4. Includes a clear call-to-action
+5. Maintains a friendly, professional tone
+
+Keep it concise but engaging (under 200 words).`;
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert influencer marketing manager. Create compelling, personalized outreach messages that build genuine connections and drive collaboration.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 300,
+        temperature: 0.7
+      });
+
+      return response.choices[0].message.content || baseMessage;
+    } catch (error) {
+      logger.error('Failed to generate personalized outreach:', error);
+      return baseMessage;
+    }
+  }
+
+  /**
+   * Track influencer performance
+   */
+  async trackInfluencerPerformance(
+    influencerId: string,
+    platform: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<InfluencerAnalytics> {
+    try {
+      const influencer = await prisma.influencerProfile.findUnique({
+        where: { id: influencerId }
+      });
+
+      if (!influencer) {
+        throw new Error('Influencer not found');
+      }
+
+      // Get historical data
+      const posts = await prisma.socialMediaPost.findMany({
+        where: {
+          accountId: influencerId,
+          platform,
+          publishedAt: {
+            gte: startDate,
+            lte: endDate
+          }
+        }
+      });
+
+      // Calculate metrics
+      const analytics = await this.calculateInfluencerAnalytics(influencer as unknown as InfluencerProfile, posts, startDate, endDate);
+
+      return analytics;
+    } catch (error) {
+      logger.error('Failed to track influencer performance:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Manage campaign deliverables
+   */
+  async submitDeliverable(
+    campaignId: string,
+    influencerId: string,
+    deliverableData: {
+      type: string;
+      content: string;
+      mediaUrls: string[];
+    }
+  ): Promise<void> {
+    try {
+      const campaign = await prisma.influencerCampaign.findUnique({
+        where: { id: campaignId }
+      });
+
+      if (!campaign) {
+        throw new Error('Campaign not found');
+      }
+
+      const influencers = JSON.parse(campaign.influencers);
+      const influencerIndex = influencers.findIndex((inf: any) => inf.influencerId === influencerId);
+
+      if (influencerIndex === -1) {
+        throw new Error('Influencer not found in campaign');
+      }
+
+      // Update deliverable status
+      const deliverableIndex = influencers[influencerIndex].deliverables.findIndex(
+        (del: any) => del.type === deliverableData.type && del.status === 'pending'
+      );
+
+      if (deliverableIndex !== -1) {
+        influencers[influencerIndex].deliverables[deliverableIndex] = {
+          ...influencers[influencerIndex].deliverables[deliverableIndex],
+          status: 'submitted',
+          submittedAt: new Date(),
+          content: deliverableData.content,
+          mediaUrls: deliverableData.mediaUrls
+        };
+
+        // Update campaign
+        await prisma.influencerCampaign.update({
+          where: { id: campaignId },
+          data: { influencers: JSON.stringify(influencers) }
+        });
+      }
+
+      logger.info(`Deliverable submitted for campaign ${campaignId} by influencer ${influencerId}`);
+    } catch (error) {
+      logger.error('Failed to submit deliverable:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Approve or reject deliverable
+   */
+  async reviewDeliverable(
+    campaignId: string,
+    influencerId: string,
+    deliverableType: string,
+    action: 'approve' | 'reject',
+    feedback?: string
+  ): Promise<void> {
+    try {
+      const campaign = await prisma.influencerCampaign.findUnique({
+        where: { id: campaignId }
+      });
+
+      if (!campaign) {
+        throw new Error('Campaign not found');
+      }
+
+      const influencers = JSON.parse(campaign.influencers);
+      const influencerIndex = influencers.findIndex((inf: any) => inf.influencerId === influencerId);
+
+      if (influencerIndex === -1) {
+        throw new Error('Influencer not found in campaign');
+      }
+
+      // Update deliverable status
+      const deliverableIndex = influencers[influencerIndex].deliverables.findIndex(
+        (del: any) => del.type === deliverableType && del.status === 'submitted'
+      );
+
+      if (deliverableIndex !== -1) {
+        influencers[influencerIndex].deliverables[deliverableIndex] = {
+          ...influencers[influencerIndex].deliverables[deliverableIndex],
+          status: action === 'approve' ? 'approved' : 'rejected',
+          approvedAt: action === 'approve' ? new Date() : undefined,
+          feedback
+        };
+
+        // Update campaign
+        await prisma.influencerCampaign.update({
+          where: { id: campaignId },
+          data: { influencers: JSON.stringify(influencers) }
+        });
+      }
+
+      logger.info(`Deliverable ${action}d for campaign ${campaignId}`);
+    } catch (error) {
+      logger.error('Failed to review deliverable:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get campaign analytics
+   */
+  async getCampaignAnalytics(campaignId: string): Promise<InfluencerCampaign['metrics']> {
+    try {
+      const campaign = await prisma.influencerCampaign.findUnique({
+        where: { id: campaignId }
+      });
+
+      if (!campaign) {
+        throw new Error('Campaign not found');
+      }
+
+      const influencers = JSON.parse(campaign.influencers);
+      const metrics = JSON.parse(campaign.metrics);
+
+      // Calculate updated metrics
+      let totalReach = 0;
+      let totalEngagement = 0;
+      let totalCost = 0;
+
+      for (const influencer of influencers) {
+        if (influencer.status === 'completed') {
+          // Mock calculations - would use actual data
+          totalReach += Math.floor(Math.random() * 10000) + 5000;
+          totalEngagement += Math.floor(Math.random() * 1000) + 100;
+          totalCost += influencer.payment.amount;
+        }
+      }
+
+      const roas = totalReach > 0 ? (totalReach / totalCost) : 0;
+      const cpm = totalReach > 0 ? (totalCost / totalReach) * 1000 : 0;
+
+      const updatedMetrics = {
+        totalReach,
+        totalEngagement,
+        totalCost,
+        roas,
+        cpm
+      };
+
+      // Update campaign metrics
+      await prisma.influencerCampaign.update({
+        where: { id: campaignId },
+        data: { metrics: JSON.stringify(updatedMetrics) }
+      });
+
+      return updatedMetrics;
+    } catch (error) {
+      logger.error('Failed to get campaign analytics:', error);
+      throw error;
+    }
+  }
+
+  // Helper methods
+  private async addInfluencerToCampaign(campaignId: string, influencerId: string): Promise<void> {
+    const campaign = await prisma.influencerCampaign.findUnique({
+      where: { id: campaignId }
+    });
+
+    if (!campaign) return;
+
+    const influencers = JSON.parse(campaign.influencers);
+    const influencerExists = influencers.some((inf: any) => inf.influencerId === influencerId);
+
+    if (!influencerExists) {
+      influencers.push({
+        influencerId,
+        status: 'invited',
+        deliverables: [],
+        payment: {
+          amount: 0,
+          status: 'pending'
+        }
+      });
+
+      await prisma.influencerCampaign.update({
+        where: { id: campaignId },
+        data: { influencers: JSON.stringify(influencers) }
+      });
+    }
+  }
+
+  private async calculateInfluencerAnalytics(
+    influencer: InfluencerProfile,
+    posts: any[],
+    startDate: Date,
+    endDate: Date
+  ): Promise<InfluencerAnalytics> {
+    const totalLikes = posts.reduce((sum, post) => sum + (post.engagement?.likes || 0), 0);
+    const totalComments = posts.reduce((sum, post) => sum + (post.engagement?.comments || 0), 0);
+    const totalShares = posts.reduce((sum, post) => sum + (post.engagement?.shares || 0), 0);
+    const averageEngagementRate = posts.length > 0 ? (totalLikes + totalComments + totalShares) / posts.length / influencer.followers * 100 : 0;
+
+    return {
+      influencerId: influencer.id,
+      platform: influencer.platform,
+      period: { start: startDate, end: endDate },
+      metrics: {
+        followers: {
+          current: influencer.followers,
+          growth: Math.floor(influencer.followers * 0.05), // 5% growth
+          growthRate: 5.0
+        },
+        engagement: {
+          totalLikes,
+          totalComments,
+          totalShares,
+          averageEngagementRate,
+          topPosts: posts.slice(0, 5).map(post => ({
+            id: post.id,
+            content: post.content,
+            engagement: (post.engagement?.likes || 0) + (post.engagement?.comments || 0) + (post.engagement?.shares || 0),
+            reach: post.engagement?.reach || 0
+          }))
+        },
+        demographics: {
+          ageGroups: [
+            { age: '18-24', percentage: 35 },
+            { age: '25-34', percentage: 40 },
+            { age: '35-44', percentage: 20 },
+            { age: '45+', percentage: 5 }
+          ],
+          genders: [
+            { gender: 'Female', percentage: 65 },
+            { gender: 'Male', percentage: 35 }
+          ],
+          locations: [
+            { location: 'United States', percentage: 45 },
+            { location: 'Canada', percentage: 20 },
+            { location: 'United Kingdom', percentage: 15 },
+            { location: 'Other', percentage: 20 }
+          ]
+        },
+        content: {
+          totalPosts: posts.length,
+          averagePostsPerWeek: posts.length / 4, // Assuming 4 weeks
+          topCategories: [
+            { category: influencer.category, count: posts.length }
+          ]
+        }
+      },
+      performance: {
+        qualityScore: Math.min(100, influencer.engagementRate * 10),
+        authenticityScore: Math.min(100, influencer.engagementRate * 8),
+        consistencyScore: Math.min(100, posts.length * 5),
+        recommendations: [
+          'Maintain consistent posting schedule',
+          'Engage more with audience comments',
+          'Collaborate with brands in similar niches'
+        ]
+      }
+    };
+  }
+}
+
+export const influencerCollaboration = new InfluencerCollaboration();

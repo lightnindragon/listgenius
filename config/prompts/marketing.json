@@ -1,0 +1,11 @@
+{
+  "pinterestCaption": {
+    "template": "✨ {productName} ✨\n\n{description}\n\nPerfect for {targetAudience}!\n\n🎯 {keyFeatures}\n📱 Instant download\n💝 Perfect gift idea\n\n#Etsy #DigitalDownload #Printable #{niche}",
+    "maxLength": 500,
+    "hashtagLimit": 20
+  },
+  "etsyMessage": {
+    "template": "Thank you for your purchase! 🎉\n\nYour {productName} is ready for instant download:\n\n📥 Download Instructions:\n1. Go to your Etsy account → Purchases\n2. Click 'Download files' next to this order\n3. Save and enjoy your purchase!\n\n💡 Tips:\n• Best printed on high-quality paper\n• Use Adobe Reader for best results\n• Contact me if you need any help!\n\nThank you for supporting my small business! ❤️",
+    "maxLength": 1000
+  }
+}
