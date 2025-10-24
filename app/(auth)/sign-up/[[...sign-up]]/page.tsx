@@ -8,11 +8,18 @@ export default function SignUpPage() {
     // Debug: Check if Clerk is loaded
     console.log('SignUp page loaded');
     console.log('Clerk publishable key:', process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? 'Present' : 'Missing');
+    console.log('Current URL:', window.location.href);
+    console.log('Current pathname:', window.location.pathname);
     
     // Check for any global errors
     window.addEventListener('error', (e) => {
       console.error('Global error on signup page:', e.error);
     });
+
+    // Check if we're actually on the sign-up page
+    if (window.location.pathname !== '/sign-up') {
+      console.warn('Not on sign-up page, current path:', window.location.pathname);
+    }
   }, []);
 
   return (
@@ -45,6 +52,8 @@ export default function SignUpPage() {
             }}
             afterSignUpUrl="/app"
             redirectUrl="/app"
+            forceRedirectUrl="/app"
+            signInUrl="/sign-in"
           />
         </div>
       </div>
