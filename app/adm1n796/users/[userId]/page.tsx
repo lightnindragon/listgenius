@@ -84,9 +84,26 @@ export default function UserDetailPage() {
 
       if (analyticsData.success) {
         setAnalytics(analyticsData.data);
+      } else {
+        console.warn('Analytics data failed to load:', analyticsData.error);
+        // Set empty analytics data structure to prevent errors
+        setAnalytics({
+          user: null,
+          activity: { loginHistory: [] },
+          usage: null,
+          trends: null
+        });
       }
     } catch (error) {
+      console.error('Error fetching user data:', error);
       setError('Failed to load user data');
+      // Set empty analytics data structure to prevent errors
+      setAnalytics({
+        user: null,
+        activity: { loginHistory: [] },
+        usage: null,
+        trends: null
+      });
     } finally {
       setLoading(false);
     }
@@ -299,7 +316,7 @@ export default function UserDetailPage() {
               </div>
 
               {/* Activity Timeline */}
-              {analytics && (
+              {analytics && analytics.activity && analytics.activity.loginHistory && (
                 <div className="bg-white rounded-lg shadow p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
                   <div className="space-y-3">
@@ -310,6 +327,17 @@ export default function UserDetailPage() {
                         <span className="text-gray-900">{formatRelativeTime(login.timestamp)}</span>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Show message if no activity data */}
+              {analytics && (!analytics.activity || !analytics.activity.loginHistory) && (
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+                  <div className="text-center text-gray-500 py-8">
+                    <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p>No activity data available</p>
                   </div>
                 </div>
               )}
