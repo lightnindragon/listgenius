@@ -154,22 +154,36 @@ export const AnalyticsProvider: React.FC<AnalyticsProviderProps> = ({ children }
             strategy="afterInteractive"
             dangerouslySetInnerHTML={{
               __html: `
-                console.log('Initializing GA4 with measurement ID: ${GA4_MEASUREMENT_ID}');
+                console.log('🚀 Initializing GA4 with measurement ID: ${GA4_MEASUREMENT_ID}');
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 window.gtag = gtag;
                 gtag('js', new Date());
                 gtag('config', '${GA4_MEASUREMENT_ID}', {
                   page_path: window.location.pathname,
-                  send_page_view: true
+                  send_page_view: true,
+                  debug_mode: true
                 });
-                console.log('GA4 initialized successfully');
+                console.log('✅ GA4 initialized successfully');
+                console.log('📊 DataLayer:', window.dataLayer);
+                console.log('🌐 Current URL:', window.location.href);
                 
                 // Test event to verify GA4 is working
                 gtag('event', 'ga4_initialized', {
                   event_category: 'debug',
-                  event_label: 'GA4_test'
+                  event_label: 'GA4_test',
+                  value: 1
                 });
+                
+                // Additional test events
+                setTimeout(() => {
+                  gtag('event', 'page_view_test', {
+                    event_category: 'debug',
+                    event_label: 'Page View Test',
+                    value: 1
+                  });
+                  console.log('📈 Test events sent to GA4');
+                }, 1000);
               `,
             }}
           />
