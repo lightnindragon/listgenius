@@ -35,21 +35,29 @@ export const AnalyticsProvider: React.FC<AnalyticsProviderProps> = ({ children }
   const pathname = usePathname();
 
   useEffect(() => {
+    // Debug: Log all environment variables
+    console.log('🔍 GA4 Debug - All env vars:', {
+      GA4_MEASUREMENT_ID,
+      NODE_ENV: process.env.NODE_ENV,
+      NEXT_PUBLIC_GA4_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID
+    });
+
     // Check environment variable
     if (!GA4_MEASUREMENT_ID) {
-      console.error('GA4_MEASUREMENT_ID is not set in environment variables');
-      console.error('Please add NEXT_PUBLIC_GA4_MEASUREMENT_ID=G-XXXXXXXXXX to your .env.local file');
+      console.error('❌ GA4_MEASUREMENT_ID is not set in environment variables');
+      console.error('Current value:', GA4_MEASUREMENT_ID);
+      console.error('Please add NEXT_PUBLIC_GA4_MEASUREMENT_ID=G-XXXXXXXXXX to your Vercel environment variables');
       return;
     }
 
     // Check if running in browser
     if (typeof window === 'undefined') {
-      console.log('GA4 will be initialized on client side');
+      console.log('🌐 GA4 will be initialized on client side');
       return;
     }
 
-    console.log('GA4 measurement ID found:', GA4_MEASUREMENT_ID);
-    console.log('GA4 will be initialized via Next.js Script components');
+    console.log('✅ GA4 measurement ID found:', GA4_MEASUREMENT_ID);
+    console.log('🚀 GA4 will be initialized via Next.js Script components');
     
     // Set initialized to true - the Script components will handle the actual initialization
     setIsInitialized(true);
