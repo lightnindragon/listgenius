@@ -7,6 +7,15 @@ export async function GET(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    // Check if Clerk is configured
+    if (!process.env.CLERK_SECRET_KEY) {
+      logger.error('CLERK_SECRET_KEY not configured');
+      return NextResponse.json(
+        { success: false, error: 'Authentication service not configured' },
+        { status: 500 }
+      );
+    }
+
     // Require admin authentication
     requireAdmin(request);
 
@@ -41,7 +50,11 @@ export async function GET(
       );
     }
 
-    logger.error('Error getting user details', { userId: (await params).userId, error });
+    logger.error('Error getting user details', { 
+      userId: (await params).userId, 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to get user details' },
       { status: 500 }

@@ -5,7 +5,17 @@ import jwt from 'jsonwebtoken';
 import { logger } from './logger';
 
 // Initialize Clerk client
-const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
+let clerkClient: any;
+try {
+  if (!process.env.CLERK_SECRET_KEY) {
+    throw new Error('CLERK_SECRET_KEY not found in environment variables');
+  }
+  clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+  console.log('Clerk client initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize Clerk client:', error);
+  throw error;
+}
 
 // Admin credentials from environment
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin123genius';
@@ -144,7 +154,7 @@ export async function getAllUsers(page: number = 1, limit: number = 50, search?:
       offset: (page - 1) * limit,
     });
 
-    const adminUsers: AdminUser[] = users.data.map(user => {
+    const adminUsers: AdminUser[] = users.data.map((user: any) => {
       const metadata = user.publicMetadata as any || {};
       const email = user.emailAddresses[0]?.emailAddress || '';
       const name = user.fullName || user.firstName || email.split('@')[0];
@@ -203,6 +213,10 @@ export async function getAllUsers(page: number = 1, limit: number = 50, search?:
  */
 export async function getUserById(userId: string): Promise<AdminUser | null> {
   try {
+    if (!clerkClient) {
+      throw new Error('Clerk client not initialized');
+    }
+    
     const user = await clerkClient.users.getUser(userId);
     const metadata = user.publicMetadata as any || {};
     const email = user.emailAddresses[0]?.emailAddress || '';
@@ -227,8 +241,12 @@ export async function getUserById(userId: string): Promise<AdminUser | null> {
       customQuota: metadata.customQuota
     };
   } catch (error) {
-    logger.error('Error fetching user by ID', { userId, error });
-    return null;
+    logger.error('Error fetching user by ID', { 
+      userId, 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    throw error; // Re-throw to let the API handle it
   }
 }
 
