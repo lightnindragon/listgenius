@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { AlertCircle, Clock, Zap } from 'lucide-react';
 import { useUserMetadata } from '@/contexts/UserMetadataContext';
@@ -11,7 +11,34 @@ interface GenerationCounterProps {
 
 export function GenerationCounter({ className }: GenerationCounterProps) {
   const { user, isSignedIn } = useUser();
-  const { userMetadata, loading } = useUserMetadata();
+  const { userMetadata, loading, refreshUserMetadata } = useUserMetadata();
+
+  // Listen for quota reset events
+  useEffect(() => {
+    const handleQuotaReset = () => {
+      console.log('Quota reset event detected, refreshing user metadata...');
+      refreshUserMetadata();
+    };
+
+    // Listen for custom events
+    window.addEventListener('quotaReset', handleQuotaReset);
+    window.addEventListener('generationCompleted', handleQuotaReset);
+    
+    // Also listen for localStorage changes as backup
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'quotaReset' || e.key === 'generationCountUpdated') {
+        handleQuotaReset();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('quotaReset', handleQuotaReset);
+      window.removeEventListener('generationCompleted', handleQuotaReset);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [refreshUserMetadata]);
 
   // Don't show anything if not signed in or loading
   if (!isSignedIn || loading) {

@@ -149,6 +149,16 @@ export default function UserDetailPage() {
         // Add a small delay to ensure Clerk API has propagated the changes
         await new Promise(resolve => setTimeout(resolve, 1000));
         await fetchUserData(); // Refresh data
+        
+        // Emit quota reset event if this was a quota reset action
+        if (action === 'reset-quota') {
+          // Emit custom event for quota reset
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('quotaReset'));
+            localStorage.setItem('quotaReset', Date.now().toString());
+          }
+        }
+        
         alert('Action completed successfully');
       } else {
         console.error('Action failed:', result);
