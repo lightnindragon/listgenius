@@ -23,20 +23,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         success: false, 
         error: 'OpenAI API key not configured',
-        step: 'env_check'
+        step: 'openai_key'
       }, { status: 500 });
     }
     
     console.log('OpenAI API key exists, testing connection...');
     
-    // Test OpenAI connection
+    // Test OpenAI connection with a simple request
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
     
-    console.log('OpenAI client created, testing API call...');
-    
-    // Make a simple test call
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
@@ -48,8 +45,8 @@ export async function POST(request: NextRequest) {
       max_tokens: 10,
     });
     
-    const response = completion.choices[0]?.message?.content;
-    console.log('OpenAI response:', response);
+    const response = completion.choices[0]?.message?.content || 'No response';
+    console.log('OpenAI test response:', response);
     
     return NextResponse.json({
       success: true,
