@@ -7,11 +7,17 @@ export async function POST(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    console.log('=== RESET QUOTA API CALLED ===');
+    
     // Require admin authentication
     requireAdmin(request);
+    console.log('Admin authentication passed');
 
     const { userId } = await params;
+    console.log('User ID:', userId);
+    
     const body = await request.json();
+    console.log('Request body:', body);
 
     if (!userId) {
       return NextResponse.json(
@@ -21,13 +27,16 @@ export async function POST(
     }
 
     const { resetDaily, resetMonthly, setCustomQuota } = body;
+    console.log('Reset options:', { resetDaily, resetMonthly, setCustomQuota });
 
     // Reset user quota
+    console.log('Calling resetUserQuota...');
     await resetUserQuota(userId, {
       resetDaily: resetDaily || false,
       resetMonthly: resetMonthly || false,
       setCustomQuota: setCustomQuota
     });
+    console.log('resetUserQuota completed successfully');
 
     // Get updated user details
     const updatedUser = await getUserById(userId);
@@ -52,9 +61,15 @@ export async function POST(
       );
     }
 
-    logger.error('Error resetting user quota', { userId: (await params).userId, error });
+    logger.error('Error resetting user quota', { 
+      userId: (await params).userId, 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    const errorMessage = error instanceof Error ? error.message : 'Failed to reset user quota';
     return NextResponse.json(
-      { success: false, error: 'Failed to reset user quota' },
+      { success: false, error: errorMessage },
       { status: 500 }
     );
   }

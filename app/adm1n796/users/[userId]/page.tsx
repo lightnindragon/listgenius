@@ -149,10 +149,12 @@ export default function UserDetailPage() {
         await fetchUserData(); // Refresh data
         alert('Action completed successfully');
       } else {
+        console.error('Action failed:', result);
         alert(result.error || 'Action failed');
       }
     } catch (error) {
-      alert('Action failed');
+      console.error('Action error:', error);
+      alert(`Action failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setActionLoading(null);
     }
