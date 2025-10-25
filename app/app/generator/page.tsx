@@ -162,6 +162,14 @@ export default function AppPage() {
         body: JSON.stringify(data),
       });
 
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response received:', text);
+        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+      }
+
       const result: APIResponse<ListingOutput> = await response.json();
 
       if (result.success && result.data) {
@@ -187,7 +195,16 @@ export default function AppPage() {
         analytics.trackError(errorMessage, 'listing_generation');
       }
     } catch (error) {
-      const errorMessage = 'Network error. Please try again.';
+      console.error('Generation error:', error);
+      let errorMessage = 'Network error. Please try again.';
+      
+      // Provide more specific error messages
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = 'Unable to connect to server. Please check your internet connection.';
+      } else if (error instanceof Error) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
       emitTopRightToast(errorMessage, 'error');
       analytics.trackError(errorMessage, 'network_error');
     } finally {

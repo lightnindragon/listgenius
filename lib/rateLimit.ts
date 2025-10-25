@@ -19,7 +19,7 @@ export async function canGenerate(userId: string): Promise<boolean> {
     
     // Check limits based on plan
     if (plan === 'free') {
-      // Free plan: 6 generations per month (we'll use monthly tracking)
+      // Free plan: 6 generations per month (handled by generation-quota.ts)
       return true; // Monthly limit is handled in generation-quota.ts
     } else if (plan === 'pro') {
       // Pro plan: 50 generations per day
@@ -69,25 +69,11 @@ export async function incrementGenerationCount(userId: string): Promise<void> {
   try {
     const plan = await getUserPlan(userId);
     
-    // Paid plans: no limits, just track
-    if (plan === 'pro' || plan === 'business' || plan === 'agency') {
-      await incrementDailyGenCount(userId);
-      return;
-    }
-    
-      // Free plan: check limit first
-      const canGenerateNow = await canGenerate(userId);
-      if (!canGenerateNow) {
-        throw new RateLimitError('Daily generation limit exceeded (6/day for free plan)');
-      }
-    
+    // For all plans, just track daily count for analytics
+    // The actual quota checking is handled by generation-quota.ts
     await incrementDailyGenCount(userId);
     logger.info('Generation count incremented', { userId, plan });
   } catch (error) {
-    if (error instanceof RateLimitError) {
-      throw error;
-    }
-    
     logger.error('Failed to increment generation count', { userId, error });
     
     // Fallback to in-memory store

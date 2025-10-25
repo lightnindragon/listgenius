@@ -14,18 +14,56 @@ import path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+    console.log('=== GENERATION API CALLED ===');
+    console.log('URL:', request.url);
+    console.log('Method:', request.method);
+    
+    logger.info('Generation API called', { 
+      url: request.url,
+      method: request.method,
+      headers: Object.fromEntries(request.headers.entries())
+    });
+
+    // Check if required environment variables are configured
+    if (!process.env.OPENAI_API_KEY) {
+      logger.error('OpenAI API key not configured');
+      return NextResponse.json({ 
+        success: false, 
+        error: 'AI service not configured. Please contact support.',
+        type: 'CONFIG_ERROR'
+      }, { status: 500 });
     }
 
+    if (!process.env.CLERK_SECRET_KEY) {
+      logger.error('Clerk secret key not configured');
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Authentication service not configured. Please contact support.',
+        type: 'CONFIG_ERROR'
+      }, { status: 500 });
+    }
+
+    // Get authenticated user
+    logger.info('Getting authenticated user...');
+    const { userId } = await auth();
+    if (!userId) {
+      logger.warn('No user ID found in auth');
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+    }
+    logger.info('User authenticated', { userId });
+
     // Parse and validate request body
+    logger.info('Parsing request body...');
     const body = await request.json();
+    logger.info('Request body parsed', { bodyKeys: Object.keys(body) });
+    
     const validatedData = validateRequest(generateRequestSchema, body);
+    logger.info('Request validated', { validatedKeys: Object.keys(validatedData) });
 
     // Check and increment generation quota
-    const quota = await checkAndIncrementGeneration();
+    logger.info('Checking generation quota...');
+    const quota = await checkAndIncrementGeneration(userId);
+    logger.info('Quota check result', { quota });
     if (!quota.ok) {
       return NextResponse.json({ 
         success: false, 
@@ -184,7 +222,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error) {
-    logger.error('Generation API error', { error: (error as Error).message });
+    logger.error('Generation API error', { 
+      error: (error as Error).message,
+      stack: (error as Error).stack,
+      name: (error as Error).name
+    });
     
     if (error instanceof Error && error.name.includes('RateLimitError')) {
       return NextResponse.json({
@@ -201,6 +243,24 @@ export async function POST(request: NextRequest) {
         error: 'OpenAI API quota exceeded. Please check your OpenAI billing and usage limits.',
         type: 'OPENAI_QUOTA_ERROR'
       }, { status: 429 });
+    }
+
+    // Handle authentication errors
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+      return NextResponse.json({
+        success: false,
+        error: 'Authentication required. Please sign in again.',
+        type: 'AUTH_ERROR'
+      }, { status: 401 });
+    }
+
+    // Handle quota errors
+    if (error instanceof Error && error.message.includes('limit reached')) {
+      return NextResponse.json({
+        success: false,
+        error: error.message,
+        type: 'QUOTA_EXCEEDED'
+      }, { status: 402 });
     }
 
     const errorResponse = getErrorResponse(error);

@@ -434,24 +434,12 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Daily Generations</h4>
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Monthly Generations</h4>
                 <div className="text-2xl font-bold text-gray-900">
-                  {typeof userMetadata?.dailyGenCount === 'number' ? userMetadata.dailyGenCount : 0}/
-                  {userMetadata?.plan === 'free' ? '3' : 
-                   userMetadata?.plan === 'pro' ? '50' :
-                   userMetadata?.plan === 'business' ? '200' : '∞'}
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Daily Rewrites</h4>
-                <div className="text-2xl font-bold text-gray-900">
-                  {typeof userMetadata?.dailyRewriteCount === 'number' ? userMetadata.dailyRewriteCount : 0}/
-                  {userMetadata?.plan === 'free' ? '3' : 
-                   userMetadata?.plan === 'pro' ? '25' :
-                   userMetadata?.plan === 'business' ? '100' : '∞'}
+                  {typeof userMetadata?.monthlyGenCount === 'number' ? userMetadata.monthlyGenCount : 0}/
+                  {(userMetadata?.plan || 'free') === 'free' ? '6' : '∞'}
                 </div>
               </div>
               

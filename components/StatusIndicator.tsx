@@ -61,7 +61,7 @@ export function StatusIndicator({ className }: StatusIndicatorProps) {
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
         borderColor: 'border-blue-200',
-        showUpgrade: dailyGenCount >= 3
+        showUpgrade: (userMetadata?.monthlyGenCount || 0) >= 6
       };
     } else {
       return {

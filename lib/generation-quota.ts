@@ -1,24 +1,39 @@
 import { createClerkClient, auth } from '@clerk/nextjs/server';
 
-const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
+// Initialize Clerk client with error handling
+let clerkClient: any;
+try {
+  if (!process.env.CLERK_SECRET_KEY) {
+    throw new Error('CLERK_SECRET_KEY not found in environment variables');
+  }
+  clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+  console.log('Clerk client initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize Clerk client:', error);
+  throw error;
+}
 import { getUserPlanSimple, PLAN_CONFIG, getMonthKey } from './entitlements';
 
-export async function checkAndIncrementGeneration(): Promise<{ 
+export async function checkAndIncrementGeneration(userId?: string): Promise<{ 
   ok: boolean; 
   plan: 'free'|'pro'|'business'; 
   remaining?: number;
   error?: string;
 }> {
-  const { userId } = await auth();
-  if (!userId) return { ok: false, plan: 'free', error: 'Unauthorized' };
+  if (!userId) {
+    const { userId: authUserId } = await auth();
+    if (!authUserId) return { ok: false, plan: 'free', error: 'Unauthorized' };
+    userId = authUserId;
+  }
 
-  const user = await clerkClient.users.getUser(userId);
-  const plan = await getUserPlanSimple(user);
-  
-  const monthKey = getMonthKey();
-  const meta = (user.publicMetadata ?? {}) as any;
-  const usage = (meta.genUsage ?? {}) as Record<string, number>;
-  const used = usage[monthKey] ?? 0;
+  try {
+    const user = await clerkClient.users.getUser(userId);
+    const plan = await getUserPlanSimple(user);
+    
+    const monthKey = getMonthKey();
+    const meta = (user.publicMetadata ?? {}) as any;
+    const usage = (meta.genUsage ?? {}) as Record<string, number>;
+    const used = usage[monthKey] ?? 0;
 
   if (plan === 'pro' || plan === 'business') {
     // Soft safety cap at 1000
@@ -35,14 +50,18 @@ export async function checkAndIncrementGeneration(): Promise<{
     // Free plan: 6/month
     const cap = PLAN_CONFIG.free.maxGenerationsPerMonth as number;
     if (used >= cap) {
-      return { ok: false, plan, remaining: 0, error: 'Free plan limit reached (6/month). Upgrade to Pro for unlimited generations.' };
+      return { ok: false, plan, remaining: 0, error: 'Free plan limit reached (6/month). Upgrade to Pro for 50 generations per day.' };
     }
 
-  usage[monthKey] = used + 1;
-  await clerkClient.users.updateUserMetadata(userId, { 
-    publicMetadata: { ...meta, genUsage: usage } 
-  });
-  return { ok: true, plan, remaining: cap - (used + 1) };
+    usage[monthKey] = used + 1;
+    await clerkClient.users.updateUserMetadata(userId, { 
+      publicMetadata: { ...meta, genUsage: usage } 
+    });
+    return { ok: true, plan, remaining: cap - (used + 1) };
+  } catch (error) {
+    console.error('Error in checkAndIncrementGeneration:', error);
+    return { ok: false, plan: 'free', error: 'Failed to check generation quota' };
+  }
 }
 
 export async function getCurrentMonthUsage(userId: string): Promise<{ used: number; limit: number | 'unlimited'; plan: 'free'|'pro'|'business' }> {

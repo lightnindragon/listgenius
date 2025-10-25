@@ -26,10 +26,18 @@ export async function GET() {
       metadataKeys: Object.keys(metadata)
     });
 
+    // Calculate monthly usage directly from metadata
+    const plan = metadata.plan || 'free';
+    const monthKey = `${new Date().getUTCFullYear()}-${String(new Date().getUTCMonth()+1).padStart(2,'0')}`;
+    const usage = (metadata.genUsage ?? {}) as Record<string, number>;
+    const monthlyGenCount = usage[monthKey] ?? 0;
+
     const response = {
-      plan: metadata.plan || 'free',
+      plan,
       dailyGenCount: metadata.dailyGenCount || 0,
       dailyRewriteCount: metadata.dailyRewriteCount || 0,
+      monthlyGenCount,
+      lastResetDate: metadata.lastResetDate || new Date().toLocaleDateString(),
       preferences: metadata.preferences || {
         tone: 'Professional',
         niche: '',
@@ -42,18 +50,31 @@ export async function GET() {
       }
     };
 
+    logger.info('User metadata API response', { 
+      userId, 
+      plan: response.plan,
+      monthlyGenCount: response.monthlyGenCount,
+      monthKey,
+      rawMetadata: metadata
+    });
+
     logger.info('User metadata retrieved', { 
       userId, 
       plan: response.plan,
       dailyGenCount: response.dailyGenCount,
       dailyRewriteCount: response.dailyRewriteCount,
+      monthlyGenCount: response.monthlyGenCount,
       metadata: metadata,
       fullUserMetadata: JSON.stringify(metadata, null, 2)
     });
 
     return NextResponse.json(response);
   } catch (error) {
-    logger.error('Failed to get user metadata', { error: (error as Error).message });
+    logger.error('Failed to get user metadata', { 
+      error: (error as Error).message,
+      stack: (error as Error).stack,
+      name: (error as Error).name
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to retrieve user data' },
       { status: 500 }

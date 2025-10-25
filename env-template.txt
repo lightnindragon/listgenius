@@ -1,0 +1,45 @@
+# ===== CORE SERVICES (REQUIRED FOR MVP) =====
+
+# OpenAI API Key - Get from https://platform.openai.com/api-keys
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL_GENERATE=gpt-4o
+OPENAI_MODEL_FREE=gpt-4o-mini
+
+# Clerk Authentication - Get from https://clerk.com/
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key_here
+CLERK_SECRET_KEY=your_clerk_secret_key_here
+
+# Stripe Payment Processing - Get from https://stripe.com/
+STRIPE_SECRET_KEY=your_stripe_secret_key_here
+NEXT_PUBLIC_STRIPE_PRICE_ID_PRO=your_stripe_pro_price_id_here
+NEXT_PUBLIC_STRIPE_PRICE_ID_BUSINESS=your_stripe_business_price_id_here
+NEXT_PUBLIC_STRIPE_PRICE_ID_AGENCY=your_stripe_agency_price_id_here
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret_here
+
+# Etsy Integration - Get from https://www.etsy.com/developers/
+ETSY_CLIENT_ID=your_etsy_client_id_here
+ETSY_CLIENT_SECRET=your_etsy_client_secret_here
+ETSY_REDIRECT_URI=http://localhost:3000/api/etsy/oauth
+ETSY_API_BASE=https://openapi.etsy.com/v3
+ETSY_MOCK_MODE=true
+
+# Encryption Key - Generate a 64-character hex string
+ENCRYPTION_KEY=your_64_character_hex_encryption_key_here
+
+# App Configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_ENV=development
+
+# ===== OPTIONAL SERVICES (ADD AS NEEDED) =====
+
+# Database (Optional for MVP)
+# DATABASE_URL=postgresql://username:password@host:port/database
+
+# Email Service (Optional for MVP)
+# SENDGRID_API_KEY=your_sendgrid_api_key_here
+# SENDGRID_FROM_EMAIL=noreply@yourdomain.com
+# SENDGRID_FROM_NAME=ListGenius
+
+# Redis Cache (Optional for MVP)
+# UPSTASH_REDIS_REST_URL=https://your-db.upstash.io
+# UPSTASH_REDIS_REST_TOKEN=your_token_here

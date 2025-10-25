@@ -75,10 +75,10 @@ export default function SettingsPage() {
   ];
 
   const planFeatures = {
-    free: { generations: 6, etsyConnection: false },
-    pro: { generations: 50, etsyConnection: true },
-    business: { generations: 200, etsyConnection: true },
-    agency: { generations: '∞', etsyConnection: true }
+    free: { generations: 6, etsyConnection: false, period: 'month' },
+    pro: { generations: 50, etsyConnection: true, period: 'day' },
+    business: { generations: 200, etsyConnection: true, period: 'day' },
+    agency: { generations: '∞', etsyConnection: true, period: 'day' }
   };
 
   useEffect(() => {
@@ -460,7 +460,7 @@ export default function SettingsPage() {
                 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-800">Daily Generations:</span>
+                    <span className="text-gray-800">{features.period === 'month' ? 'Monthly' : 'Daily'} Generations:</span>
                     <span className="font-medium text-gray-900">{features.generations}</span>
                   </div>
                   {isEnabled('etsy') && (
@@ -472,11 +472,16 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="pt-4 border-t border-gray-200">
-                  <div className="text-xs text-gray-700 mb-2 font-medium">Usage Today:</div>
+                  <div className="text-xs text-gray-700 mb-2 font-medium">Usage {features.period === 'month' ? 'This Month' : 'Today'}:</div>
                   <div className="space-y-1">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-800">Generations:</span>
-                      <span className="font-medium text-gray-900">{userMetadata?.dailyGenCount || 0}/{typeof features.generations === 'number' ? features.generations : '∞'}</span>
+                      <span className="font-medium text-gray-900">
+                        {features.period === 'month' 
+                          ? `${userMetadata?.monthlyGenCount || 0}/${typeof features.generations === 'number' ? features.generations : '∞'}`
+                          : `${userMetadata?.dailyGenCount || 0}/${typeof features.generations === 'number' ? features.generations : '∞'}`
+                        }
+                      </span>
                     </div>
                   </div>
                 </div>

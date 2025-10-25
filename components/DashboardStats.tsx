@@ -27,15 +27,15 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className, creat
   const getPlanFeatures = (plan: string) => {
     switch (plan) {
       case 'free':
-        return { dailyGenerations: 6, name: 'Free' };
+        return { monthlyGenerations: 6, name: 'Free' };
       case 'pro':
-        return { dailyGenerations: 50, name: 'Pro' };
+        return { monthlyGenerations: 'unlimited', name: 'Pro' };
       case 'business':
-        return { dailyGenerations: 200, name: 'Business' };
+        return { monthlyGenerations: 'unlimited', name: 'Business' };
       case 'agency':
-        return { dailyGenerations: 1000, name: 'Agency' };
+        return { monthlyGenerations: 'unlimited', name: 'Agency' };
       default:
-        return { dailyGenerations: 6, name: 'Free' };
+        return { monthlyGenerations: 6, name: 'Free' };
     }
   };
 
@@ -67,8 +67,10 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className, creat
 
   const stats = [
     {
-      title: 'Generations Today',
-      value: `${userMetadata?.dailyGenCount || 0}/${features.dailyGenerations}`,
+      title: 'Generations This Month',
+      value: features.monthlyGenerations === 'unlimited' 
+        ? `${userMetadata?.monthlyGenCount || 0}/∞`
+        : `${userMetadata?.monthlyGenCount || 0}/${features.monthlyGenerations}`,
       icon: FileText,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -88,7 +90,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ className, creat
       icon: Calendar,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
-      description: 'Daily counters reset'
+      description: 'Monthly counters reset'
     }
   ];
 

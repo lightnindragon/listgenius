@@ -62,6 +62,15 @@ export function UserMetadataProvider({ children }: UserMetadataProviderProps) {
       const response = await fetch(`${baseUrl}/api/user/metadata`);
       
       if (response.ok) {
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Non-JSON response received from user metadata API:', text);
+          setError('Server returned invalid response format');
+          return;
+        }
+        
         const data = await response.json();
         console.log('UserMetadataContext: Received data:', data);
         setUserMetadata(data);
