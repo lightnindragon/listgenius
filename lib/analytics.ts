@@ -110,7 +110,7 @@ export const getSystemAnalytics = async () => {
 };
 
 // Track generation (for API routes)
-export const trackGeneration = (userId: string, plan: string, wordCount: number, tone: string) => {
+export const trackGeneration = (userId: string, plan: string, wordCount: number, tone: string): void => {
   trackEvent('listing_generated', {
     category: 'listing',
     user_id: userId,
