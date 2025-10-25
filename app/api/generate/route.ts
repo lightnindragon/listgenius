@@ -17,10 +17,16 @@ export async function POST(request: NextRequest) {
     console.log('=== GENERATION API CALLED ===');
     console.log('URL:', request.url);
     console.log('Method:', request.method);
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('OpenAI Key exists:', !!process.env.OPENAI_API_KEY);
+    console.log('Clerk Key exists:', !!process.env.CLERK_SECRET_KEY);
     
     logger.info('Generation API called', { 
       url: request.url,
       method: request.method,
+      environment: process.env.NODE_ENV,
+      hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+      hasClerkKey: !!process.env.CLERK_SECRET_KEY,
       headers: Object.fromEntries(request.headers.entries())
     });
 
@@ -91,10 +97,24 @@ export async function POST(request: NextRequest) {
     const platformRulesPath = path.join(process.cwd(), 'config/platforms/etsy.json');
     const promptTemplatePath = path.join(process.cwd(), 'config/prompts/etsy-digital.json');
     
+    console.log('Loading config files...');
+    console.log('Platform rules path:', platformRulesPath);
+    console.log('Prompt template path:', promptTemplatePath);
+    console.log('Current working directory:', process.cwd());
+    
+    logger.info('Loading config files', {
+      platformRulesPath,
+      promptTemplatePath,
+      cwd: process.cwd()
+    });
+    
     const [platformRules, promptTemplate] = await Promise.all([
       fs.readFile(platformRulesPath, 'utf-8').then(JSON.parse),
       fs.readFile(promptTemplatePath, 'utf-8').then(JSON.parse)
     ]);
+    
+    console.log('Config files loaded successfully');
+    logger.info('Config files loaded successfully');
 
     // Extract focus keywords (ensure long-tail)
     const focusKeywords = extractFocusKeywords(sanitizedData.keywords);
@@ -131,8 +151,30 @@ export async function POST(request: NextRequest) {
       ? (process.env.OPENAI_MODEL_FREE || 'gpt-4o-mini')
       : (process.env.OPENAI_MODEL_GENERATE || 'gpt-4o');
 
+    console.log('Calling OpenAI API...');
+    console.log('Model:', model);
+    console.log('Plan:', plan);
+    console.log('Prompt length:', prompt.length);
+    
+    logger.info('Calling OpenAI API', {
+      model,
+      plan,
+      promptLength: prompt.length
+    });
+
     // Generate listing with OpenAI
     const { content, tokensUsed, model: usedModel } = await generateListing(prompt, model);
+    
+    console.log('OpenAI API call successful');
+    console.log('Response length:', content.length);
+    console.log('Tokens used:', tokensUsed);
+    console.log('Model used:', usedModel);
+    
+    logger.info('OpenAI API call successful', {
+      responseLength: content.length,
+      tokensUsed,
+      modelUsed: usedModel
+    });
 
     // Parse and validate OpenAI response
     const parsedOutput = parseOpenAIResponse(content);
