@@ -11,7 +11,7 @@ export const GA4_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
 
 // Track page views
 export const trackPageView = (url: string, title?: string) => {
-  if (!GA4_MEASUREMENT_ID || !window.gtag) return;
+  if (typeof window === 'undefined' || !GA4_MEASUREMENT_ID || !window.gtag) return;
 
   window.gtag('config', GA4_MEASUREMENT_ID, {
     page_path: url,
@@ -21,7 +21,7 @@ export const trackPageView = (url: string, title?: string) => {
 
 // Track custom events
 export const trackEvent = (eventName: string, parameters?: Record<string, any>) => {
-  if (!GA4_MEASUREMENT_ID || !window.gtag) return;
+  if (typeof window === 'undefined' || !GA4_MEASUREMENT_ID || !window.gtag) return;
 
   window.gtag('event', eventName, {
     ...parameters,
@@ -109,26 +109,28 @@ export const getSystemAnalytics = async () => {
   };
 };
 
-// Track generation (for API routes)
+// Track generation (for API routes - server-side logging only)
 export const trackGeneration = (userId: string, plan: string, wordCount: number, tone: string): void => {
-  trackEvent('listing_generated', {
-    category: 'listing',
-    user_id: userId,
+  // Only log to server-side logs for API routes
+  // Client-side tracking will be handled by the frontend
+  console.log('Generation tracked:', {
+    userId,
     plan,
-    word_count: wordCount,
+    wordCount,
     tone,
-    value: 1,
+    timestamp: new Date().toISOString()
   });
 };
 
-// Track plan change (for admin)
+// Track plan change (for admin - server-side logging only)
 export const trackPlanChange = (userId: string, fromPlan: string, toPlan: string, adminId: string) => {
-  trackEvent('plan_changed_admin', {
-    category: 'admin_action',
-    user_id: userId,
-    from_plan: fromPlan,
-    to_plan: toPlan,
-    admin_id: adminId,
+  // Only log to server-side logs for API routes
+  console.log('Plan change tracked:', {
+    userId,
+    fromPlan,
+    toPlan,
+    adminId,
+    timestamp: new Date().toISOString()
   });
 };
 
