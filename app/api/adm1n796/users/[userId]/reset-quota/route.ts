@@ -8,10 +8,20 @@ export async function POST(
 ) {
   try {
     console.log('=== RESET QUOTA API CALLED ===');
+    console.log('Request headers:', Object.fromEntries(request.headers.entries()));
+    console.log('Request cookies:', request.cookies.getAll());
     
     // Require admin authentication
-    requireAdmin(request);
-    console.log('Admin authentication passed');
+    try {
+      requireAdmin(request);
+      console.log('Admin authentication passed');
+    } catch (authError) {
+      console.error('Admin authentication failed:', authError);
+      return NextResponse.json(
+        { success: false, error: 'Admin authentication required' },
+        { status: 401 }
+      );
+    }
 
     const { userId } = await params;
     console.log('User ID:', userId);
