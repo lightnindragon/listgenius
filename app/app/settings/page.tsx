@@ -31,6 +31,8 @@ interface UserPreferences {
 interface UserMetadata {
   plan: string;
   dailyGenCount: number;
+  monthlyGenCount?: number;
+  lastResetDate?: string;
   preferences?: UserPreferences;
   etsyConnection?: {
     shopId: string;

@@ -26,6 +26,7 @@ interface UserMetadata {
   plan: 'free' | 'pro' | 'business' | 'agency';
   dailyGenCount: number;
   dailyRewriteCount: number;
+  monthlyGenCount?: number;
   lastResetDate: string;
 }
 
