@@ -5,6 +5,7 @@ export const flags = {
   finances: process.env.NEXT_PUBLIC_ENABLE_FINANCES === 'true',
   pinterest: process.env.NEXT_PUBLIC_ENABLE_PINTEREST === 'true',
   analytics: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true',
+  ga4Analytics: process.env.NEXT_PUBLIC_ENABLE_GA4_ANALYTICS === 'true',
   communication: process.env.NEXT_PUBLIC_ENABLE_COMMUNICATION === 'true',
   inventory: process.env.NEXT_PUBLIC_ENABLE_INVENTORY === 'true',
   tools: process.env.NEXT_PUBLIC_ENABLE_TOOLS === 'true',

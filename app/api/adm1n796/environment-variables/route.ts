@@ -18,6 +18,12 @@ export async function GET(request: NextRequest) {
         current: process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID ? 'Set' : 'Not set'
       },
       {
+        key: 'NEXT_PUBLIC_ENABLE_GA4_ANALYTICS',
+        description: 'Enable Google Analytics 4 tracking',
+        type: 'public',
+        current: process.env.NEXT_PUBLIC_ENABLE_GA4_ANALYTICS || 'false'
+      },
+      {
         key: 'NEXT_PUBLIC_ENABLE_MY_LISTINGS',
         description: 'Enable My Listings feature',
         type: 'public',
@@ -123,6 +129,7 @@ export async function POST(request: NextRequest) {
     // Validate that only public variables can be updated
     const allowedKeys = [
       'NEXT_PUBLIC_GA4_MEASUREMENT_ID',
+      'NEXT_PUBLIC_ENABLE_GA4_ANALYTICS',
       'NEXT_PUBLIC_ENABLE_MY_LISTINGS',
       'NEXT_PUBLIC_ENABLE_KEYWORDS',
       'NEXT_PUBLIC_ENABLE_ANALYTICS',
