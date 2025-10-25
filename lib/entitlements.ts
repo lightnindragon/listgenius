@@ -9,8 +9,8 @@ export const PLAN_CONFIG: Record<Plan, {
 }> = {
   free: {
     maxGenerationsPerMonth: 6,
-    allowedTones: ['Professional'],
-    allowedWordCounts: [200],
+    allowedTones: ['Professional', 'Friendly', 'Casual', 'Formal', 'Enthusiastic', 'Warm', 'Creative', 'Luxury', 'Playful', 'Minimalist', 'Artistic', 'Rustic', 'Modern', 'Vintage', 'Elegant'],
+    allowedWordCounts: [200,300,400,500,600],
     canSaveGenerations: true,
     canAccessRewrites: false,
   },

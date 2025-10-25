@@ -86,16 +86,14 @@ export default function PricingPage() {
       description: 'Perfect for testing and small shops',
       features: [
         '6 generations per month',
-        'Professional tone only',
-        '200 words max per listing',
+        'All 15 tone options',
+        '200-600 words per listing',
         'Save generated listings',
         'AI-powered listing generation',
         'Standard support'
       ],
       limitations: [
-        'Limited to 6 generations per month',
-        'Professional tone only',
-        '200 words maximum per listing'
+        'Limited to 6 generations per month'
       ],
       cta: 'Get Started Free',
       ctaLink: '/sign-up',
@@ -275,14 +273,14 @@ export default function PricingPage() {
                 </tr>
                 <tr className="border-b border-gray-100">
                   <td className="py-4 px-6 text-gray-900">Tone options</td>
-                  <td className="text-center py-4 px-6 text-gray-600">Professional only</td>
+                  <td className="text-center py-4 px-6 text-green-600">All 15 tones</td>
                   <td className="text-center py-4 px-6 text-green-600">All 15 tones</td>
                   <td className="text-center py-4 px-6 text-green-600">All 15 tones</td>
                   <td className="text-center py-4 px-6 text-green-600">All 15 tones</td>
                 </tr>
                 <tr className="border-b border-gray-100">
                   <td className="py-4 px-6 text-gray-900">Word count options</td>
-                  <td className="text-center py-4 px-6 text-gray-600">200 words max</td>
+                  <td className="text-center py-4 px-6 text-green-600">200-600 words</td>
                   <td className="text-center py-4 px-6 text-green-600">200-600 words</td>
                   <td className="text-center py-4 px-6 text-green-600">200-600 words</td>
                   <td className="text-center py-4 px-6 text-green-600">200-600 words</td>

@@ -68,8 +68,7 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
     niche: userPreferences?.niche || '',
     audience: userPreferences?.audience || '',
     keywords: [],
-    // Force Professional tone for free users, regardless of preferences
-    tone: plan === 'free' ? 'Professional' : (userPreferences?.tone || 'Professional'),
+    tone: userPreferences?.tone || 'Professional',
     wordCount: 300,
     extras: {
       pinterestCaption: false,
@@ -92,8 +91,7 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
       setFormData(prev => ({
         ...prev,
         niche: userPreferences.niche || prev.niche,
-        // Force Professional tone for free users, regardless of preferences
-        tone: plan === 'free' ? 'Professional' : (userPreferences.tone || prev.tone),
+        tone: userPreferences.tone || prev.tone,
         audience: userPreferences.audience || prev.audience
       }));
     }

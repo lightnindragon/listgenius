@@ -102,8 +102,8 @@ export default function UpgradePage() {
       period: 'forever',
       features: [
         '6 generations per month',
-        'Professional tone only',
-        '200 words max per listing',
+        'All 15 tone options',
+        '200-600 words per listing',
         'Save generated listings',
         'AI-powered listing generation',
         'Standard support'

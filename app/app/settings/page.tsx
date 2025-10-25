@@ -116,12 +116,7 @@ export default function SettingsPage() {
         console.log('User data loaded:', JSON.stringify(data, null, 2));
         setUserMetadata(data);
         if (data.preferences) {
-          const userPrefs = { ...data.preferences };
-          // Force Professional tone for free users
-          if (data.plan === 'free') {
-            userPrefs.tone = 'Professional';
-          }
-          setPreferences(userPrefs);
+          setPreferences(data.preferences);
         }
       } else {
         console.error('Failed to load user data:', response.status, response.statusText);
@@ -308,36 +303,22 @@ export default function SettingsPage() {
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {toneOptions.map((tone) => {
-                        const isFreeUser = userMetadata?.plan === 'free';
-                        const isProfessional = tone.value === 'Professional';
-                        const isLocked = isFreeUser && !isProfessional;
                         const isSelected = preferences.tone === tone.value;
                         
                         return (
                           <button
                             key={tone.value}
                             onClick={() => {
-                              // Only allow tone changes for Pro/Business users or Professional for free users
-                              if (!isFreeUser || isProfessional) {
-                                setPreferences(prev => ({ ...prev, tone: tone.value }));
-                              }
+                              setPreferences(prev => ({ ...prev, tone: tone.value }));
                             }}
                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors relative ${
                               isSelected
                                 ? 'bg-blue-600 text-white'
-                                : isLocked
-                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-dashed border-gray-300'
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
-                            title={isLocked ? 'Pro feature - Upgrade to unlock' : tone.description}
-                            disabled={isLocked}
+                            title={tone.description}
                           >
                             {tone.value}
-                            {isLocked && (
-                              <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs px-1 rounded-full">
-                                Pro
-                              </span>
-                            )}
                           </button>
                         );
                       })}
