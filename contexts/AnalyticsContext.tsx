@@ -39,8 +39,23 @@ export const AnalyticsProvider: React.FC<AnalyticsProviderProps> = ({ children }
     console.log('🔍 GA4 Debug - All env vars:', {
       GA4_MEASUREMENT_ID,
       NODE_ENV: process.env.NODE_ENV,
-      NEXT_PUBLIC_GA4_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID
+      NEXT_PUBLIC_GA4_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID,
+      NEXT_PUBLIC_ENABLE_ANALYTICS: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS,
+      ALL_NEXT_PUBLIC_VARS: Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC_'))
     });
+
+    // Check analytics flag first
+    const analyticsEnabled = process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true';
+    console.log('🎯 Analytics enabled check:', {
+      rawValue: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS,
+      isEnabled: analyticsEnabled,
+      type: typeof process.env.NEXT_PUBLIC_ENABLE_ANALYTICS
+    });
+
+    if (!analyticsEnabled) {
+      console.warn('⚠️ Analytics is disabled via NEXT_PUBLIC_ENABLE_ANALYTICS flag');
+      return;
+    }
 
     // Check environment variable
     if (!GA4_MEASUREMENT_ID) {
