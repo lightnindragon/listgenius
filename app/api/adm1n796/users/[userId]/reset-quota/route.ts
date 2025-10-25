@@ -39,13 +39,16 @@ export async function POST(
     console.log('resetUserQuota completed successfully');
 
     // Get updated user details
+    console.log('Getting updated user details...');
     const updatedUser = await getUserById(userId);
+    console.log('Updated user data:', JSON.stringify(updatedUser, null, 2));
 
     logger.info('User quota reset by admin', { 
       userId, 
       resetDaily, 
       resetMonthly, 
-      setCustomQuota 
+      setCustomQuota,
+      updatedUser: JSON.stringify(updatedUser, null, 2)
     });
 
     return NextResponse.json({

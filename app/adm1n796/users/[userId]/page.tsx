@@ -146,6 +146,8 @@ export default function UserDetailPage() {
       const result = await response.json();
       
       if (result.success) {
+        // Add a small delay to ensure Clerk API has propagated the changes
+        await new Promise(resolve => setTimeout(resolve, 1000));
         await fetchUserData(); // Refresh data
         alert('Action completed successfully');
       } else {

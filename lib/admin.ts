@@ -387,33 +387,50 @@ export async function unsuspendUser(userId: string): Promise<void> {
  */
 export async function resetUserQuota(userId: string, options: { resetDaily?: boolean; resetMonthly?: boolean; setCustomQuota?: number }): Promise<void> {
   try {
+    console.log('=== RESET USER QUOTA FUNCTION ===');
+    console.log('User ID:', userId);
+    console.log('Options:', options);
+    
     const user = await clerkClient.users.getUser(userId);
     const currentMetadata = user.publicMetadata as any || {};
+    console.log('Current metadata before reset:', JSON.stringify(currentMetadata, null, 2));
     
     const updatedMetadata = { ...currentMetadata };
     
     if (options.resetDaily) {
+      console.log('Resetting daily counters...');
       updatedMetadata.dailyGenCount = 0;
       updatedMetadata.dailyRewriteCount = 0;
     }
     
     if (options.resetMonthly) {
+      console.log('Resetting monthly counters...');
       updatedMetadata.genUsage = {};
     }
     
     if (options.setCustomQuota !== undefined) {
+      console.log('Setting custom quota:', options.setCustomQuota);
       updatedMetadata.customQuota = options.setCustomQuota;
     }
     
     updatedMetadata.quotaResetAt = new Date().toISOString();
     updatedMetadata.quotaResetBy = 'admin';
     
+    console.log('Updated metadata to save:', JSON.stringify(updatedMetadata, null, 2));
+    
     await clerkClient.users.updateUserMetadata(userId, {
       publicMetadata: updatedMetadata
     });
     
+    console.log('Metadata update completed successfully');
+    
+    // Verify the update by fetching the user again
+    const verifyUser = await clerkClient.users.getUser(userId);
+    console.log('Verified metadata after update:', JSON.stringify(verifyUser.publicMetadata, null, 2));
+    
     logger.info('User quota reset', { userId, options });
   } catch (error) {
+    console.error('Error in resetUserQuota:', error);
     logger.error('Error resetting user quota', { userId, options, error });
     throw error;
   }
