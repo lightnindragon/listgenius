@@ -30,6 +30,7 @@ export interface AdminUser {
   lifetimeGenerations: number;
   dailyGenCount: number;
   dailyRewriteCount: number;
+  monthlyGenCount?: number;
   signUpDate: string;
   stripeCustomerId?: string;
   subscriptionStatus?: string;
@@ -160,6 +161,7 @@ export async function getAllUsers(page: number = 1, limit: number = 50, search?:
         lifetimeGenerations: metadata.lifetimeGenerations || 0,
         dailyGenCount: metadata.dailyGenCount || 0,
         dailyRewriteCount: metadata.dailyRewriteCount || 0,
+        monthlyGenCount: metadata.monthlyGenCount || 0,
         signUpDate: new Date(user.createdAt).toISOString(),
         stripeCustomerId: metadata.stripeCustomerId,
         subscriptionStatus: metadata.subscriptionStatus,
@@ -218,6 +220,7 @@ export async function getUserById(userId: string): Promise<AdminUser | null> {
       lifetimeGenerations: metadata.lifetimeGenerations || 0,
       dailyGenCount: metadata.dailyGenCount || 0,
       dailyRewriteCount: metadata.dailyRewriteCount || 0,
+      monthlyGenCount: metadata.monthlyGenCount || 0,
       signUpDate: new Date(user.createdAt).toISOString(),
       stripeCustomerId: metadata.stripeCustomerId,
       subscriptionStatus: metadata.subscriptionStatus,

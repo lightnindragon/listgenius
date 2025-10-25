@@ -30,6 +30,7 @@ interface AdminUser {
   lifetimeGenerations: number;
   dailyGenCount: number;
   dailyRewriteCount: number;
+  monthlyGenCount?: number;
   signUpDate: string;
   stripeCustomerId?: string;
   subscriptionStatus?: string;
