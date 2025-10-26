@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { stripe } from '@/lib/stripe';
 import { getCurrentUser } from '@/lib/clerk';
 import { logger } from '@/lib/logger';
+import { getAffiliateCodeFromCookie } from '@/lib/affiliate';
 import { z } from 'zod';
 
 const checkoutSchema = z.object({
@@ -49,6 +50,9 @@ export async function POST(request: NextRequest) {
     }
 
     const { plan, successUrl, cancelUrl } = validation.data;
+
+    // Get affiliate code from cookie
+    const affiliateCode = await getAffiliateCodeFromCookie();
 
     // Get price ID for the plan (using test price IDs for development)
     const priceIdMapping: { [key: string]: string } = {
@@ -140,11 +144,13 @@ export async function POST(request: NextRequest) {
       metadata: {
         userId: userId,
         plan: plan,
+        ...(affiliateCode && { affiliateCode }),
       },
       subscription_data: {
         metadata: {
           userId: userId,
           plan: plan,
+          ...(affiliateCode && { affiliateCode }),
         },
       },
       allow_promotion_codes: true,

@@ -2,8 +2,11 @@
 
 import { SignUp } from '@clerk/nextjs';
 import { useEffect } from 'react';
+import { useAuth } from '@clerk/nextjs';
 
 export default function SignUpPage() {
+  const { isSignedIn } = useAuth();
+
   useEffect(() => {
     // Debug: Check if Clerk is loaded
     console.log('SignUp page loaded');
@@ -21,6 +24,24 @@ export default function SignUpPage() {
       console.warn('Not on sign-up page, current path:', window.location.pathname);
     }
   }, []);
+
+  // Handle affiliate onboarding after successful signup
+  useEffect(() => {
+    if (isSignedIn) {
+      // Call affiliate onboarding API
+      fetch('/api/user/onboard', { method: 'POST' })
+        .then(response => {
+          if (response.ok) {
+            console.log('Affiliate onboarding completed');
+          } else {
+            console.error('Affiliate onboarding failed');
+          }
+        })
+        .catch(error => {
+          console.error('Affiliate onboarding error:', error);
+        });
+    }
+  }, [isSignedIn]);
 
   // Get redirect URL from query parameters
   const getRedirectUrl = () => {

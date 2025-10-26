@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AdminAuthGuard } from '@/components/admin/AdminAuthGuard';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { 
@@ -14,7 +14,8 @@ import {
   RotateCcw,
   ChevronLeft,
   ChevronRight,
-  Download
+  Download,
+  Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -110,6 +111,10 @@ export default function UsersPage() {
         case 'reset-quota':
           endpoint = `/api/adm1n796/users/${userId}/reset-quota`;
           break;
+        case 'delete':
+          endpoint = `/api/adm1n796/users/${userId}`;
+          method = 'DELETE';
+          break;
         default:
           return;
       }
@@ -125,6 +130,27 @@ export default function UsersPage() {
     } catch (error) {
       alert('Action failed');
     }
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete user "${userName}"?\n\n` +
+      `This action cannot be undone and will:\n` +
+      `- Remove the user from Clerk\n` +
+      `- Delete all user data\n` +
+      `- Remove any associated subscriptions\n\n` +
+      `Type "DELETE" to confirm:`
+    );
+    
+    if (!confirmed) return;
+    
+    const confirmation = window.prompt('Type "DELETE" to confirm permanent deletion:');
+    if (confirmation !== 'DELETE') {
+      alert('Deletion cancelled. You must type "DELETE" exactly to confirm.');
+      return;
+    }
+    
+    await handleUserAction(userId, 'delete');
   };
 
   const getPlanBadgeColor = (plan: string) => {
@@ -164,16 +190,16 @@ export default function UsersPage() {
 
   if (loading && users.length === 0) {
     return (
-      <AdminAuthGuard>
+      <AdminLayout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      </AdminAuthGuard>
+      </AdminLayout>
     );
   }
 
   return (
-    <AdminAuthGuard>
+    <AdminLayout>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow">
@@ -348,6 +374,15 @@ export default function UsersPage() {
                           >
                             <UserX className="h-3 w-3" />
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            title="Delete User Permanently"
+                            onClick={() => handleDeleteUser(user.id, user.name)}
+                            className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -406,6 +441,6 @@ export default function UsersPage() {
           </div>
         </main>
       </div>
-    </AdminAuthGuard>
+    </AdminLayout>
   );
 }

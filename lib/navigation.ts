@@ -34,7 +34,8 @@ import {
   DollarSign as DollarIcon,
   BarChart3 as AnalyticsIcon,
   MessageSquare as CommunicationIcon,
-  Package as InventoryIcon
+  Package as InventoryIcon,
+  HandCoins
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -169,6 +170,12 @@ export const navigationCategories: NavigationCategory[] = [
     icon: DollarIcon,
     defaultOpen: false,
     items: [
+      {
+        name: 'Affiliate Program',
+        href: '/app/affiliate',
+        icon: HandCoins,
+        featureFlag: 'affiliate',
+      },
       {
         name: 'Smart Pricing',
         href: '/app/pricing/optimizer',

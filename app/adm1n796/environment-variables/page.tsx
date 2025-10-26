@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { AdminAuthGuard } from '@/components/admin/AdminAuthGuard';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Container } from '@/components/ui/Container';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -210,18 +210,18 @@ export default function EnvironmentVariablesPage() {
 
   if (loading) {
     return (
-      <AdminAuthGuard>
+      <AdminLayout>
         <Container>
           <div className="flex items-center justify-center h-64">
             <RefreshCw className="w-8 h-8 animate-spin" />
           </div>
         </Container>
-      </AdminAuthGuard>
+      </AdminLayout>
     );
   }
 
   return (
-    <AdminAuthGuard>
+    <AdminLayout>
       <Container>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -307,6 +307,6 @@ export default function EnvironmentVariablesPage() {
         <ToastContainer toasts={toasts} onClose={removeToast} />
         <TopRightToast />
       </Container>
-    </AdminAuthGuard>
+    </AdminLayout>
   );
 }

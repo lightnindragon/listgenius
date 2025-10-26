@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AdminAuthGuard } from '@/components/admin/AdminAuthGuard';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { StatsCard } from '@/components/admin/StatsCard';
 import { Button } from '@/components/ui/Button';
 import { 
@@ -72,61 +72,38 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <AdminAuthGuard>
-        <div className="min-h-screen flex items-center justify-center">
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      </AdminAuthGuard>
+      </AdminLayout>
     );
   }
 
   if (error) {
     return (
-      <AdminAuthGuard>
-        <div className="min-h-screen flex items-center justify-center">
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-64">
           <div className="text-center">
             <p className="text-red-600 mb-4">{error}</p>
             <Button onClick={fetchAnalytics}>Retry</Button>
           </div>
         </div>
-      </AdminAuthGuard>
+      </AdminLayout>
     );
   }
 
   return (
-    <AdminAuthGuard>
-      <div className="min-h-screen bg-gray-50">
+    <AdminLayout>
+      <div>
         {/* Header */}
-        <header className="bg-white shadow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">System Dashboard</h1>
-                <p className="text-gray-600">Analytics and user management</p>
-              </div>
-              <div className="flex space-x-4">
-                <Link href="/adm1n796/users">
-                  <Button variant="outline">
-                    <Users className="h-4 w-4 mr-2" />
-                    Manage Users
-                  </Button>
-                </Link>
-                <Link href="/adm1n796/environment-variables">
-                  <Button variant="outline">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Environment Variables
-                  </Button>
-                </Link>
-                <Button onClick={handleLogout} variant="outline">
-                  Logout
-                </Button>
-              </div>
-            </div>
-          </div>
-        </header>
+        <div className="mb-2">
+          <h1 className="text-3xl font-bold text-gray-900">System Dashboard</h1>
+          <p className="text-gray-600">Analytics and user management</p>
+        </div>
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto">
           {analytics && (
             <>
               {/* Stats Grid */}
@@ -219,19 +196,7 @@ export default function AdminDashboard() {
               {/* Quick Actions */}
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <Link href="/adm1n796/users">
-                    <Button className="w-full" variant="outline">
-                      <Users className="h-4 w-4 mr-2" />
-                      View All Users
-                    </Button>
-                  </Link>
-                  <Link href="/adm1n796/environment-variables">
-                    <Button className="w-full" variant="outline">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Environment Variables
-                    </Button>
-                  </Link>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Button 
                     className="w-full" 
                     variant="outline"
@@ -252,8 +217,8 @@ export default function AdminDashboard() {
               </div>
             </>
           )}
-        </main>
+        </div>
       </div>
-    </AdminAuthGuard>
+    </AdminLayout>
   );
 }

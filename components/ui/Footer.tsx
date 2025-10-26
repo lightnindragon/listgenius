@@ -30,6 +30,11 @@ const Footer: React.FC = () => {
                   Generator
                 </Link>
               </li>
+              <li>
+                <Link href="/affiliate-program" className="text-muted-foreground hover:text-primary text-sm transition-colors">
+                  Affiliate Program
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -9,6 +9,7 @@ import { StatusIndicator } from '@/components/StatusIndicator';
 import { navigationCategories, bottomNavigation, NavigationItem, NavigationCategory } from '@/lib/navigation';
 import { isEnabled } from '@/lib/flags';
 import { getUserPlanSimple } from '@/lib/entitlements';
+import { useAffiliateStatus } from '@/lib/hooks/useAffiliateStatus';
 
 const Header: React.FC = () => {
   const { user, isSignedIn } = useUser();
@@ -17,6 +18,7 @@ const Header: React.FC = () => {
   const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'business'>('free');
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { hasApplication, status } = useAffiliateStatus();
 
   // Get user plan when user data is available
   useEffect(() => {
@@ -65,6 +67,13 @@ const Header: React.FC = () => {
     return navigationCategories.map(category => ({
       ...category,
       items: category.items.filter(item => {
+        // Special handling for affiliate feature flag
+        if (item.featureFlag === 'affiliate') {
+          // Show affiliate link if user has an application (PENDING or APPROVED)
+          // Hide if REJECTED or no application
+          return hasApplication && (status === 'PENDING' || status === 'APPROVED');
+        }
+        
         // Check feature flag if present
         if (item.featureFlag) {
           if (!isEnabled(item.featureFlag as any)) return false;

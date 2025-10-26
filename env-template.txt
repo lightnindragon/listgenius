@@ -43,3 +43,21 @@ NEXT_PUBLIC_ENV=development
 # Redis Cache (Optional for MVP)
 # UPSTASH_REDIS_REST_URL=https://your-db.upstash.io
 # UPSTASH_REDIS_REST_TOKEN=your_token_here
+
+# ===== AFFILIATE SYSTEM =====
+
+# Affiliate Cookie Settings
+AFFILIATE_COOKIE_NAME=affiliate_ref
+AFFILIATE_COOKIE_MAX_DAYS=30
+
+# Commission & Payout Settings
+AFFILIATE_COMMISSION_RATE=0.30
+AFFILIATE_MIN_PAYOUT=10
+AFFILIATE_EARLY_PAYOUT_THRESHOLD=50
+AFFILIATE_PAYOUT_CURRENCY=USD
+
+# Admin Settings
+ADMIN_USER_IDS=user_123456789,user_987654321
+
+# Timezone
+NEXT_PUBLIC_TIMEZONE=America/New_York

@@ -49,12 +49,11 @@ export const GA4DebugPanel: React.FC = () => {
     console.log('Test listing generation event sent to GA4');
   };
 
-  if (process.env.NODE_ENV === 'production') {
-    return null; // Don't show debug panel in production
-  }
+  // Debug panel disabled - was causing UI issues
+  return null;
 
   return (
-    <div className="fixed bottom-4 right-4 bg-white border border-gray-300 rounded-lg p-4 shadow-lg max-w-sm z-50">
+    <div className="fixed top-4 right-4 bg-white border border-gray-300 rounded-lg p-4 shadow-lg max-w-sm z-50">
       <h3 className="font-bold text-sm mb-2">GA4 Debug Panel</h3>
       
       <div className="space-y-2 text-xs">

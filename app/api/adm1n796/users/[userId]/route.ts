@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin, getUserById, updateUserPlanAdmin, suspendUser, unsuspendUser } from '@/lib/admin';
+import { requireAdmin, getUserById, updateUserPlanAdmin, suspendUser, unsuspendUser, deleteUser } from '@/lib/admin';
 import { logger } from '@/lib/logger';
 
 export async function GET(
@@ -132,14 +132,14 @@ export async function DELETE(
       );
     }
 
-    // Suspend user instead of deleting (safer approach)
-    await suspendUser(userId);
+    // Permanently delete the user
+    await deleteUser(userId);
 
-    logger.info('User suspended by admin', { userId });
+    logger.info('User deleted permanently by admin', { userId });
 
     return NextResponse.json({
       success: true,
-      message: 'User suspended successfully'
+      message: 'User deleted permanently'
     });
   } catch (error) {
     if (error instanceof Error && error.message === 'Admin authentication required') {
@@ -149,9 +149,9 @@ export async function DELETE(
       );
     }
 
-    logger.error('Error suspending user', { userId: (await params).userId, error });
+    logger.error('Error deleting user', { userId: (await params).userId, error });
     return NextResponse.json(
-      { success: false, error: 'Failed to suspend user' },
+      { success: false, error: 'Failed to delete user' },
       { status: 500 }
     );
   }

@@ -383,6 +383,21 @@ export async function unsuspendUser(userId: string): Promise<void> {
 }
 
 /**
+ * Delete user account permanently
+ */
+export async function deleteUser(userId: string): Promise<void> {
+  try {
+    // First, try to delete the user from Clerk
+    await clerkClient.users.deleteUser(userId);
+    
+    logger.info('User deleted permanently', { userId });
+  } catch (error) {
+    logger.error('Error deleting user', { userId, error });
+    throw error;
+  }
+}
+
+/**
  * Reset user quotas
  */
 export async function resetUserQuota(userId: string, options: { resetDaily?: boolean; resetMonthly?: boolean; setCustomQuota?: number }): Promise<void> {

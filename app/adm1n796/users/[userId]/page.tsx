@@ -19,7 +19,8 @@ import {
   Edit,
   UserX,
   Key,
-  RotateCcw
+  RotateCcw,
+  Trash2
 } from 'lucide-react';
 
 interface AdminUser {
@@ -133,6 +134,10 @@ export default function UserDetailPage() {
           endpoint = `/api/adm1n796/users/${userId}/plan`;
           method = 'PUT';
           break;
+        case 'delete':
+          endpoint = `/api/adm1n796/users/${userId}`;
+          method = 'DELETE';
+          break;
         default:
           return;
       }
@@ -146,6 +151,13 @@ export default function UserDetailPage() {
       const result = await response.json();
       
       if (result.success) {
+        // If user was deleted, redirect to users list
+        if (action === 'delete') {
+          alert('User deleted successfully');
+          router.push('/adm1n796/users');
+          return;
+        }
+        
         // Add a small delay to ensure Clerk API has propagated the changes
         await new Promise(resolve => setTimeout(resolve, 1000));
         await fetchUserData(); // Refresh data
@@ -426,6 +438,35 @@ export default function UserDetailPage() {
                       ? 'Processing...' 
                       : user.status === 'active' ? 'Suspend User' : 'Unsuspend User'
                     }
+                  </Button>
+
+                  <Button
+                    className="w-full"
+                    variant="destructive"
+                    onClick={() => {
+                      const confirmed = window.confirm(
+                        `Are you sure you want to permanently delete user "${user.name}"?\n\n` +
+                        `This action cannot be undone and will:\n` +
+                        `- Remove the user from Clerk\n` +
+                        `- Delete all user data\n` +
+                        `- Remove any associated subscriptions\n\n` +
+                        `Type "DELETE" to confirm:`
+                      );
+                      
+                      if (!confirmed) return;
+                      
+                      const confirmation = window.prompt('Type "DELETE" to confirm permanent deletion:');
+                      if (confirmation !== 'DELETE') {
+                        alert('Deletion cancelled. You must type "DELETE" exactly to confirm.');
+                        return;
+                      }
+                      
+                      handleUserAction('delete');
+                    }}
+                    disabled={actionLoading === 'delete'}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {actionLoading === 'delete' ? 'Deleting...' : 'Delete User Permanently'}
                   </Button>
                 </div>
               </div>

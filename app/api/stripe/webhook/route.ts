@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { logger } from "@/lib/logger";
+import { awardCommission } from "@/lib/affiliate";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-09-30.clover",
@@ -29,7 +30,36 @@ export async function POST(req: Request) {
 
   // Handle subscription events
   switch (event.type) {
-    case "invoice.payment_succeeded":
+    case "invoice.payment_succeeded": {
+      const invoice = event.data.object as Stripe.Invoice;
+      const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+      const customer = await stripe.customers.retrieve(subscription.customer as string);
+      const email = (customer as Stripe.Customer).email;
+
+      if (email && invoice.amount_paid) {
+        try {
+          const users = await (await clerkClient()).users.getUserList({ emailAddress: [email] });
+          if (users.data.length > 0) {
+            const userId = users.data[0].id;
+            
+            // Award commission for recurring payment
+            if (subscription.metadata?.affiliateCode) {
+              await awardCommission(userId, invoice.amount_paid, subscription.metadata);
+            }
+            
+            logger.info('Recurring commission awarded', { 
+              userId, 
+              amount: invoice.amount_paid,
+              subscriptionId: subscription.id 
+            });
+          }
+        } catch (err) {
+          logger.error('Failed to award recurring commission', { email, error: err });
+        }
+      }
+      break;
+    }
+
     case "customer.subscription.updated": {
       const subscription = event.data.object as Stripe.Subscription;
       const customer = await stripe.customers.retrieve(subscription.customer as string);
@@ -54,6 +84,11 @@ export async function POST(req: Request) {
             await (await clerkClient()).users.updateUserMetadata(userId, {
               publicMetadata: { plan },
             });
+            
+            // Award affiliate commission for recurring payments
+            if (subscription.metadata?.affiliateCode) {
+              await awardCommission(userId, 0, subscription.metadata); // Amount will be from invoice
+            }
             
             logger.info("Updated user plan", { 
               email, 
@@ -126,6 +161,11 @@ export async function POST(req: Request) {
             await (await clerkClient()).users.updateUserMetadata(userId, {
               publicMetadata: { plan },
             });
+            
+            // Award affiliate commission for initial payment
+            if (session.amount_total && session.metadata?.affiliateCode) {
+              await awardCommission(userId, session.amount_total, session.metadata);
+            }
             
             logger.info("Updated user plan from checkout", { 
               email, 

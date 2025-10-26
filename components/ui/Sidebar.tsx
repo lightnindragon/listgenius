@@ -10,6 +10,7 @@ import { getUserPlanSimple } from '@/lib/entitlements';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { navigationCategories, bottomNavigation, NavigationItem, NavigationCategory } from '@/lib/navigation';
 import { useUserMetadata } from '@/contexts/UserMetadataContext';
+import { useAffiliateStatus } from '@/lib/hooks/useAffiliateStatus';
 
 interface SidebarProps {
   className?: string;
@@ -21,6 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className, onCreateListingClic
   const pathname = usePathname();
   const { user } = useUser();
   const { userMetadata } = useUserMetadata();
+  const { hasApplication, status } = useAffiliateStatus();
   
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -72,6 +74,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ className, onCreateListingClic
     const filtered = navigationCategories.map(category => ({
       ...category,
       items: category.items.filter(item => {
+        // Special handling for affiliate feature flag
+        if (item.featureFlag === 'affiliate') {
+          // Show affiliate link if user has an application (PENDING or APPROVED)
+          // Hide if REJECTED or no application
+          const shouldShow = hasApplication && (status === 'PENDING' || status === 'APPROVED');
+          console.log(`Item ${item.name} (affiliate): hasApplication=${hasApplication}, status=${status}, shouldShow=${shouldShow}`);
+          return shouldShow;
+        }
+        
         // Check feature flag if present
         if (item.featureFlag) {
           const enabled = isEnabled(item.featureFlag as any);
