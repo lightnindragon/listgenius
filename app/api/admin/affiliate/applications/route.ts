@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const applicationsWithUserDetails = await Promise.all(
       applications.map(async (application) => {
         try {
-          const user = await clerkClient.users.getUser(application.userId);
+          const user = await (await clerkClient()).users.getUser(application.userId);
           return {
             ...application,
             // Use application data if available, fallback to Clerk data

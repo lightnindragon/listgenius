@@ -11,7 +11,7 @@ const COMMISSION_RATE = Number(process.env.AFFILIATE_COMMISSION_RATE || 0.30);
  */
 export async function getAffiliateCodeFromCookie(): Promise<string | null> {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const affiliateCookie = cookieStore.get(COOKIE_NAME);
     return affiliateCookie?.value || null;
   } catch (error) {

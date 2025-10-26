@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!isAdminAuthenticated(request)) {
@@ -16,14 +16,16 @@ export async function GET(
       );
     }
 
+    const { id } = await params;
+
     const loginLogs = await prisma.affiliateLoginLog.findMany({
-      where: { affiliateId: params.id },
+      where: { affiliateId: id },
       orderBy: { loginAt: 'desc' },
       take: 50, // Limit to last 50 logins
     });
 
     logger.info('Admin fetched affiliate login logs', { 
-      affiliateId: params.id,
+      affiliateId: id,
       logCount: loginLogs.length
     });
 

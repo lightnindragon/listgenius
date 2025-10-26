@@ -22,8 +22,7 @@ export async function GET(request: NextRequest) {
     });
 
     logger.info('Admin fetched queued payouts', { 
-      count: payouts.length,
-      adminUserId: userId 
+      count: payouts.length
     });
 
     return NextResponse.json({ payouts });

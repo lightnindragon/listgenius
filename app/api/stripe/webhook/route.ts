@@ -32,7 +32,13 @@ export async function POST(req: Request) {
   switch (event.type) {
     case "invoice.payment_succeeded": {
       const invoice = event.data.object as Stripe.Invoice;
-      const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+      
+      if (!(invoice as any).subscription) {
+        logger.info('Invoice has no subscription, skipping affiliate commission');
+        return NextResponse.json({ received: true });
+      }
+      
+      const subscription = await stripe.subscriptions.retrieve((invoice as any).subscription);
       const customer = await stripe.customers.retrieve(subscription.customer as string);
       const email = (customer as Stripe.Customer).email;
 

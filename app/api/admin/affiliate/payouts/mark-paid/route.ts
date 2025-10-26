@@ -66,7 +66,6 @@ export async function POST(req: NextRequest) {
       amount: Number(payout.amount),
       method: method || payout.method,
       reference: reference || payout.reference,
-      adminUserId: userId,
     });
 
     return NextResponse.json({ success: true });

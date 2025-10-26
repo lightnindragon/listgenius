@@ -83,9 +83,8 @@ export default async function CustomAffiliatePage({ params }: CustomAffiliatePag
       await prisma.refClick.create({
         data: {
           affiliateCode: affiliate.code,
-          ipAddress: 'unknown', // We'll get this from headers in middleware
-          userAgent: 'unknown',
-          referrer: 'custom-endpoint',
+          ipHash: 'unknown', // We'll get this from headers in middleware
+          uaHash: 'unknown',
         },
       });
 

@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const affiliatesWithUserDetails = await Promise.all(
       affiliates.map(async (affiliate) => {
         try {
-          const user = await clerkClient.users.getUser(affiliate.userId);
+          const user = await (await clerkClient()).users.getUser(affiliate.userId);
           return {
             ...affiliate,
             // Use application data if available, fallback to Clerk data

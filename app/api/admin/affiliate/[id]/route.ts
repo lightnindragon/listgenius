@@ -8,7 +8,7 @@ import { deleteUser } from '@/lib/admin';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!isAdminAuthenticated(request)) {
@@ -18,8 +18,10 @@ export async function GET(
       );
     }
 
+    const { id } = await params;
+
     const affiliate = await prisma.affiliate.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         _count: {
           select: {
@@ -41,7 +43,7 @@ export async function GET(
     // Fetch user details from Clerk
     let clerkUser = null;
     try {
-      const user = await clerkClient.users.getUser(affiliate.userId);
+      const user = await (await clerkClient()).users.getUser(affiliate.userId);
       clerkUser = {
         id: user.id,
         firstName: user.firstName,
@@ -53,7 +55,7 @@ export async function GET(
       };
     } catch (error) {
       logger.warn('Failed to fetch user details for affiliate', { 
-        affiliateId: params.id, 
+        affiliateId: id, 
         userId: affiliate.userId,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -69,7 +71,7 @@ export async function GET(
     };
 
     logger.info('Admin fetched affiliate details', { 
-      affiliateId: params.id,
+      affiliateId: id,
       affiliateCode: affiliate.code
     });
 
@@ -87,7 +89,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!isAdminAuthenticated(request)) {
@@ -97,6 +99,7 @@ export async function PUT(
       );
     }
 
+    const { id } = await params;
     const { userName, userEmail, payoutEmail, customSlug, applicationNote, rejectionReason } = await request.json();
 
     // Validate custom slug if provided
@@ -128,7 +131,7 @@ export async function PUT(
       const existingSlug = await prisma.affiliate.findFirst({
         where: { 
           customSlug: slug,
-          id: { not: params.id } // Exclude current affiliate
+          id: { not: id } // Exclude current affiliate
         },
       });
       
@@ -140,7 +143,7 @@ export async function PUT(
     }
 
     const affiliate = await prisma.affiliate.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!affiliate) {
@@ -151,7 +154,7 @@ export async function PUT(
     }
 
     const updatedAffiliate = await prisma.affiliate.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         userName: userName || null,
         userEmail: userEmail || null,
@@ -164,7 +167,7 @@ export async function PUT(
     });
 
     logger.info('Admin updated affiliate details', { 
-      affiliateId: params.id,
+      affiliateId: id,
       affiliateCode: affiliate.code,
       changes: { userName, userEmail, payoutEmail }
     });
@@ -187,8 +190,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+  
   try {
     if (!isAdminAuthenticated(request)) {
       return NextResponse.json(
@@ -198,7 +203,7 @@ export async function DELETE(
     }
 
     const affiliate = await prisma.affiliate.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!affiliate) {
@@ -214,24 +219,24 @@ export async function DELETE(
       // Note: Some models use affiliateId, others use affiliateCode
       
       logger.info('Starting affiliate deletion transaction', { 
-        affiliateId: params.id, 
+        affiliateId: id, 
         affiliateCode: affiliate.code,
         userId: affiliate.userId
       });
       
       // Delete by affiliateId
       const commissionAdjustments = await tx.commissionAdjustment.deleteMany({
-        where: { affiliateId: params.id }
+        where: { affiliateId: id }
       });
       logger.info('Deleted commission adjustments', { count: commissionAdjustments.count });
       
       const loginLogs = await tx.affiliateLoginLog.deleteMany({
-        where: { affiliateId: params.id }
+        where: { affiliateId: id }
       });
       logger.info('Deleted login logs', { count: loginLogs.count });
       
       const payouts = await tx.payout.deleteMany({
-        where: { affiliateId: params.id }
+        where: { affiliateId: id }
       });
       logger.info('Deleted payouts', { count: payouts.count });
       
@@ -248,7 +253,7 @@ export async function DELETE(
       
       // Finally delete the affiliate record
       const deletedAffiliate = await tx.affiliate.delete({
-        where: { id: params.id }
+        where: { id: id }
       });
       logger.info('Deleted affiliate record', { affiliateId: deletedAffiliate.id });
     });
@@ -257,13 +262,13 @@ export async function DELETE(
     try {
       await deleteUser(affiliate.userId);
       logger.info('Affiliate user deleted from Clerk', { 
-        affiliateId: params.id, 
+        affiliateId: id, 
         userId: affiliate.userId,
         affiliateCode: affiliate.code
       });
     } catch (clerkError) {
       logger.warn('Failed to delete affiliate user from Clerk - continuing with database cleanup', { 
-        affiliateId: params.id, 
+        affiliateId: id, 
         userId: affiliate.userId,
         error: clerkError instanceof Error ? clerkError.message : 'Unknown error'
       });
@@ -271,7 +276,7 @@ export async function DELETE(
     }
 
     logger.info('Affiliate deleted permanently', { 
-      affiliateId: params.id,
+      affiliateId: id,
       affiliateCode: affiliate.code,
       userId: affiliate.userId
     });
@@ -283,7 +288,7 @@ export async function DELETE(
     
   } catch (error) {
     logger.error('Failed to delete affiliate', { 
-      affiliateId: params.id, 
+      affiliateId: id, 
       error: error instanceof Error ? error.message : 'Unknown error'
     });
     
