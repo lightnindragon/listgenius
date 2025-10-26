@@ -27,7 +27,7 @@ export default function AffiliatePage() {
 
   const MIN_PAYOUT = 10;
   const EARLY_THRESHOLD = 50;
-  const COOKIE_DAYS = 30;
+  const COOKIE_DAYS = 60;
 
   useEffect(() => {
     if (isLoaded) {
@@ -393,6 +393,61 @@ export default function AffiliatePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Detailed Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Detailed Statistics</CardTitle>
+          <CardDescription>
+            Breakdown of your performance and earnings
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Commission Summary */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Commission Summary</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Total Commissions Earned:</span>
+                  <span className="font-semibold">${Number(affiliate.totalCommissions || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Total Revenue Generated:</span>
+                  <span className="font-semibold">${Number(affiliate.totalRevenue || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm pt-2 border-t">
+                  <span className="text-gray-600">Commission Rate:</span>
+                  <span className="font-semibold text-green-600">30%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Referral Breakdown by Plan */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Referrals by Plan</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Pro Plan Referrals:</span>
+                  <span className="font-semibold">{affiliate.proReferrals || 0}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Business Plan Referrals:</span>
+                  <span className="font-semibold">{affiliate.businessReferrals || 0}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Agency Plan Referrals:</span>
+                  <span className="font-semibold">{affiliate.agencyReferrals || 0}</span>
+                </div>
+                <div className="flex justify-between text-sm pt-2 border-t">
+                  <span className="text-gray-600">Total Referrals:</span>
+                  <span className="font-semibold">{affiliate.referralCount}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Referral Links */}
       <Card>

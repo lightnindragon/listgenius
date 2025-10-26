@@ -62,7 +62,7 @@ export default clerkMiddleware(async (auth, req) => {
   
   if (affiliateCode) {
     const COOKIE_NAME = process.env.AFFILIATE_COOKIE_NAME || 'affiliate_ref';
-    const COOKIE_DAYS = Number(process.env.AFFILIATE_COOKIE_MAX_DAYS || 30);
+    const COOKIE_DAYS = Number(process.env.AFFILIATE_COOKIE_MAX_DAYS || 60);
     const maxAge = COOKIE_DAYS * 24 * 60 * 60; // Convert days to seconds
     
     const response = NextResponse.next();
