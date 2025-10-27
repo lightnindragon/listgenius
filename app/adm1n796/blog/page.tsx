@@ -217,7 +217,7 @@ export default function AdminBlogPage() {
                   <p className="text-sm text-gray-600">Allow users to comment on blog posts</p>
                 </div>
                 <Button
-                  variant={commentSettings.commentsEnabled ? "default" : "outline"}
+                  variant={commentSettings.commentsEnabled ? "primary" : "outline"}
                   onClick={() => handleToggleCommentSettings('commentsEnabled')}
                   className="flex items-center gap-2"
                 >
@@ -241,7 +241,7 @@ export default function AdminBlogPage() {
                   <p className="text-sm text-gray-600">Comments must be approved before appearing</p>
                 </div>
                 <Button
-                  variant={commentSettings.moderationRequired ? "default" : "outline"}
+                  variant={commentSettings.moderationRequired ? "primary" : "outline"}
                   onClick={() => handleToggleCommentSettings('moderationRequired')}
                   className="flex items-center gap-2"
                 >
