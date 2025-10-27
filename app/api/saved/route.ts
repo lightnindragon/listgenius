@@ -21,7 +21,7 @@ export async function GET() {
     
     // Use raw SQL to work around Prisma client schema issue
     const generations = await prisma.$queryRaw`
-      SELECT id, "userId", title, description, tags, materials, tone, "wordCount", "createdAt"
+      SELECT id, "userId", title, description, tags, materials, tone, "wordCount", "bulkImportId", "bulkImportDate", source, "createdAt"
       FROM "SavedGeneration"
       WHERE "userId" = ${userId}
       ORDER BY "createdAt" DESC
@@ -32,18 +32,12 @@ export async function GET() {
     return NextResponse.json({ success: true, data: generations });
   } catch (error) {
     console.error('GET /api/saved - Error fetching saved generations:', error);
-    console.error('GET /api/saved - Error details:', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    });
     
     return NextResponse.json(
       { 
         success: false, 
         error: 'Failed to fetch saved generations', 
-        details: error instanceof Error ? error.message : 'Unknown error',
-        errorName: error instanceof Error ? error.name : 'Unknown'
+        details: error instanceof Error ? error.message : 'Unknown error'
       }, 
       { status: 500 }
     );
@@ -95,9 +89,9 @@ export async function POST(req: Request) {
     
     // Use raw SQL to work around Prisma client schema issue
     const result = await prisma.$queryRaw`
-      INSERT INTO "SavedGeneration" (id, "userId", title, description, tags, materials, tone, "wordCount")
-      VALUES (${randomUUID()}, ${userId}, ${body.title}, ${body.description}, ${JSON.stringify(tags)}::jsonb, ${JSON.stringify(materials)}::jsonb, ${body.tone || null}, ${body.wordCount || null})
-      RETURNING id, "userId", title, description, tags, materials, tone, "wordCount", "createdAt"
+      INSERT INTO "SavedGeneration" (id, "userId", title, description, tags, materials, tone, "wordCount", "bulkImportId", "bulkImportDate", source)
+      VALUES (${randomUUID()}, ${userId}, ${body.title}, ${body.description}, ${JSON.stringify(tags)}::jsonb, ${JSON.stringify(materials)}::jsonb, ${body.tone || null}, ${body.wordCount || null}, ${body.bulkImportId || null}, ${body.bulkImportDate || null}, ${body.source || 'manual'})
+      RETURNING id, "userId", title, description, tags, materials, tone, "wordCount", "bulkImportId", "bulkImportDate", source, "createdAt"
     ` as any[];
     
     const saved = result[0];

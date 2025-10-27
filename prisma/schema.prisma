@@ -923,21 +923,209 @@ model RiskAssessment {
 }
 
 model SavedGeneration {
-  id          String   @id @default(cuid())
-  userId      String
-  title       String
-  description String
-  tags        String
-  materials   String
-  tone        String?
-  wordCount   Int?
-  createdAt   DateTime @default(now())
+  id             String    @id @default(cuid())
+  userId         String
+  title          String
+  description    String
+  tags           String
+  materials      String
+  tone           String?
+  wordCount      Int?
+  createdAt      DateTime  @default(now())
+  bulkImportDate DateTime?
+  bulkImportId   String?
+  source         String?   @default("manual")
 
   @@index([userId])
   @@index([createdAt])
+  @@index([bulkImportId])
+  @@index([bulkImportDate])
+  @@index([source])
 }
 
-// Affiliate system models
+model Affiliate {
+  id                    String                 @id @default(cuid())
+  userId                String                 @unique
+  code                  String                 @unique
+  customSlug            String?                @unique
+  status                AffiliateStatus        @default(PENDING)
+  referralCount         Int                    @default(0)
+  totalEarnings         Decimal                @default(0) @db.Decimal(10, 2)
+  pendingEarnings       Decimal                @default(0) @db.Decimal(10, 2)
+  payoutEmail           String?
+  applicationNote       String?
+  rejectionReason       String?
+  approvedAt            DateTime?
+  approvedBy            String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  userName              String?
+  userEmail             String?
+  firstName             String?
+  lastName              String?
+  phoneNumber           String?
+  address               String?
+  advertisingPlans      String?
+  website               String?
+  socialMedia           String?
+  termsAccepted         Boolean                @default(false)
+  lastLoginAt           DateTime?
+  lastLoginIP           String?
+  loginCount            Int                    @default(0)
+  lastActivityAt        DateTime?
+  totalCommissions      Decimal                @default(0) @db.Decimal(10, 2)
+  totalRevenue          Decimal                @default(0) @db.Decimal(10, 2)
+  proReferrals          Int                    @default(0)
+  businessReferrals     Int                    @default(0)
+  agencyReferrals       Int                    @default(0)
+  loginLogs             AffiliateLoginLog[]
+  commissionAdjustments CommissionAdjustment[]
+  payouts               Payout[]
+  clicks                RefClick[]
+  referrals             Referral[]
+
+  @@index([userId])
+  @@index([code])
+  @@index([customSlug])
+  @@index([status])
+  @@index([lastLoginAt])
+  @@index([userEmail])
+}
+
+model Referral {
+  id            String    @id @default(cuid())
+  affiliateCode String
+  userId        String    @unique
+  createdAt     DateTime  @default(now())
+  affiliate     Affiliate @relation(fields: [affiliateCode], references: [code], onDelete: Cascade)
+
+  @@index([affiliateCode])
+}
+
+model RefClick {
+  id            String    @id @default(cuid())
+  affiliateCode String
+  ipHash        String
+  uaHash        String
+  createdAt     DateTime  @default(now())
+  affiliate     Affiliate @relation(fields: [affiliateCode], references: [code], onDelete: Cascade)
+
+  @@index([affiliateCode])
+  @@index([createdAt])
+}
+
+model AffiliateLoginLog {
+  id          String    @id @default(cuid())
+  affiliateId String
+  ipAddress   String
+  userAgent   String?
+  loginAt     DateTime  @default(now())
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  @@index([affiliateId])
+  @@index([loginAt])
+}
+
+model Payout {
+  id                  String       @id @default(cuid())
+  affiliateId         String
+  amount              Decimal      @db.Decimal(10, 2)
+  currency            String       @default("USD")
+  status              PayoutStatus @default(QUEUED)
+  type                PayoutType   @default(MONTHLY)
+  method              String?
+  reference           String?
+  paypalTransactionId String?
+  notes               String?
+  requestedAt         DateTime?
+  approvedAt          DateTime?
+  approvedBy          String?
+  processedAt         DateTime?
+  createdAt           DateTime     @default(now())
+  paidAt              DateTime?
+  affiliate           Affiliate    @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  @@index([affiliateId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@index([requestedAt])
+}
+
+model CommissionAdjustment {
+  id          String    @id @default(cuid())
+  affiliateId String
+  amount      Decimal   @db.Decimal(10, 2)
+  reason      String
+  reference   String?
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  @@index([affiliateId])
+  @@index([createdAt])
+}
+
+model BlogPost {
+  id             String        @id @default(cuid())
+  userId         String
+  title          String
+  slug           String        @unique
+  excerpt        String?
+  content        String
+  featuredImage  String?
+  status         String        @default("draft")
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  views          Int           @default(0)
+  likes          Int           @default(0)
+  tags           String[]
+  category       String?
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String[]
+  comments       BlogComment[]
+  images         BlogImage[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([slug])
+  @@index([category])
+}
+
+model BlogImage {
+  id        String   @id @default(cuid())
+  postId    String
+  url       String
+  alt       String?
+  caption   String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([order])
+}
+
+model BlogComment {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String?
+  name      String
+  email     String
+  content   String
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([status])
+  @@index([createdAt])
+}
+
 enum PayoutStatus {
   QUEUED
   PAID
@@ -959,205 +1147,4 @@ enum AffiliateStatus {
   APPROVED
   REJECTED
   SUSPENDED
-}
-
-model Affiliate {
-  id               String           @id @default(cuid())
-  userId           String           @unique
-  code             String           @unique
-  customSlug       String?          @unique // Custom endpoint slug (e.g., "aslmarketing")
-  status           AffiliateStatus  @default(PENDING)
-  referralCount    Int              @default(0)
-  totalEarnings    Decimal          @default(0) @db.Decimal(10, 2)
-  pendingEarnings  Decimal          @default(0) @db.Decimal(10, 2)
-  payoutEmail      String?
-  applicationNote  String?          // Why they want to join
-  rejectionReason  String?          // Why they were rejected
-  approvedAt       DateTime?        // When they were approved
-  approvedBy       String?          // Admin who approved them
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  
-  // User details
-  userName         String?          // Display name
-  userEmail        String?          // User's email address
-  
-  // Comprehensive application data
-  firstName        String?          // First name from application
-  lastName         String?          // Last name from application
-  phoneNumber      String?          // Phone number with country code
-  address          String?          // Full address including country
-  advertisingPlans String?          // Where they plan to advertise
-  website          String?          // Optional website URL
-  socialMedia      String?          // Optional social media handles
-  termsAccepted    Boolean          @default(false) // Terms and conditions acceptance
-  
-  // IP logging and activity tracking
-  lastLoginAt      DateTime?        // Last login timestamp
-  lastLoginIP      String?          // Last login IP address
-  loginCount       Int              @default(0) // Total login count
-  lastActivityAt   DateTime?        // Last activity timestamp
-  
-  // Analytics fields
-  totalCommissions Decimal          @default(0) @db.Decimal(10, 2) // Total commissions earned
-  totalRevenue     Decimal          @default(0) @db.Decimal(10, 2) // Total revenue generated
-  proReferrals     Int              @default(0) // Pro plan referrals
-  businessReferrals Int             @default(0) // Business plan referrals
-  agencyReferrals  Int              @default(0) // Agency plan referrals
-
-  referrals        Referral[]
-  payouts          Payout[]
-  clicks           RefClick[]
-  loginLogs        AffiliateLoginLog[]
-  commissionAdjustments CommissionAdjustment[]
-
-  @@index([userId])
-  @@index([code])
-  @@index([customSlug])
-  @@index([status])
-  @@index([lastLoginAt])
-  @@index([userEmail])
-}
-
-model Referral {
-  id            String   @id @default(cuid())
-  affiliateCode String
-  userId        String   @unique
-  createdAt     DateTime @default(now())
-
-  affiliate     Affiliate @relation(fields: [affiliateCode], references: [code], onDelete: Cascade)
-
-  @@index([affiliateCode])
-}
-
-model RefClick {
-  id            String   @id @default(cuid())
-  affiliateCode String
-  ipHash        String
-  uaHash        String
-  createdAt     DateTime @default(now())
-
-  affiliate     Affiliate @relation(fields: [affiliateCode], references: [code], onDelete: Cascade)
-
-  @@index([affiliateCode])
-  @@index([createdAt])
-}
-
-model AffiliateLoginLog {
-  id            String   @id @default(cuid())
-  affiliateId   String
-  ipAddress     String
-  userAgent     String?
-  loginAt       DateTime @default(now())
-  affiliate     Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
-
-  @@index([affiliateId])
-  @@index([loginAt])
-}
-
-model Payout {
-  id           String       @id @default(cuid())
-  affiliateId  String
-  amount       Decimal      @db.Decimal(10, 2)
-  currency     String       @default("USD")
-  status       PayoutStatus @default(QUEUED)
-  type         PayoutType   @default(MONTHLY)
-  method       String?
-  reference    String?
-  paypalTransactionId String? // PayPal transaction ID
-  notes        String?      // Admin notes or reason for correction
-  requestedAt  DateTime?    // When affiliate requested (for early payouts)
-  approvedAt   DateTime?    // When admin approved
-  approvedBy   String?      // Admin who approved
-  processedAt  DateTime?    // When actually sent
-  createdAt    DateTime     @default(now())
-  paidAt       DateTime?
-
-  affiliate    Affiliate    @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
-
-  @@index([affiliateId])
-  @@index([status])
-  @@index([type])
-  @@index([createdAt])
-  @@index([requestedAt])
-}
-
-model CommissionAdjustment {
-  id           String   @id @default(cuid())
-  affiliateId  String
-  amount       Decimal  @db.Decimal(10, 2) // Positive for additions, negative for corrections
-  reason       String   // Reason for adjustment
-  reference    String?  // Reference to original transaction or issue
-  createdBy    String   // Admin who made the adjustment
-  createdAt    DateTime @default(now())
-
-  affiliate    Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
-
-  @@index([affiliateId])
-  @@index([createdAt])
-}
-
-// Blog system models
-model BlogPost {
-  id          String   @id @default(cuid())
-  userId      String
-  title       String
-  slug        String   @unique
-  excerpt     String?
-  content     String
-  featuredImage String?
-  status      String   @default("draft") // draft, published, archived
-  publishedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  views       Int      @default(0)
-  likes       Int      @default(0)
-  tags        String[]
-  category    String?
-  seoTitle    String?
-  seoDescription String?
-  seoKeywords String[]
-  
-  // Relations
-  images      BlogImage[]
-  comments    BlogComment[]
-  
-  @@index([userId])
-  @@index([status])
-  @@index([publishedAt])
-  @@index([slug])
-  @@index([category])
-}
-
-model BlogImage {
-  id        String   @id @default(cuid())
-  postId    String
-  url       String
-  alt       String?
-  caption   String?
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
-  
-  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  @@index([postId])
-  @@index([order])
-}
-
-model BlogComment {
-  id        String   @id @default(cuid())
-  postId    String
-  userId    String?
-  name      String
-  email     String
-  content   String
-  status    String   @default("pending") // pending, approved, rejected
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  @@index([postId])
-  @@index([status])
-  @@index([createdAt])
 }

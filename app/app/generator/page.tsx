@@ -12,9 +12,10 @@ import { GenerationCounter } from '@/components/GenerationCounter';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ListingOutput, GenerateRequest, APIResponse } from '@/types';
 import { Button } from '@/components/ui/Button';
-import { Save, Download } from 'lucide-react';
+import { Save, Download, Upload, FileText } from 'lucide-react';
 import { useUserMetadata } from '@/contexts/UserMetadataContext';
 import { useAnalytics } from '@/contexts/AnalyticsContext';
+import CSVBulkUpload from '@/components/CSVBulkUpload';
 
 export default function AppPage() {
   const { user, isLoaded } = useUser();
@@ -29,6 +30,7 @@ export default function AppPage() {
   const [autoSaveInterval, setAutoSaveInterval] = useState<NodeJS.Timeout | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'generator' | 'bulk'>('generator');
 
   // Load user preferences from context
   useEffect(() => {
@@ -297,7 +299,39 @@ export default function AppPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Tab Navigation */}
+        <div className="mb-8">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('generator')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'generator'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <FileText className="h-4 w-4 inline mr-2" />
+                Single Generator
+              </button>
+              <button
+                onClick={() => setActiveTab('bulk')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'bulk'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Upload className="h-4 w-4 inline mr-2" />
+                Bulk Upload
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'generator' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form Column */}
           <div className="space-y-6">
             <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
@@ -327,6 +361,9 @@ export default function AppPage() {
             />
           </div>
         </div>
+        ) : (
+          <CSVBulkUpload />
+        )}
       </div>
 
 

@@ -25,7 +25,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         tone = ${body.tone || null},
         "wordCount" = ${body.wordCount || null}
       WHERE id = ${id} AND "userId" = ${userId}
-      RETURNING id, "userId", title, description, tags, materials, tone, "wordCount", "createdAt"
+      RETURNING id, "userId", title, description, tags, materials, tone, "wordCount", "bulkImportId", "bulkImportDate", source, "createdAt"
     ` as any[];
     
     if (!Array.isArray(result) || result.length === 0) {

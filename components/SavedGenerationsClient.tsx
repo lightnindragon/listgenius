@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Trash2, Copy, ExternalLink, ChevronDown, ChevronRight, Edit3, Check, X, Plus } from 'lucide-react';
+import { Trash2, Copy, ExternalLink, ChevronDown, ChevronRight, Edit3, Check, X, Plus, Download, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface SavedGeneration {
@@ -14,6 +14,9 @@ interface SavedGeneration {
   materials: string[];
   tone?: string;
   wordCount?: number;
+  bulkImportId?: string;
+  bulkImportDate?: string;
+  source?: string;
   createdAt: string;
 }
 
@@ -21,6 +24,8 @@ export default function SavedGenerationsClient() {
   const [generations, setGenerations] = useState<SavedGeneration[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [filterSource, setFilterSource] = useState<string>('all');
+  const [filterBulkImport, setFilterBulkImport] = useState<string>('all');
   
   // Edit state for each generation
   const [editingItems, setEditingItems] = useState<Set<string>>(new Set());
@@ -207,6 +212,49 @@ export default function SavedGenerationsClient() {
     }
   };
 
+  const handleExportCSV = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filterSource !== 'all') params.append('source', filterSource);
+      if (filterBulkImport !== 'all') params.append('bulkImportId', filterBulkImport);
+
+      const response = await fetch(`/api/csv/export?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `listgenius-generations-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('CSV exported successfully');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export CSV');
+    }
+  };
+
+  const getBulkImportDates = () => {
+    const dates = new Set<string>();
+    generations.forEach(gen => {
+      if (gen.bulkImportDate) {
+        dates.add(new Date(gen.bulkImportDate).toLocaleDateString());
+      }
+    });
+    return Array.from(dates).sort();
+  };
+
+  const filteredGenerations = generations.filter(gen => {
+    if (filterSource !== 'all' && gen.source !== filterSource) return false;
+    if (filterBulkImport !== 'all' && gen.bulkImportId !== filterBulkImport) return false;
+    return true;
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -231,19 +279,63 @@ export default function SavedGenerationsClient() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Saved Generations</h1>
-        <Button 
-          asChild 
-          size="sm"
-          className="bg-blue-600 text-white hover:bg-blue-700 md:size-md"
+        <div className="flex gap-2">
+          <Button 
+            asChild 
+            size="sm"
+            className="bg-blue-600 text-white hover:bg-blue-700"
+          >
+            <a href="/app/generator">Generate New</a>
+          </Button>
+          <Button 
+            onClick={handleExportCSV}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-4 items-center">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-gray-500" />
+          <span className="text-sm font-medium text-gray-700">Filters:</span>
+        </div>
+        
+        <select
+          value={filterSource}
+          onChange={(e) => setFilterSource(e.target.value)}
+          className="px-3 py-1 border border-gray-300 rounded text-sm"
         >
-          <a href="/app/generator">Generate New</a>
-        </Button>
+          <option value="all">All Sources</option>
+          <option value="manual">Manual</option>
+          <option value="bulk">Bulk Import</option>
+        </select>
+
+        <select
+          value={filterBulkImport}
+          onChange={(e) => setFilterBulkImport(e.target.value)}
+          className="px-3 py-1 border border-gray-300 rounded text-sm"
+        >
+          <option value="all">All Imports</option>
+          {getBulkImportDates().map(date => (
+            <option key={date} value={date}>{date}</option>
+          ))}
+        </select>
+
+        <span className="text-sm text-gray-500">
+          Showing {filteredGenerations.length} of {generations.length} generations
+        </span>
       </div>
 
       <div className="space-y-4">
-        {generations.map((generation) => {
+        {filteredGenerations.map((generation) => {
           const isExpanded = expandedItems.has(generation.id);
           
           return (
@@ -278,6 +370,11 @@ export default function SavedGenerationsClient() {
                         <span>Words: {generation.wordCount}</span>
                       )}
                       <span>Saved: {new Date(generation.createdAt).toLocaleDateString()}</span>
+                      {generation.source === 'bulk' && (
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                          Bulk Import
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 ml-4">
