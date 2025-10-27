@@ -13,6 +13,7 @@ export interface UserMetadata {
   dailyGenCount: number; // keep for backward compat
   dailyRewriteCount: number;
   monthlyGenCount?: number; // current month's generation count
+  lifetimeGenerations?: number; // total lifetime generations
   lastResetDate: string; // ISO 8601 format (YYYY-MM-DD)
   preferences?: {
     tone?: string; // e.g., "Professional", "Casual", "Luxury"
