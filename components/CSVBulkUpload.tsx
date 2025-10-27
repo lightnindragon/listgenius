@@ -176,6 +176,7 @@ export default function CSVBulkUpload() {
         processedRows: 0,
         successfulRows: 0,
         failedRows: 0,
+        errors: [],
         progress: 0
       });
 
