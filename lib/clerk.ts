@@ -129,6 +129,7 @@ export async function incrementDailyGenCount(userId: string): Promise<number> {
       ...metadata,
       plan: metadata.plan || 'free',
       dailyGenCount: newCount,
+      lifetimeGenerations: (metadata.lifetimeGenerations || 0) + 1,
       lastResetDate: metadata.lastResetDate || today,
       // Preserve all other existing metadata
       preferences: metadata.preferences,

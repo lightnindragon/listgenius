@@ -11,7 +11,9 @@ import {
   TrendingUp,
   Menu,
   X,
-  LogOut
+  LogOut,
+  FileText,
+  Plus
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -36,6 +38,16 @@ const adminNavItems = [
     name: 'Affiliates',
     href: '/adm1n796/affiliates',
     icon: DollarSign,
+  },
+  {
+    name: 'Blog Posts',
+    href: '/adm1n796/blog',
+    icon: FileText,
+  },
+  {
+    name: 'Create Post',
+    href: '/adm1n796/blog/create',
+    icon: Plus,
   },
   {
     name: 'Environment Variables',

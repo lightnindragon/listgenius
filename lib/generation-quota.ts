@@ -42,7 +42,11 @@ export async function checkAndIncrementGeneration(userId?: string): Promise<{
     }
     usage[monthKey] = used + 1;
     await clerkClient.users.updateUserMetadata(userId, { 
-      publicMetadata: { ...meta, genUsage: usage } 
+      publicMetadata: { 
+        ...meta, 
+        genUsage: usage,
+        lifetimeGenerations: (meta.lifetimeGenerations || 0) + 1
+      } 
     });
     return { ok: true, plan };
   }
@@ -55,7 +59,11 @@ export async function checkAndIncrementGeneration(userId?: string): Promise<{
 
     usage[monthKey] = used + 1;
     await clerkClient.users.updateUserMetadata(userId, { 
-      publicMetadata: { ...meta, genUsage: usage } 
+      publicMetadata: { 
+        ...meta, 
+        genUsage: usage,
+        lifetimeGenerations: (meta.lifetimeGenerations || 0) + 1
+      } 
     });
     return { ok: true, plan, remaining: cap - (used + 1) };
   } catch (error) {

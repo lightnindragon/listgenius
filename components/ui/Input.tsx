@@ -18,7 +18,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         <input
           className={cn(
-            'block w-full px-3 py-2 border border-border rounded-lg shadow-sm bg-white text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors',
+            'block w-full px-3 py-2 border border-border rounded-lg shadow-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors',
             error && 'border-destructive focus:ring-destructive focus:border-destructive',
             className
           )}
@@ -29,7 +29,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <p className="mt-1 text-sm text-red-600">{error}</p>
         )}
         {helperText && !error && (
-          <p className="mt-1 text-sm text-gray-500">{helperText}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{helperText}</p>
         )}
       </div>
     );

@@ -35,6 +35,11 @@ const Footer: React.FC = () => {
                   Affiliate Program
                 </Link>
               </li>
+              <li>
+                <Link href="/blog" className="text-muted-foreground hover:text-primary text-sm transition-colors">
+                  Blog
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -1096,3 +1096,68 @@ model CommissionAdjustment {
   @@index([affiliateId])
   @@index([createdAt])
 }
+
+// Blog system models
+model BlogPost {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  content     String
+  featuredImage String?
+  status      String   @default("draft") // draft, published, archived
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  views       Int      @default(0)
+  likes       Int      @default(0)
+  tags        String[]
+  category    String?
+  seoTitle    String?
+  seoDescription String?
+  seoKeywords String[]
+  
+  // Relations
+  images      BlogImage[]
+  comments    BlogComment[]
+  
+  @@index([userId])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([slug])
+  @@index([category])
+}
+
+model BlogImage {
+  id        String   @id @default(cuid())
+  postId    String
+  url       String
+  alt       String?
+  caption   String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  
+  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@index([postId])
+  @@index([order])
+}
+
+model BlogComment {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String?
+  name      String
+  email     String
+  content   String
+  status    String   @default("pending") // pending, approved, rejected
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@index([postId])
+  @@index([status])
+  @@index([createdAt])
+}
