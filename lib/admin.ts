@@ -456,7 +456,23 @@ export async function resetUserQuota(userId: string, options: { resetDaily?: boo
  */
 export async function getAnalyticsOverview(): Promise<AdminAnalytics> {
   try {
-    const users = await clerkClient.users.getUserList({ limit: 1000 });
+    // Fetch all users by paginating through results
+    const allUsers: any[] = [];
+    let hasMore = true;
+    let offset = 0;
+    const pageSize = 500;
+    
+    while (hasMore) {
+      const response = await clerkClient.users.getUserList({ 
+        limit: pageSize,
+        offset: offset 
+      });
+      
+      allUsers.push(...response.data);
+      hasMore = response.data.length === pageSize;
+      offset += pageSize;
+    }
+    
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -469,7 +485,7 @@ export async function getAnalyticsOverview(): Promise<AdminAnalytics> {
     
     const usersByPlan = { free: 0, pro: 0, business: 0, agency: 0 };
     
-    for (const user of users.data) {
+    for (const user of allUsers) {
       totalUsers++;
       const metadata = user.publicMetadata as any || {};
       
@@ -506,6 +522,13 @@ export async function getAnalyticsOverview(): Promise<AdminAnalytics> {
     // Generate mock chart data (in real implementation, you'd query historical data)
     const userGrowthData = generateMockChartData(30, totalUsers);
     const generationTrends = generateMockChartData(30, totalGenerationsThisMonth);
+    
+    logger.info('Analytics overview generated', {
+      totalUsers,
+      usersFetched: allUsers.length,
+      activeUsers,
+      newUsersThisMonth
+    });
     
     return {
       totalUsers,
