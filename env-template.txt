@@ -35,10 +35,43 @@ NEXT_PUBLIC_ENV=development
 # Database (Optional for MVP)
 # DATABASE_URL=postgresql://username:password@host:port/database
 
-# Email Service (Optional for MVP)
+# ===== EMAIL SERVICE =====
+
+# Primary Email Configuration (Required for welcome emails and notifications)
+# Use SMTP for privateemail.com or other email providers
+# For privateemail.com, use mail.privateemail.com as the SMTP server
+SMTP_HOST=mail.privateemail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your_email@privateemail.com
+SMTP_PASS=your_email_password_here
+
+# Email Identity
+FROM_EMAIL=your_email@privateemail.com
+FROM_NAME=ListGenius
+
+# Admin Email (for affiliate application notifications)
+ADMIN_EMAIL=admin@yourdomain.com
+
+# Contact Email (for contact form submissions)
+CONTACT_EMAIL=support@yourdomain.com
+
+# Alternative Email Providers (Optional - uncomment to use)
+# Gmail Configuration
+# GMAIL_USER=your_email@gmail.com
+# GMAIL_APP_PASSWORD=your_gmail_app_password_here
+
+# SendGrid Configuration
 # SENDGRID_API_KEY=your_sendgrid_api_key_here
 # SENDGRID_FROM_EMAIL=noreply@yourdomain.com
 # SENDGRID_FROM_NAME=ListGenius
+
+# Resend Configuration
+# RESEND_API_KEY=your_resend_api_key_here
+
+# Mailgun Configuration
+# MAILGUN_API_KEY=your_mailgun_api_key_here
+# MAILGUN_DOMAIN=your_domain.com
 
 # Redis Cache (Optional for MVP)
 # UPSTASH_REDIS_REST_URL=https://your-db.upstash.io

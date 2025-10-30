@@ -27,6 +27,7 @@ ListGenius currently focuses on core Etsy listing optimization:
 - 📱 **Mobile Responsive**: Works perfectly on all devices
 - 🔒 **Secure**: Enterprise-grade security with Clerk authentication
 - 💳 **Stripe Integration**: Seamless subscription management
+- 📧 **Email Automation**: Automated welcome emails and affiliate notifications
 - 📈 **Keyword Research**: Advanced keyword tools and rank tracking
 - 🏪 **Shop Analytics**: Competitor analysis and performance tracking
 - 💰 **Financial Tracking**: Internal expense and profit tracking
@@ -293,6 +294,18 @@ listgenius/
 - [ ] Webhook secrets set
 - [ ] Etsy OAuth redirect URI updated
 - [ ] App URL points to production domain
+- [ ] Email service configured (for welcome emails and notifications)
+
+## Documentation
+
+Additional setup guides and documentation are available in the `/docs` folder:
+
+- **[Email Setup Guide](docs/EMAIL_SETUP.md)** - Configure email notifications with PrivateEmail.com or other providers
+- **[Etsy Integration Guide](docs/ETSY_INTEGRATION_COMPLETE.md)** - Complete Etsy integration setup
+- **[Analytics Setup](docs/ANALYTICS_SETUP.md)** - Configure analytics tracking
+- **[Database Setup](docs/DATABASE_SETUP.md)** - Database configuration guide
+- **[Deployment Checklist](docs/DEPLOYMENT_CHECKLIST.md)** - Production deployment steps
+- **[User Guide](docs/USER_GUIDE.md)** - End-user documentation
 
 ## Contributing
 

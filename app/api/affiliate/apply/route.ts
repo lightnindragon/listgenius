@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { sendAffiliateApplicationNotification, sendAffiliateApplicationReceivedEmail, type AffiliateApplicationData } from '@/lib/email';
 import crypto from 'crypto';
 
 export async function POST(req: Request) {
@@ -129,6 +130,41 @@ export async function POST(req: Request) {
       hasWebsite: !!website,
       hasSocialMedia: !!socialMedia,
     });
+
+    // Send email notifications
+    try {
+      // Send confirmation email to the applicant
+      await sendAffiliateApplicationReceivedEmail(email, `${firstName} ${lastName}`);
+      
+      // Send notification email to admin
+      const adminEmail = process.env.ADMIN_EMAIL || 'admin@listgenius.expert';
+      const applicationData: AffiliateApplicationData = {
+        affiliateName: `${firstName} ${lastName}`,
+        affiliateEmail: email,
+        firstName: firstName,
+        lastName: lastName,
+        phoneNumber: phoneNumber,
+        address: address,
+        advertisingPlans: advertisingPlans,
+        website: website,
+        socialMedia: socialMedia,
+        applicationNote: affiliate.applicationNote || undefined,
+      };
+      await sendAffiliateApplicationNotification(adminEmail, applicationData);
+      
+      logger.info('Affiliate application emails sent', {
+        userId,
+        applicantEmail: email,
+        adminEmail,
+      });
+    } catch (emailError) {
+      // Don't fail the application if email fails
+      logger.error('Failed to send affiliate application emails', {
+        error: emailError,
+        userId,
+        email,
+      });
+    }
 
     return NextResponse.json({ 
       success: true, 

@@ -3,6 +3,11 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isAdminAuthenticated } from '@/lib/affiliate';
 import { logger } from '@/lib/logger';
+import { 
+  sendAffiliateApprovalEmail, 
+  sendAffiliateRejectionEmail, 
+  sendAffiliateSuspensionEmail 
+} from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,6 +75,45 @@ export async function POST(req: NextRequest) {
       action,
       affiliateCode: affiliate.code,
     });
+
+    // Send email notifications based on status change
+    try {
+      const affiliateEmail = affiliate.userEmail || affiliate.userName;
+      
+      if (action === 'approve' || action === 'approved') {
+        await sendAffiliateApprovalEmail(
+          affiliateEmail,
+          affiliate.userName || 'there',
+          affiliate.code,
+          affiliate.customSlug || undefined
+        );
+      } else if (action === 'reject' || action === 'rejected') {
+        await sendAffiliateRejectionEmail(
+          affiliateEmail,
+          affiliate.userName || 'there',
+          rejectionReason
+        );
+      } else if (action === 'suspend' || action === 'suspended') {
+        await sendAffiliateSuspensionEmail(
+          affiliateEmail,
+          affiliate.userName || 'there',
+          rejectionReason
+        );
+      }
+      
+      logger.info('Affiliate status email sent', {
+        affiliateId,
+        action,
+        email: affiliateEmail,
+      });
+    } catch (emailError) {
+      // Don't fail the status update if email fails
+      logger.error('Failed to send affiliate status email', {
+        affiliateId,
+        action,
+        error: emailError,
+      });
+    }
 
     return NextResponse.json({ 
       success: true, 
