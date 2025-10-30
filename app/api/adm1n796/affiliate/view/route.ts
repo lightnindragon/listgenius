@@ -22,7 +22,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Affiliate not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, affiliate });
+    // Get actual referral count from database
+    const actualReferralCount = await prisma.referral.count({
+      where: { affiliateCode: affiliate.code }
+    });
+
+    // Return affiliate with actual referral count
+    const affiliateWithStats = {
+      ...affiliate,
+      referralCount: actualReferralCount, // Use actual count instead of stored field
+    };
+
+    return NextResponse.json({ success: true, affiliate: affiliateWithStats });
   } catch (error: any) {
     logger.error('Admin affiliate view error', { error: error?.message });
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });

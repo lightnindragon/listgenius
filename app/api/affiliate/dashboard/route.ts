@@ -25,9 +25,25 @@ export async function GET() {
       );
     }
 
-    logger.info('Affiliate dashboard data fetched', { userId });
+    // Get actual referral count from database
+    const actualReferralCount = await prisma.referral.count({
+      where: { affiliateCode: affiliate.code }
+    });
 
-    return NextResponse.json({ affiliate });
+    // Calculate actual referral stats
+    const affiliateWithStats = {
+      ...affiliate,
+      referralCount: actualReferralCount, // Use actual count instead of stored field
+      // Preserve other fields
+    };
+
+    logger.info('Affiliate dashboard data fetched', { 
+      userId, 
+      actualReferralCount,
+      storedReferralCount: affiliate.referralCount 
+    });
+
+    return NextResponse.json({ affiliate: affiliateWithStats });
     
   } catch (error) {
     logger.error('Failed to fetch affiliate dashboard', { error });
