@@ -348,7 +348,15 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-700 whitespace-pre-wrap">{description}</p>
+                <div className="text-gray-700 space-y-3">
+                  {description.split(/\n\n+/).map((paragraph, idx) => (
+                    paragraph.trim() && (
+                      <p key={idx} className="leading-relaxed">
+                        {paragraph.trim()}
+                      </p>
+                    )
+                  ))}
+                </div>
               )}
             </div>
           </div>

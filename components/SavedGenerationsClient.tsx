@@ -464,9 +464,15 @@ export default function SavedGenerationsClient() {
                           />
                         </div>
                       ) : (
-                        <p className="text-gray-700 text-sm leading-relaxed">
-                          {generation.description}
-                        </p>
+                        <div className="text-gray-700 text-sm leading-relaxed space-y-3">
+                          {generation.description.split(/\n\n+/).map((paragraph, idx) => (
+                            paragraph.trim() && (
+                              <p key={idx} className="mb-3">
+                                {paragraph.trim()}
+                              </p>
+                            )
+                          ))}
+                        </div>
                       )}
                     </div>
 
