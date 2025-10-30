@@ -96,8 +96,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Failed to send test email', { error });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to send test email' },
+      { error: 'Failed to send test email', details: errorMessage },
       { status: 500 }
     );
   }

@@ -153,8 +153,11 @@ export default function EditEmailTemplatePage({ params }: { params: { id: string
         toast.success('Test email sent successfully!');
         setShowTestDialog(false);
       } else {
-        toast.error(data.error || 'Failed to send test email');
-        setError(data.error || 'Failed to send test email');
+        const errorMsg = data.details 
+          ? `${data.error || 'Failed to send test email'}: ${data.details}`
+          : data.error || 'Failed to send test email';
+        toast.error(errorMsg);
+        setError(errorMsg);
       }
     } catch (error) {
       toast.error('Failed to send test email');
