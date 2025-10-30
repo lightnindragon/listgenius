@@ -20,7 +20,15 @@ import {
   XCircle,
   AlertCircle,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Bot,
+  Play,
+  Pause,
+  RefreshCw,
+  BarChart3,
+  Clock,
+  TrendingUp,
+  Activity
 } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -39,9 +47,25 @@ interface BlogPost {
   likes: number;
   tags: string[];
   category: string | null;
+  workflowStatus?: string;
+  qualityScore?: number;
+  autoPublished?: boolean;
+  revisionCount?: number;
+  aiGeneratedTopicKeyword?: string;
+  targetKeywordDensity?: number;
   _count: {
     comments: number;
   };
+}
+
+interface AutomationStats {
+  totalAutoPosts: number;
+  avgQualityScore: number;
+  avgWordCount: number;
+  avgRevisionCount: number;
+  lastSuccessfulRun: string | null;
+  automationEnabled: boolean;
+  categoryDistribution: Record<string, number>;
 }
 
 interface CommentSettings {
@@ -58,10 +82,14 @@ export default function AdminBlogPage() {
   });
   const [showCommentSettings, setShowCommentSettings] = useState(false);
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
+  const [automationStats, setAutomationStats] = useState<AutomationStats | null>(null);
+  const [showAutomationPanel, setShowAutomationPanel] = useState(false);
+  const [automationLoading, setAutomationLoading] = useState(false);
 
   useEffect(() => {
     fetchPosts();
     fetchCommentSettings();
+    fetchAutomationStats();
   }, []);
 
   const fetchPosts = async () => {
@@ -91,6 +119,83 @@ export default function AdminBlogPage() {
       }
     } catch (error) {
       console.error('Failed to load comment settings');
+    }
+  };
+
+  const fetchAutomationStats = async () => {
+    try {
+      const response = await fetch('/api/blog/automation/publish?status=published&limit=50');
+      const data = await response.json();
+      
+      if (data.success) {
+        const autoPosts = data.data.posts.filter((post: any) => post.autoPublished);
+        const totalAutoPosts = autoPosts.length;
+        const avgQualityScore = data.data.statistics.avgQualityScore || 0;
+        const avgWordCount = data.data.statistics.avgWordCount || 0;
+        const avgRevisionCount = data.data.statistics.avgRevisionCount || 0;
+        
+        // Calculate category distribution
+        const categoryDistribution: Record<string, number> = {};
+        autoPosts.forEach((post: any) => {
+          if (post.category) {
+            categoryDistribution[post.category] = (categoryDistribution[post.category] || 0) + 1;
+          }
+        });
+
+        // Get last successful run (most recent published post)
+        const lastSuccessfulRun = autoPosts.length > 0 ? autoPosts[0].publishedAt : null;
+
+        setAutomationStats({
+          totalAutoPosts,
+          avgQualityScore,
+          avgWordCount,
+          avgRevisionCount,
+          lastSuccessfulRun,
+          automationEnabled: true, // This could be a setting
+          categoryDistribution
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load automation stats');
+    }
+  };
+
+  const handleTestAutomation = async () => {
+    setAutomationLoading(true);
+    try {
+      const response = await fetch('/api/blog/automation/test-workflow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ testMode: true, skipExistingCheck: true })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success('Test workflow completed successfully');
+        fetchPosts();
+        fetchAutomationStats();
+      } else {
+        toast.error(`Test workflow failed: ${data.error}`);
+      }
+    } catch (error) {
+      toast.error('Failed to run test workflow');
+    } finally {
+      setAutomationLoading(false);
+    }
+  };
+
+  const handleRefreshAutomation = async () => {
+    setAutomationLoading(true);
+    try {
+      await fetchAutomationStats();
+      toast.success('Automation stats refreshed');
+    } catch (error) {
+      toast.error('Failed to refresh automation stats');
+    } finally {
+      setAutomationLoading(false);
     }
   };
 
@@ -186,6 +291,14 @@ export default function AdminBlogPage() {
           <div className="flex gap-3">
             <Button
               variant="outline"
+              onClick={() => setShowAutomationPanel(!showAutomationPanel)}
+              className="flex items-center gap-2"
+            >
+              <Bot className="h-4 w-4" />
+              Automation
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => setShowCommentSettings(!showCommentSettings)}
               className="flex items-center gap-2"
             >
@@ -256,6 +369,125 @@ export default function AdminBlogPage() {
                       Not Required
                     </>
                   )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Automation Panel */}
+        {showAutomationPanel && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bot className="h-5 w-5" />
+                Blog Automation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Automation Status */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium text-gray-900">Automation Status</h3>
+                  <p className="text-sm text-gray-600">AI-powered blog post generation and publishing</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={automationStats?.automationEnabled ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                    {automationStats?.automationEnabled ? "Enabled" : "Disabled"}
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefreshAutomation}
+                    disabled={automationLoading}
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${automationLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
+              </div>
+
+              {/* Automation Stats */}
+              {automationStats && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BarChart3 className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-900">Total Auto Posts</span>
+                    </div>
+                    <div className="text-2xl font-bold text-blue-900">{automationStats.totalAutoPosts}</div>
+                  </div>
+                  
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-900">Avg Quality Score</span>
+                    </div>
+                    <div className="text-2xl font-bold text-green-900">{automationStats.avgQualityScore.toFixed(1)}</div>
+                  </div>
+                  
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Activity className="h-4 w-4 text-purple-600" />
+                      <span className="text-sm font-medium text-purple-900">Avg Word Count</span>
+                    </div>
+                    <div className="text-2xl font-bold text-purple-900">{automationStats.avgWordCount}</div>
+                  </div>
+                  
+                  <div className="bg-orange-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <RefreshCw className="h-4 w-4 text-orange-600" />
+                      <span className="text-sm font-medium text-orange-900">Avg Revisions</span>
+                    </div>
+                    <div className="text-2xl font-bold text-orange-900">{automationStats.avgRevisionCount.toFixed(1)}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Last Run Info */}
+              {automationStats?.lastSuccessfulRun && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-900">Last Successful Run</span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {formatDistanceToNow(new Date(automationStats.lastSuccessfulRun), { addSuffix: true })}
+                  </div>
+                </div>
+              )}
+
+              {/* Category Distribution */}
+              {automationStats && Object.keys(automationStats.categoryDistribution).length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">Category Distribution</h4>
+                  <div className="space-y-2">
+                    {Object.entries(automationStats.categoryDistribution).map(([category, count]) => (
+                      <div key={category} className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">{category}</span>
+                        <Badge variant="outline">{count} posts</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Automation Controls */}
+              <div className="flex items-center gap-3 pt-4 border-t">
+                <Button
+                  onClick={handleTestAutomation}
+                  disabled={automationLoading}
+                  className="flex items-center gap-2"
+                >
+                  <Play className="h-4 w-4" />
+                  {automationLoading ? 'Running Test...' : 'Test Workflow'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAutomationPanel(false)}
+                >
+                  Close Panel
                 </Button>
               </div>
             </CardContent>
@@ -338,6 +570,28 @@ export default function AdminBlogPage() {
                               <div><span className="font-medium">Category:</span> {post.category || 'None'}</div>
                               <div><span className="font-medium">Created:</span> {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</div>
                               <div><span className="font-medium">Updated:</span> {formatDistanceToNow(new Date(post.updatedAt), { addSuffix: true })}</div>
+                              {post.autoPublished && (
+                                <div className="flex items-center gap-2">
+                                  <Bot className="h-3 w-3 text-blue-600" />
+                                  <span className="text-blue-600 font-medium">AI Generated</span>
+                                </div>
+                              )}
+                              {post.workflowStatus && (
+                                <div><span className="font-medium">Workflow:</span> 
+                                  <Badge className="ml-2 text-xs" variant="outline">
+                                    {post.workflowStatus}
+                                  </Badge>
+                                </div>
+                              )}
+                              {post.qualityScore && (
+                                <div><span className="font-medium">Quality Score:</span> {post.qualityScore}/100</div>
+                              )}
+                              {post.revisionCount && post.revisionCount > 0 && (
+                                <div><span className="font-medium">Revisions:</span> {post.revisionCount}</div>
+                              )}
+                              {post.aiGeneratedTopicKeyword && (
+                                <div><span className="font-medium">Topic Keyword:</span> {post.aiGeneratedTopicKeyword}</div>
+                              )}
                             </div>
                           </div>
                           

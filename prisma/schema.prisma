@@ -1067,32 +1067,45 @@ model CommissionAdjustment {
 }
 
 model BlogPost {
-  id             String        @id @default(cuid())
-  userId         String
-  title          String
-  slug           String        @unique
-  excerpt        String?
-  content        String
-  featuredImage  String?
-  status         String        @default("draft")
-  publishedAt    DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  views          Int           @default(0)
-  likes          Int           @default(0)
-  tags           String[]
-  category       String?
-  seoTitle       String?
-  seoDescription String?
-  seoKeywords    String[]
-  comments       BlogComment[]
-  images         BlogImage[]
+  id                      String        @id @default(cuid())
+  userId                  String
+  title                   String
+  slug                    String        @unique
+  excerpt                 String?
+  content                 String
+  featuredImage           String?
+  status                  String        @default("draft")
+  publishedAt             DateTime?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+  views                   Int           @default(0)
+  likes                   Int           @default(0)
+  tags                    String[]
+  category                String?
+  seoTitle                String?
+  seoDescription          String?
+  seoKeywords             String[]
+  comments                BlogComment[]
+  images                  BlogImage[]
+  
+  // Blog automation workflow fields
+  workflowStatus          String        @default("draft") // pending_generation, generated, quality_check, needs_revision, approved, published, failed
+  aiGeneratedTopicKeyword String?
+  qualityScore            Int?
+  qualityFeedback         String?       // JSON string
+  revisionCount           Int           @default(0)
+  autoPublished           Boolean       @default(false)
+  scheduledPublishAt      DateTime?
+  internalLinksAdded      String?       // JSON array of internal links
+  targetKeywordDensity    Float?
 
   @@index([userId])
   @@index([status])
   @@index([publishedAt])
   @@index([slug])
   @@index([category])
+  @@index([workflowStatus])
+  @@index([autoPublished])
 }
 
 model BlogImage {
