@@ -59,7 +59,19 @@ export default function SavedGenerationsClient() {
       
       const data = JSON.parse(text);
       if (data.success) {
-        setGenerations(data.data || []);
+        const normalized = (data.data || []).map((gen: any) => {
+          const asArray = (val: any): string[] => {
+            if (Array.isArray(val)) return val.filter((v) => typeof v === 'string');
+            if (typeof val === 'string') return val.split(',').map((s) => s.trim()).filter(Boolean);
+            return [];
+          };
+          return {
+            ...gen,
+            tags: asArray(gen.tags),
+            materials: asArray(gen.materials),
+          } as SavedGeneration;
+        });
+        setGenerations(normalized);
       } else {
         console.error('API returned error:', data.error);
         toast.error(data.error || 'Failed to load saved generations');
@@ -115,8 +127,8 @@ export default function SavedGenerationsClient() {
       [generation.id]: {
         title: generation.title,
         description: generation.description,
-        tags: [...generation.tags],
-        materials: [...generation.materials],
+        tags: Array.isArray(generation.tags) ? [...generation.tags] : [],
+        materials: Array.isArray(generation.materials) ? [...generation.materials] : [],
         newTag: '',
         newMaterial: ''
       }
@@ -513,7 +525,7 @@ export default function SavedGenerationsClient() {
                         </div>
                       ) : (
                         <div className="flex flex-wrap gap-2">
-                          {generation.tags.map((tag, index) => (
+                          {(Array.isArray(generation.tags) ? generation.tags : []).map((tag, index) => (
                             <span
                               key={index}
                               className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md"
@@ -580,7 +592,7 @@ export default function SavedGenerationsClient() {
                         </div>
                       ) : (
                         <div className="flex flex-wrap gap-2">
-                          {generation.materials.map((material, index) => (
+                          {(Array.isArray(generation.materials) ? generation.materials : []).map((material, index) => (
                             <span
                               key={index}
                               className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-md"
