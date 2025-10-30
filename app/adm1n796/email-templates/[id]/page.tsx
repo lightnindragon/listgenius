@@ -10,10 +10,18 @@ import {
   Eye,
   X,
   Loader2,
-  ArrowLeft
+  ArrowLeft,
+  RefreshCw
 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+
+// Helper function to strip HTML and convert to plain text
+const stripHtml = (html: string): string => {
+  const tmp = document.createElement('DIV');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+};
 
 interface EmailTemplate {
   id: string;
@@ -339,9 +347,24 @@ export default function EditEmailTemplatePage({ params }: { params: { id: string
             <label className="block text-sm font-medium text-gray-700">
               HTML Body
             </label>
-            <span className="text-xs text-gray-500">
-              {template.htmlBody.length} characters
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-500">
+                {template.htmlBody.length} characters
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const plainText = stripHtml(template.htmlBody);
+                  setTemplate({ ...template, textBody: plainText });
+                  toast.success('Plain text generated from HTML!');
+                }}
+                className="text-xs"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Generate Text from HTML
+              </Button>
+            </div>
           </div>
           <textarea
             value={template.htmlBody}
