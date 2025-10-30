@@ -13,7 +13,8 @@ import {
   X,
   LogOut,
   FileText,
-  Plus
+  Plus,
+  Mail
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -38,6 +39,11 @@ const adminNavItems = [
     name: 'Affiliates',
     href: '/adm1n796/affiliates',
     icon: DollarSign,
+  },
+  {
+    name: 'Email Templates',
+    href: '/adm1n796/email-templates',
+    icon: Mail,
   },
   {
     name: 'Blog Posts',
