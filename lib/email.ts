@@ -3,7 +3,7 @@ import { logger } from './logger';
 
 // Create transporter - using Gmail SMTP as default
 // You can configure this with your preferred email service
-const createTransporter = () => {
+export const createTransporter = () => {
   // For development, you can use Gmail SMTP
   // Make sure to set up an App Password in your Gmail account
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
@@ -35,12 +35,12 @@ const createTransporter = () => {
 };
 
 // Get the configured FROM email address
-const getFromEmail = () => {
+export const getFromEmail = () => {
   return process.env.FROM_EMAIL || process.env.SMTP_USER || process.env.GMAIL_USER || 'noreply@listgenius.expert';
 };
 
 // Get the FROM name
-const getFromName = () => {
+export const getFromName = () => {
   return process.env.FROM_NAME || 'ListGenius';
 };
 

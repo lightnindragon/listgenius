@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isAdminAuthenticated } from '@/lib/admin';
-import { createTransporter } from '@/lib/email';
+import { createTransporter, getFromEmail, getFromName } from '@/lib/email';
 import { logger } from '@/lib/logger';
 
 // Send test email with template preview
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@listgenius.expert',
+      from: `${getFromName()} <${getFromEmail()}>`,
       to: testEmail,
       subject: `[TEST] ${processedSubject}`,
       html: processedHtmlBody,
