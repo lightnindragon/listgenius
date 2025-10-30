@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: [
+    'adm-zip',
+    'fetch-blob',
+    'node-fetch'
+  ],
   images: {
     remotePatterns: [
       {
