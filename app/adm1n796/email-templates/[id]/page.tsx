@@ -13,6 +13,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 interface EmailTemplate {
   id: string;
@@ -53,7 +54,29 @@ export default function EditEmailTemplatePage({ params }: { params: { id: string
         // Initialize test variables with sample values
         const vars: Record<string, string> = {};
         data.template.variables.forEach((v: string) => {
-          vars[v] = `{{${v}}}`;
+          // Map variable names to sample values
+          switch(v) {
+            case 'userName':
+              vars[v] = 'Test User';
+              break;
+            case 'affiliateCode':
+              vars[v] = 'TEST123';
+              break;
+            case 'affiliateUrl':
+              vars[v] = (typeof window !== 'undefined' ? window.location.origin : 'https://listgenius.expert') + '/ref/TEST123';
+              break;
+            case 'appUrl':
+              vars[v] = typeof window !== 'undefined' ? window.location.origin : 'https://listgenius.expert';
+              break;
+            case 'rejectionReason':
+              vars[v] = 'Not meeting our current requirements';
+              break;
+            case 'suspensionReason':
+              vars[v] = 'Violation of terms of service';
+              break;
+            default:
+              vars[v] = `Sample ${v}`;
+          }
         });
         setTestVariables(vars);
       } else {
@@ -106,7 +129,7 @@ export default function EditEmailTemplatePage({ params }: { params: { id: string
 
   const handleSendTest = async () => {
     if (!template || !testEmail) {
-      setError('Please enter a test email address');
+      toast.error('Please enter a test email address');
       return;
     }
 
@@ -127,13 +150,14 @@ export default function EditEmailTemplatePage({ params }: { params: { id: string
       const data = await response.json();
       
       if (data.success) {
-        setSuccess('Test email sent successfully!');
+        toast.success('Test email sent successfully!');
         setShowTestDialog(false);
-        setTimeout(() => setSuccess(''), 3000);
       } else {
+        toast.error(data.error || 'Failed to send test email');
         setError(data.error || 'Failed to send test email');
       }
     } catch (error) {
+      toast.error('Failed to send test email');
       setError('Failed to send test email');
     } finally {
       setTesting(false);
