@@ -23,6 +23,31 @@ const stripHtml = (html: string): string => {
   return tmp.textContent || tmp.innerText || '';
 };
 
+// Helper function to convert plain text to HTML
+const textToHtml = (text: string): string => {
+  // Preserve any existing HTML tags
+  if (text.includes('<') && text.includes('>')) {
+    return text;
+  }
+  
+  // Convert line breaks to <br> tags
+  let html = text
+    .replace(/\r\n/g, '<br>')
+    .replace(/\n\r/g, '<br>')
+    .replace(/\n/g, '<br>')
+    .replace(/\r/g, '<br>');
+  
+  // Convert URLs to links
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  html = html.replace(urlRegex, '<a href="$1" style="color: #4285F4;">$1</a>');
+  
+  // Convert email addresses to mailto links
+  const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  html = html.replace(emailRegex, '<a href="mailto:$1" style="color: #4285F4;">$1</a>');
+  
+  return html;
+};
+
 interface EmailTemplate {
   id: string;
   name: string;
@@ -381,9 +406,24 @@ export default function EditEmailTemplatePage({ params }: { params: { id: string
             <label className="block text-sm font-medium text-gray-700">
               Plain Text Body
             </label>
-            <span className="text-xs text-gray-500">
-              {template.textBody.length} characters
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-500">
+                {template.textBody.length} characters
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const html = textToHtml(template.textBody);
+                  setTemplate({ ...template, htmlBody: html });
+                  toast.success('HTML generated from plain text!');
+                }}
+                className="text-xs"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Generate HTML from Text
+              </Button>
+            </div>
           </div>
           <textarea
             value={template.textBody}
