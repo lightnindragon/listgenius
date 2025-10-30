@@ -134,6 +134,9 @@ export default function UserDetailPage() {
           endpoint = `/api/adm1n796/users/${userId}/plan`;
           method = 'PUT';
           break;
+        case 'impersonate':
+          endpoint = `/api/adm1n796/users/${userId}/impersonate`;
+          break;
         case 'delete':
           endpoint = `/api/adm1n796/users/${userId}`;
           method = 'DELETE';
@@ -151,6 +154,10 @@ export default function UserDetailPage() {
       const result = await response.json();
       
       if (result.success) {
+        if (action === 'impersonate' && result.url) {
+          window.location.href = result.url;
+          return;
+        }
         // If user was deleted, redirect to users list
         if (action === 'delete') {
           alert('User deleted successfully');
@@ -277,6 +284,13 @@ export default function UserDetailPage() {
                 <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getStatusBadgeColor(user.status)}`}>
                   {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                 </span>
+                <Button
+                  variant="outline"
+                  onClick={() => handleUserAction('impersonate')}
+                >
+                  <Key className="h-4 w-4 mr-2" />
+                  Login as user
+                </Button>
               </div>
             </div>
           </div>

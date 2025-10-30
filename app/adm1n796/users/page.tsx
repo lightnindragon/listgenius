@@ -111,6 +111,9 @@ export default function UsersPage() {
         case 'reset-quota':
           endpoint = `/api/adm1n796/users/${userId}/reset-quota`;
           break;
+        case 'impersonate':
+          endpoint = `/api/adm1n796/users/${userId}/impersonate`;
+          break;
         case 'delete':
           endpoint = `/api/adm1n796/users/${userId}`;
           method = 'DELETE';
@@ -123,6 +126,10 @@ export default function UsersPage() {
       const data = await response.json();
       
       if (data.success) {
+        if (action === 'impersonate' && data.url) {
+          window.location.href = data.url;
+          return;
+        }
         fetchUsers(); // Refresh the list
       } else {
         alert(data.error || 'Action failed');
@@ -363,6 +370,14 @@ export default function UsersPage() {
                               <Edit className="h-3 w-3" />
                             </Button>
                           </Link>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            title="Login as this user"
+                            onClick={() => handleUserAction(user.id, 'impersonate')}
+                          >
+                            <Key className="h-3 w-3" />
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
