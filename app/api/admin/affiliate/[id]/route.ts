@@ -63,6 +63,7 @@ export async function GET(
 
     const affiliateWithDetails = {
       ...affiliate,
+      referralCount: (affiliate as any)._count?.referrals ?? affiliate.referralCount ?? 0,
       userName: clerkUser?.firstName && clerkUser?.lastName 
         ? `${clerkUser.firstName} ${clerkUser.lastName}` 
         : clerkUser?.username || clerkUser?.emailAddresses?.[0]?.emailAddress || 'Unknown',
@@ -72,7 +73,8 @@ export async function GET(
 
     logger.info('Admin fetched affiliate details', { 
       affiliateId: id,
-      affiliateCode: affiliate.code
+      affiliateCode: affiliate.code,
+      referralCount: affiliateWithDetails.referralCount
     });
 
     return NextResponse.json({ affiliate: affiliateWithDetails });

@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
           const user = await (await clerkClient()).users.getUser(affiliate.userId);
           return {
             ...affiliate,
+            referralCount: (affiliate as any)._count?.referrals ?? affiliate.referralCount ?? 0,
             // Use application data if available, fallback to Clerk data
             userName: affiliate.firstName && affiliate.lastName
               ? `${affiliate.firstName} ${affiliate.lastName}`
@@ -58,6 +59,7 @@ export async function GET(request: NextRequest) {
           });
           return {
             ...affiliate,
+            referralCount: (affiliate as any)._count?.referrals ?? affiliate.referralCount ?? 0,
             userName: 'Unknown User',
             userEmail: null,
             clerkUser: null
