@@ -54,7 +54,7 @@ export default function AdminEditPostPage({ params }: { params: Promise<{ slug: 
   const fetchPost = async () => {
     try {
       const resolvedParams = await params;
-      const response = await fetch(`/api/adm1n796/blog/post/${resolvedParams.slug}`);
+      const response = await fetch(`/api/blog/${resolvedParams.slug}`);
       const data = await response.json();
       
       if (data.success) {
@@ -87,7 +87,7 @@ export default function AdminEditPostPage({ params }: { params: Promise<{ slug: 
     
     setSaving(true);
     try {
-      const response = await fetch(`/api/adm1n796/blog/post/${post.id}`, {
+      const response = await fetch(`/api/blog/${post.slug}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
