@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
         slug: true,
         category: true,
         publishedAt: true,
-        wordCount: true,
+        content: true,
         targetKeywordDensity: true,
         qualityScore: true,
         revisionCount: true,
@@ -212,7 +212,7 @@ export async function GET(request: NextRequest) {
     // Calculate word count for each post
     const postsWithWordCount = publishedPosts.map(post => ({
       ...post,
-      wordCount: post.wordCount || 0
+      wordCount: post.content ? post.content.split(/\s+/).length : 0
     }));
 
     // Calculate statistics
