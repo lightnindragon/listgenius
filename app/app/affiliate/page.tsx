@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -14,6 +14,7 @@ import { Copy, Check, DollarSign, Users, TrendingUp, ExternalLink } from 'lucide
 export default function AffiliatePage() {
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [affiliate, setAffiliate] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [payoutEmail, setPayoutEmail] = useState('');
@@ -30,18 +31,21 @@ export default function AffiliatePage() {
   const COOKIE_DAYS = 60;
 
   useEffect(() => {
-    if (isLoaded) {
-      if (!isSignedIn) {
-        router.push('/sign-in');
-        return;
-      }
-      fetchAffiliate();
+    if (!isLoaded) return;
+    const adminToken = searchParams.get('adminToken');
+    if (!isSignedIn && !adminToken) {
+      router.push('/sign-in');
+      return;
     }
-  }, [isLoaded, isSignedIn, router]);
+    fetchAffiliate();
+  }, [isLoaded, isSignedIn, router, searchParams]);
 
   async function fetchAffiliate() {
     try {
-      const res = await fetch('/api/affiliate/dashboard');
+      const adminToken = searchParams.get('adminToken');
+      const res = adminToken
+        ? await fetch(`/api/adm1n796/affiliate/view?token=${encodeURIComponent(adminToken)}`)
+        : await fetch('/api/affiliate/dashboard');
       if (res.ok) {
         const data = await res.json();
         setAffiliate(data.affiliate);
@@ -197,9 +201,8 @@ export default function AffiliatePage() {
   }
 
   // If not signed in, don't render anything (redirect will happen)
-  if (!isSignedIn) {
-    return null;
-  }
+  // If admin viewing without sign-in, allow render
+  if (!isSignedIn && !searchParams.get('adminToken')) return null;
 
   if (!affiliate) {
     return (

@@ -638,6 +638,22 @@ export default function AdminAffiliatesPage() {
                         >
                           View
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              const res = await fetch(`/api/adm1n796/affiliate/${aff.id}/impersonate`, { method: 'POST' });
+                              const data = await res.json();
+                              if (data.success && data.url) {
+                                window.location.href = data.url;
+                              }
+                            } catch {}
+                          }}
+                          className="text-xs px-2 py-1"
+                        >
+                          Login as
+                        </Button>
                         {aff.status !== 'APPROVED' && (
                           <Button
                             size="sm"
