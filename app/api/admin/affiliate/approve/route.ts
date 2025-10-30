@@ -80,32 +80,42 @@ export async function POST(req: NextRequest) {
     try {
       const affiliateEmail = affiliate.userEmail || affiliate.userName;
       
-      if (action === 'approve' || action === 'approved') {
-        await sendAffiliateApprovalEmail(
-          affiliateEmail,
-          affiliate.userName || 'there',
-          affiliate.code,
-          affiliate.customSlug || undefined
-        );
-      } else if (action === 'reject' || action === 'rejected') {
-        await sendAffiliateRejectionEmail(
-          affiliateEmail,
-          affiliate.userName || 'there',
-          rejectionReason
-        );
-      } else if (action === 'suspend' || action === 'suspended') {
-        await sendAffiliateSuspensionEmail(
-          affiliateEmail,
-          affiliate.userName || 'there',
-          rejectionReason
-        );
+      // Only send email if we have a valid email address
+      if (affiliateEmail && affiliateEmail.includes('@')) {
+        if (action === 'approve' || action === 'approved') {
+          await sendAffiliateApprovalEmail(
+            affiliateEmail,
+            affiliate.userName || 'there',
+            affiliate.code,
+            affiliate.customSlug || undefined
+          );
+        } else if (action === 'reject' || action === 'rejected') {
+          await sendAffiliateRejectionEmail(
+            affiliateEmail,
+            affiliate.userName || 'there',
+            rejectionReason
+          );
+        } else if (action === 'suspend' || action === 'suspended') {
+          await sendAffiliateSuspensionEmail(
+            affiliateEmail,
+            affiliate.userName || 'there',
+            rejectionReason
+          );
+        }
+        
+        logger.info('Affiliate status email sent', {
+          affiliateId,
+          action,
+          email: affiliateEmail,
+        });
+      } else {
+        logger.warn('Could not send affiliate status email - no valid email address', {
+          affiliateId,
+          action,
+          userEmail: affiliate.userEmail,
+          userName: affiliate.userName,
+        });
       }
-      
-      logger.info('Affiliate status email sent', {
-        affiliateId,
-        action,
-        email: affiliateEmail,
-      });
     } catch (emailError) {
       // Don't fail the status update if email fails
       logger.error('Failed to send affiliate status email', {
