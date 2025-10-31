@@ -4,7 +4,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { 
   Upload, X, CheckCircle, AlertCircle, Loader2, Image as ImageIcon, 
   Download, Star, StarOff, Maximize2, Minimize2, Search, Filter,
-  Settings2, Compress, ZoomIn, RefreshCw, Tag, FolderOpen, Trash2,
+  Settings2, ZoomIn, RefreshCw, Tag, FolderOpen, Trash2,
   ImageUp, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Button } from './ui/Button';
@@ -743,7 +743,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                     {processingImage === image.id ? (
                       <Loader2 className="w-3 h-3 animate-spin" />
                     ) : (
-                      <Compress className="w-3 h-3" />
+                      <Minimize2 className="w-3 h-3" />
                     )}
                   </button>
                   <button
@@ -820,7 +820,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                   {processingImage === previewImage.id ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   ) : (
-                    <Compress className="w-4 h-4 mr-2" />
+                    <Minimize2 className="w-4 h-4 mr-2" />
                   )}
                   Compress
                 </Button>
