@@ -53,7 +53,7 @@ export default function UpgradePage() {
   const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState<string | null>(null);
-  const [pricing, setPricing] = useState<{pro: number, business: number}>({pro: 29, business: 79});
+  const [pricing, setPricing] = useState<{pro: number, business: number, agency: number}>({pro: 29, business: 79, agency: 99});
 
   useEffect(() => {
     loadUserData();
@@ -84,7 +84,8 @@ export default function UpgradePage() {
         if (data.success) {
           setPricing({
             pro: data.data.pro.price,
-            business: data.data.business.price
+            business: data.data.business.price,
+            agency: data.data.agency?.price || 99
           });
         }
       }
@@ -106,6 +107,9 @@ export default function UpgradePage() {
         '200-600 words per listing',
         'Save generated listings',
         'AI-powered listing generation',
+        'AI Image Uploader (20 images/day)',
+        'AI-generated filenames & alt text',
+        'Image quality checking',
         'Standard support'
       ],
       icon: Star,
@@ -125,6 +129,10 @@ export default function UpgradePage() {
         '200-600 words per listing',
         'Save generated listings',
         'AI-powered listing generation',
+        'AI Image Uploader (1,000 images/day)',
+        'AI-generated filenames & alt text',
+        'Image quality checking & upscaling',
+        'Image optimization',
         'Priority support'
       ],
       icon: Zap,
@@ -145,6 +153,10 @@ export default function UpgradePage() {
         '200-600 words per listing',
         'Save generated listings',
         'AI-powered listing generation',
+        'AI Image Uploader (4,000 images/day)',
+        'AI-generated filenames & alt text',
+        'Image quality checking & upscaling',
+        'Image optimization & bulk operations',
         'Priority support'
       ],
       icon: Building,
@@ -153,6 +165,33 @@ export default function UpgradePage() {
       borderColor: 'border-purple-200',
       popular: true,
       stripePriceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUSINESS
+    },
+    {
+      id: 'agency',
+      name: 'Agency',
+      description: 'For agencies and large teams',
+      price: pricing.agency,
+      period: 'month',
+      features: [
+        'Unlimited generations per day',
+        'Unlimited image uploads per day',
+        'All 15 tone options',
+        '200-600 words per listing',
+        'Save generated listings',
+        'AI-powered listing generation',
+        'AI Image Uploader (unlimited)',
+        'AI-generated filenames & alt text',
+        'Image quality checking & upscaling',
+        'Image optimization & bulk operations',
+        'Advanced analytics',
+        'Priority support',
+        'Dedicated account manager'
+      ],
+      icon: Users,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      borderColor: 'border-indigo-200',
+      stripePriceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_AGENCY
     }
   ];
 

@@ -12,6 +12,11 @@ export async function GET() {
         price: parseFloat(process.env.BUSINESS_PRICE_USD || '79'),
         currency: 'USD',
         period: 'month'
+      },
+      agency: {
+        price: parseFloat(process.env.AGENCY_PRICE_USD || '99'),
+        currency: 'USD',
+        period: 'month'
       }
     };
 

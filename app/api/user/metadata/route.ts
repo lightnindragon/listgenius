@@ -36,6 +36,7 @@ export async function GET() {
       plan,
       dailyGenCount: metadata.dailyGenCount || 0,
       dailyRewriteCount: metadata.dailyRewriteCount || 0,
+      dailyImageUploadCount: metadata.dailyImageUploadCount || 0,
       monthlyGenCount,
       lastResetDate: metadata.lastResetDate || new Date().toLocaleDateString(),
       preferences: metadata.preferences || {

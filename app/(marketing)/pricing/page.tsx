@@ -8,7 +8,7 @@ import { Check, Star } from 'lucide-react';
 
 export default function PricingPage() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const [pricing, setPricing] = useState<{pro: number, business: number}>({pro: 29, business: 79});
+  const [pricing, setPricing] = useState<{pro: number, business: number, agency: number}>({pro: 29, business: 79, agency: 99});
 
   useEffect(() => {
     loadPricing();
@@ -32,7 +32,8 @@ export default function PricingPage() {
         if (data.success) {
           setPricing({
             pro: data.data.pro.price,
-            business: data.data.business.price
+            business: data.data.business.price,
+            agency: data.data.agency?.price || 99
           });
         }
       }
@@ -90,6 +91,9 @@ export default function PricingPage() {
         '200-600 words per listing',
         'Save generated listings',
         'AI-powered listing generation',
+        'AI Image Uploader (20 images/day)',
+        'AI-generated filenames & alt text',
+        'Image quality checking',
         'Standard support'
       ],
       limitations: [
@@ -111,6 +115,10 @@ export default function PricingPage() {
         '200-600 words per listing',
         'Save generated listings',
         'AI-powered listing generation',
+        'AI Image Uploader (1,000 images/day)',
+        'AI-generated filenames & alt text',
+        'Image quality checking & upscaling',
+        'Image optimization',
         'Priority support'
       ],
       limitations: [],
@@ -130,11 +138,41 @@ export default function PricingPage() {
         '200-600 words per listing',
         'Save generated listings',
         'AI-powered listing generation',
+        'AI Image Uploader (4,000 images/day)',
+        'AI-generated filenames & alt text',
+        'Image quality checking & upscaling',
+        'Image optimization & bulk operations',
         'Priority support'
       ],
       limitations: [],
       cta: 'Upgrade to Business',
       ctaLink: '/api/stripe/checkout?plan=business',
+      ctaVariant: 'primary' as const,
+      popular: false
+    },
+    {
+      name: 'Agency',
+      price: `$${pricing.agency}`,
+      period: 'per month',
+      description: 'For agencies and large teams',
+      features: [
+        'Unlimited generations per day',
+        'Unlimited image uploads per day',
+        'All 15 tone options',
+        '200-600 words per listing',
+        'Save generated listings',
+        'AI-powered listing generation',
+        'AI Image Uploader (unlimited)',
+        'AI-generated filenames & alt text',
+        'Image quality checking & upscaling',
+        'Image optimization & bulk operations',
+        'Advanced analytics',
+        'Priority support',
+        'Dedicated account manager'
+      ],
+      limitations: [],
+      cta: 'Upgrade to Agency',
+      ctaLink: '/api/stripe/checkout?plan=agency',
       ctaVariant: 'primary' as const,
       popular: false
     }
@@ -159,7 +197,7 @@ export default function PricingPage() {
       {/* Pricing Cards */}
       <section className="py-20">
         <Container>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {plans.map((plan) => (
               <div
                 key={plan.name}

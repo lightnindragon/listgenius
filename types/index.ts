@@ -15,6 +15,8 @@ export interface UserMetadata {
   monthlyGenCount?: number; // current month's generation count
   lifetimeGenerations?: number; // total lifetime generations
   lastResetDate: string; // ISO 8601 format (YYYY-MM-DD)
+  dailyImageUploadCount: number; // daily image upload count
+  lifetimeImageUploads?: number; // total lifetime image uploads
   preferences?: {
     tone?: string; // e.g., "Professional", "Casual", "Luxury"
     niche?: string;

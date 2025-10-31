@@ -6,7 +6,8 @@
     "bulkGenerate": false, 
     "bulkPublish": false, 
     "history": true, 
-    "tonePresets": false 
+    "tonePresets": false,
+    "imageUploadsPerDay": 20
   },
   "pro": { 
     "generateUnlimited": true, 
@@ -15,7 +16,8 @@
     "bulkGenerate": false, 
     "bulkPublish": false, 
     "history": true, 
-    "tonePresets": true 
+    "tonePresets": true,
+    "imageUploadsPerDay": 1000
   },
   "business": { 
     "generateUnlimited": true, 
@@ -25,7 +27,8 @@
     "bulkPublish": true, 
     "maxBulkSize": 50, 
     "history": true, 
-    "tonePresets": true 
+    "tonePresets": true,
+    "imageUploadsPerDay": 4000
   },
   "agency": { 
     "generateUnlimited": true, 
@@ -37,6 +40,7 @@
     "history": true, 
     "tonePresets": true, 
     "multiShop": true, 
-    "seats": 3 
+    "seats": 3,
+    "imageUploadsPerDay": "unlimited"
   }
 }

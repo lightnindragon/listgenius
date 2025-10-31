@@ -129,6 +129,8 @@ export async function incrementDailyGenCount(userId: string): Promise<number> {
       ...metadata,
       plan: metadata.plan || 'free',
       dailyGenCount: newCount,
+      dailyRewriteCount: metadata.dailyRewriteCount || 0,
+      dailyImageUploadCount: metadata.dailyImageUploadCount || 0,
       lifetimeGenerations: (metadata.lifetimeGenerations || 0) + 1,
       lastResetDate: metadata.lastResetDate || today,
       // Preserve all other existing metadata
@@ -183,6 +185,7 @@ export async function incrementDailyRewriteCount(userId: string): Promise<number
       plan: metadata.plan || 'free',
       dailyGenCount: metadata.dailyGenCount || 0,
       dailyRewriteCount: newCount,
+      dailyImageUploadCount: metadata.dailyImageUploadCount || 0,
       lastResetDate: metadata.lastResetDate || today,
       // Preserve all other existing metadata
       preferences: metadata.preferences,
@@ -223,6 +226,7 @@ export async function resetDailyCountersIfNeeded(userId: string): Promise<void> 
         plan: metadata.plan || 'free',
         dailyGenCount: 0,
         dailyRewriteCount: 0,
+        dailyImageUploadCount: 0,
         lastResetDate: today,
         // Preserve all other existing metadata
         preferences: metadata.preferences,
@@ -241,6 +245,104 @@ export async function resetDailyCountersIfNeeded(userId: string): Promise<void> 
     }
   } catch (error) {
     logger.error('Failed to reset daily counters', { userId, error });
+  }
+}
+
+/**
+ * Get daily image upload count for user
+ */
+export async function getDailyImageUploadCount(userId: string): Promise<number> {
+  try {
+    const user = await currentUser();
+    if (!user) return 0;
+    
+    const metadata = user.publicMetadata as unknown as UserMetadata;
+    const lastResetDate = metadata.lastResetDate;
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    // Reset count if it's a new day
+    if (lastResetDate !== today) {
+      await resetDailyCountersIfNeeded(userId);
+      return 0;
+    }
+    
+    return metadata.dailyImageUploadCount || 0;
+  } catch (error) {
+    logger.error('Failed to get daily image upload count', { userId, error });
+    return 0;
+  }
+}
+
+/**
+ * Increment daily image upload count
+ */
+export async function incrementDailyImageUploadCount(userId: string, count: number = 1): Promise<number> {
+  try {
+    const user = await currentUser();
+    if (!user) throw new Error('User not found');
+    
+    const currentCount = await getDailyImageUploadCount(userId);
+    const newCount = currentCount + count;
+    
+    const metadata = user.publicMetadata as unknown as UserMetadata || {};
+    const today = new Date().toISOString().split('T')[0];
+    const updatedMetadata: UserMetadata = {
+      ...metadata,
+      plan: metadata.plan || 'free',
+      dailyGenCount: metadata.dailyGenCount || 0,
+      dailyRewriteCount: metadata.dailyRewriteCount || 0,
+      dailyImageUploadCount: newCount,
+      lifetimeImageUploads: (metadata.lifetimeImageUploads || 0) + count,
+      lastResetDate: metadata.lastResetDate || today,
+      // Preserve all other existing metadata
+      preferences: metadata.preferences,
+      etsyTokens: metadata.etsyTokens,
+      etsyShopId: metadata.etsyShopId,
+      etsyRateLimitCount: metadata.etsyRateLimitCount,
+      etsyRateLimitReset: metadata.etsyRateLimitReset
+    };
+    
+    // Actually update the user metadata using clerkClient
+    await clerkClient.users.updateUserMetadata(userId, {
+      publicMetadata: updatedMetadata as unknown as UserPublicMetadata
+    });
+    
+    logger.info('Daily image upload count incremented', { userId, count: newCount });
+    return newCount;
+  } catch (error) {
+    logger.error('Failed to increment daily image upload count', { userId, error });
+    throw error;
+  }
+}
+
+/**
+ * Reset daily image upload count (called in daily counter reset)
+ */
+export async function resetDailyImageUploadCount(userId: string): Promise<void> {
+  try {
+    const user = await currentUser();
+    if (!user) return;
+    
+    const metadata = user.publicMetadata as unknown as UserMetadata;
+    const today = new Date().toISOString().split('T')[0];
+    const updatedMetadata: UserMetadata = {
+      ...metadata,
+      plan: metadata.plan || 'free',
+      dailyImageUploadCount: 0,
+      lastResetDate: today,
+      // Preserve all other existing metadata
+      preferences: metadata.preferences,
+      etsyTokens: metadata.etsyTokens,
+      etsyShopId: metadata.etsyShopId,
+      etsyRateLimitCount: metadata.etsyRateLimitCount,
+      etsyRateLimitReset: metadata.etsyRateLimitReset
+    };
+    
+    await clerkClient.users.updateUserMetadata(userId, {
+      publicMetadata: updatedMetadata as unknown as UserPublicMetadata
+    });
+  } catch (error) {
+    logger.error('Failed to reset daily image upload count', { userId, error });
   }
 }
 

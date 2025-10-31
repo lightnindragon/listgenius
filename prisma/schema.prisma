@@ -1182,3 +1182,49 @@ model EmailTemplate {
   @@index([category])
   @@index([isActive])
 }
+
+model UploadedImage {
+  id                String    @id @default(cuid())
+  userId            String
+  filename          String
+  originalFilename  String
+  blobUrl           String
+  blobKey           String
+  altText           String?   @db.Text
+  generatedFilename String
+  width             Int
+  height            Int
+  quality            String    // "poor" or "high"
+  moderationStatus  String    @default("pending") // "approved", "rejected", "pending"
+  rejectionReason   String?   @db.Text
+  fileSize          Int
+  mimeType          String
+  originalFileSize  Int?
+  optimizedFileSize Int?
+  compressionRatio  Float?
+  originalWidth     Int?
+  originalHeight    Int?
+  isFilenameEdited  Boolean   @default(false)
+  isAltTextEdited   Boolean   @default(false)
+  tags              String[]
+  category          String?
+  isFavorite        Boolean   @default(false)
+  downloadCount     Int       @default(0)
+  lastDownloadedAt  DateTime?
+  editHistory       String?   @db.Text // JSON string
+  format            String?
+  order             Int       @default(0)
+  upscaledAt        DateTime?
+  createdAt         DateTime  @default(now())
+  expiresAt         DateTime
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@index([moderationStatus])
+  @@index([category])
+  @@index([tags])
+  @@index([isFavorite])
+  @@index([order])
+  @@index([blobKey])
+}
