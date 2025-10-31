@@ -18,22 +18,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { pathname, contentType } = body;
+    // The @vercel/blob/client library posts multipart/form-data here
+    // Parse form data instead of JSON
+    const form = await request.formData();
+    const filename = String(form.get('filename') || 'upload');
+    const contentType = String(form.get('contentType') || 'application/octet-stream');
+    const proposedPathname = String(form.get('pathname') || filename);
 
-    if (!pathname) {
-      return NextResponse.json(
-        { error: 'Pathname is required' },
-        { status: 400 }
-      );
-    }
-
-    // Create a unique path with user ID
-    const uniquePath = `images/${userId}/${pathname}`;
+    // Create a unique path namespaced by user
+    const uniquePath = `images/${userId}/${Date.now()}-${proposedPathname}`;
     
     // Generate upload URL using put() - this creates a signed URL for direct upload
     // Note: We use an empty blob just to get the URL - the actual file will be uploaded by the client
-    const { url } = await put(uniquePath, new Blob([], { type: contentType || 'image/jpeg' }), {
+    const { url } = await put(uniquePath, new Blob([], { type: contentType }), {
       access: 'public',
       addRandomSuffix: true,
     });
