@@ -68,26 +68,31 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
 
-    // Check file sizes (warn if total exceeds ~4MB to avoid Vercel 413 errors)
-    const maxTotalSize = 4 * 1024 * 1024; // 4MB to stay under Vercel's limit
-    const totalSize = [...files, ...imageFiles].reduce((sum, file) => sum + file.size, 0);
+    // Check individual file sizes (max 4MB per file to avoid Vercel 413 errors)
+    const maxFileSize = 4 * 1024 * 1024; // 4MB max per file (Vercel limit is ~4.5MB)
+    const oversizedFiles = imageFiles.filter(file => file.size > maxFileSize);
     
-    if (totalSize > maxTotalSize) {
-      const totalMB = (totalSize / 1024 / 1024).toFixed(2);
+    if (oversizedFiles.length > 0) {
+      const fileNames = oversizedFiles.map(f => f.name).join(', ');
+      const maxMB = (maxFileSize / 1024 / 1024).toFixed(0);
       emitTopRightToast(
-        `Total file size (${totalMB}MB) is too large. Upload fewer images or compress them.`,
+        `${oversizedFiles.length} file(s) exceed ${maxMB}MB limit: ${fileNames.substring(0, 50)}... Please compress or resize these images before uploading.`,
         'error'
       );
       return;
     }
 
-    // Check for very large individual files (>5MB)
-    const largeFiles = imageFiles.filter(file => file.size > 5 * 1024 * 1024);
-    if (largeFiles.length > 0) {
+    // Check total size for batch operations (even though we upload sequentially)
+    const maxTotalSize = 4 * 1024 * 1024; // 4MB total limit
+    const totalSize = [...files, ...imageFiles].reduce((sum, file) => sum + file.size, 0);
+    
+    if (totalSize > maxTotalSize) {
+      const totalMB = (totalSize / 1024 / 1024).toFixed(2);
       emitTopRightToast(
-        `${largeFiles.length} file(s) are very large (>5MB). Consider compressing them before upload.`,
+        `Total file size (${totalMB}MB) exceeds limit. Please upload fewer images at once or compress them.`,
         'error'
       );
+      return;
     }
 
     // Check total count
@@ -111,13 +116,15 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
 
-    // Check total size before upload
-    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    const maxTotalSize = 4 * 1024 * 1024; // 4MB limit
-    if (totalSize > maxTotalSize) {
-      const totalMB = (totalSize / 1024 / 1024).toFixed(2);
+    // Check individual file sizes before upload (must be under 4MB each)
+    const maxFileSize = 4 * 1024 * 1024; // 4MB max per file
+    const oversizedFiles = files.filter(file => file.size > maxFileSize);
+    
+    if (oversizedFiles.length > 0) {
+      const fileNames = oversizedFiles.map(f => f.name).join(', ');
+      const fileSizes = oversizedFiles.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)}MB)`).join(', ');
       emitTopRightToast(
-        `Total file size (${totalMB}MB) exceeds limit. Please upload fewer images or compress them.`,
+        `Some files are too large (>4MB): ${fileSizes.substring(0, 100)}... Please compress or resize these images before uploading.`,
         'error'
       );
       return;
@@ -228,7 +235,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           Select Images
         </Button>
         <p className="text-xs text-gray-400 mt-4">
-          Maximum {maxImages} images • JPEG, PNG, WebP, GIF
+          Maximum {maxImages} images • JPEG, PNG, WebP, GIF • Max 4MB per file
         </p>
       </div>
 
@@ -292,10 +299,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         <h4 className="font-semibold text-blue-900 mb-2">About Image Uploader</h4>
         <ul className="text-sm text-blue-800 space-y-1">
           <li>• Upload up to {maxImages} images at once</li>
+          <li>• Maximum 4MB per file (larger files will be rejected)</li>
           <li>• AI automatically generates SEO-friendly filenames and alt text</li>
           <li>• Images are checked for quality (Etsy prefers 2000x2000px or higher)</li>
           <li>• Images are automatically deleted after 24 hours</li>
           <li>• Inappropriate content is automatically detected and blocked</li>
+          <li className="font-semibold text-orange-700">• Tip: Compress large images before uploading for best results</li>
         </ul>
       </div>
     </div>

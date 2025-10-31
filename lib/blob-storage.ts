@@ -100,12 +100,12 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
     };
   }
 
-  // Check file size (max 10MB)
-  const maxSize = 10 * 1024 * 1024; // 10MB
+  // Check file size (max 4MB to avoid Vercel function payload limits)
+  const maxSize = 4 * 1024 * 1024; // 4MB (Vercel limit is ~4.5MB for function payload)
   if (file.size > maxSize) {
     return {
       valid: false,
-      error: `File too large. Maximum size: 10MB`,
+      error: `File too large. Maximum size: 4MB per file. Please compress or resize your image before uploading.`,
     };
   }
 
