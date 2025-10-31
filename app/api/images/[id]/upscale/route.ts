@@ -12,6 +12,9 @@ const prisma = new PrismaClient();
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+// Explicitly allow dynamic route segments
+export const fetchCache = 'force-no-store';
+
 /**
  * POST - Upscale image to meet 2000px minimum requirement
  */
