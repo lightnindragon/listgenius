@@ -1,14 +1,22 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
-import { Upload, X, CheckCircle, AlertCircle, Loader2, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { 
+  Upload, X, CheckCircle, AlertCircle, Loader2, Image as ImageIcon, 
+  Download, Star, StarOff, Maximize2, Minimize2, Search, Filter,
+  Settings2, Compress, ZoomIn, RefreshCw, Tag, FolderOpen, Trash2,
+  ImageUp, ChevronLeft, ChevronRight
+} from 'lucide-react';
 import { Button } from './ui/Button';
+import { Input } from './ui/Input';
+import { Textarea } from './ui/Textarea';
 import { emitTopRightToast } from './TopRightToast';
 import { getBaseUrl } from '@/lib/utils';
 
 interface UploadedImage {
   id: string;
   filename: string;
+  originalFilename: string;
   altText: string;
   url: string;
   width: number;
@@ -16,6 +24,16 @@ interface UploadedImage {
   quality: 'poor' | 'high';
   needsUpscale?: boolean;
   expiresAt: string;
+  fileSize: number;
+  mimeType: string;
+  tags?: string[];
+  category?: string;
+  isFavorite?: boolean;
+  downloadCount?: number;
+  moderationStatus?: 'approved' | 'rejected' | 'pending';
+  originalWidth?: number;
+  originalHeight?: number;
+  upscaledAt?: string;
 }
 
 interface ImageUploaderProps {
@@ -27,11 +45,80 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   onUploadSuccess,
   maxImages = 20,
 }) => {
+  // Upload state
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Gallery state
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [loadingImages, setLoadingImages] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
+
+  // Filtering/Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [qualityFilter, setQualityFilter] = useState<'all' | 'poor' | 'high'>('all');
+  const [sortBy, setSortBy] = useState<'createdAt' | 'size' | 'quality' | 'filename'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Modal state
+  const [previewImage, setPreviewImage] = useState<UploadedImage | null>(null);
+  const [editingImage, setEditingImage] = useState<UploadedImage | null>(null);
+  const [optimizingImage, setOptimizingImage] = useState<UploadedImage | null>(null);
+  const [editForm, setEditForm] = useState({
+    filename: '',
+    altText: '',
+    tags: [] as string[],
+    category: '',
+    isFavorite: false,
+  });
+  const [optimizeForm, setOptimizeForm] = useState({
+    width: '',
+    height: '',
+    format: 'jpeg' as 'jpeg' | 'png' | 'webp',
+    quality: 85,
+  });
+
+  // Processing state
+  const [processingImage, setProcessingImage] = useState<string | null>(null);
+
+  // Load images on mount
+  useEffect(() => {
+    loadImages();
+  }, [qualityFilter, sortBy, sortOrder, searchQuery]);
+
+  const loadImages = async () => {
+    setLoadingImages(true);
+    try {
+      const params = new URLSearchParams({
+        page: '1',
+        limit: '100',
+        sortBy,
+        sortOrder,
+      });
+      
+      if (qualityFilter !== 'all') {
+        params.append('quality', qualityFilter);
+      }
+      
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+
+      const response = await fetch(`${getBaseUrl()}/api/images?${params}`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setUploadedImages(result.data.images || []);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load images:', error);
+    } finally {
+      setLoadingImages(false);
+    }
+  };
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -60,7 +147,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   }, []);
 
   const handleFiles = (newFiles: File[]) => {
-    // Filter only image files
     const imageFiles = newFiles.filter(file => file.type.startsWith('image/'));
     
     if (imageFiles.length === 0) {
@@ -68,21 +154,19 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
 
-    // Check file size (max 100MB per file - reasonable limit, can be increased)
-    const maxFileSize = 100 * 1024 * 1024; // 100MB max per file (can handle large 4000x4000 images)
+    const maxFileSize = 100 * 1024 * 1024;
     const oversizedFiles = imageFiles.filter(file => file.size > maxFileSize);
     
     if (oversizedFiles.length > 0) {
       const fileNames = oversizedFiles.map(f => f.name).join(', ');
       const maxMB = (maxFileSize / 1024 / 1024).toFixed(0);
       emitTopRightToast(
-        `${oversizedFiles.length} file(s) exceed ${maxMB}MB limit: ${fileNames.substring(0, 50)}... Please compress these images before uploading.`,
+        `${oversizedFiles.length} file(s) exceed ${maxMB}MB limit: ${fileNames.substring(0, 50)}...`,
         'error'
       );
       return;
     }
 
-    // Check total count
     const totalFiles = files.length + imageFiles.length;
     if (totalFiles > maxImages) {
       emitTopRightToast(`Maximum ${maxImages} images allowed`, 'error');
@@ -103,23 +187,17 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
 
-    // Check file size limit (100MB max per file)
-    const maxFileSize = 100 * 1024 * 1024; // 100MB max per file
+    const maxFileSize = 100 * 1024 * 1024;
     const oversizedFiles = files.filter(file => file.size > maxFileSize);
     
     if (oversizedFiles.length > 0) {
-      const fileSizes = oversizedFiles.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)}MB)`).join(', ');
-      emitTopRightToast(
-        `Some files are too large (>100MB): ${fileSizes.substring(0, 100)}... Please compress these images.`,
-        'error'
-      );
+      emitTopRightToast('Some files are too large (>100MB). Please compress these images.', 'error');
       return;
     }
 
     setUploading(true);
     
     try {
-      // Upload images sequentially using direct Vercel Blob upload
       const uploadedImages: UploadedImage[] = [];
       let successCount = 0;
       let failedCount = 0;
@@ -127,20 +205,17 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         try {
-          // Upload directly using Vercel Blob client with multipart support
-          // This bypasses serverless function payload limits
           const { upload } = await import('@vercel/blob/client');
           
           const blob = await upload(file.name, file, {
             access: 'public',
             handleUploadUrl: `${getBaseUrl()}/api/images/upload-url`,
-            multipart: true, // Enable multipart for large files
+            multipart: true,
           });
 
           const blobUrl = blob.url;
           const blobKey = blob.pathname;
 
-          // Get image dimensions from the file
           const dimensions = await new Promise<{width: number, height: number}>((resolve) => {
             const img = new Image();
             const url = URL.createObjectURL(file);
@@ -152,12 +227,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             img.src = url;
           });
 
-          // Step 3: Complete the upload by processing metadata (AI generation, moderation, etc.)
           const completeResponse = await fetch(`${getBaseUrl()}/api/images/complete`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               blobUrl,
               blobKey,
@@ -170,15 +242,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           });
 
           if (!completeResponse.ok) {
-            const errorText = await completeResponse.text();
-            let errorMessage = `Failed to process ${file.name}`;
-            try {
-              const errorJson = JSON.parse(errorText);
-              errorMessage = errorJson.error || errorMessage;
-            } catch (e) {
-              errorMessage = errorText || errorMessage;
-            }
-            console.error(`Processing failed for ${file.name}:`, errorMessage);
             failedCount++;
             continue;
           }
@@ -193,7 +256,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           }
         } catch (error) {
           console.error(`Upload error for ${file.name}:`, error);
-          emitTopRightToast(`Failed to upload ${file.name}: ${(error as Error).message}`, 'error');
           failedCount++;
         }
       }
@@ -204,6 +266,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           successCount === files.length ? 'success' : 'error'
         );
         setFiles([]);
+        loadImages();
         if (onUploadSuccess) {
           onUploadSuccess(uploadedImages);
         }
@@ -216,6 +279,199 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     } finally {
       setUploading(false);
     }
+  };
+
+  // Image actions
+  const handleUpscale = async (imageId: string) => {
+    setProcessingImage(imageId);
+    try {
+      const response = await fetch(`${getBaseUrl()}/api/images/${imageId}/upscale`, {
+        method: 'POST',
+      });
+      const result = await response.json();
+      
+      if (result.success) {
+        emitTopRightToast('Image upscaled successfully!', 'success');
+        loadImages();
+      } else {
+        emitTopRightToast(result.error || 'Failed to upscale image', 'error');
+      }
+    } catch (error) {
+      emitTopRightToast('Failed to upscale image', 'error');
+    } finally {
+      setProcessingImage(null);
+    }
+  };
+
+  const handleCompress = async (imageId: string, quality: number = 85) => {
+    setProcessingImage(imageId);
+    try {
+      const response = await fetch(`${getBaseUrl()}/api/images/${imageId}/compress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quality }),
+      });
+      const result = await response.json();
+      
+      if (result.success) {
+        emitTopRightToast(
+          `Image compressed! Size reduced by ${result.data.compressionRatio.toFixed(1)}%`,
+          'success'
+        );
+        loadImages();
+      } else {
+        emitTopRightToast(result.error || 'Failed to compress image', 'error');
+      }
+    } catch (error) {
+      emitTopRightToast('Failed to compress image', 'error');
+    } finally {
+      setProcessingImage(null);
+    }
+  };
+
+  const handleOptimize = async (
+    imageId: string,
+    options: { width?: number; height?: number; format?: 'jpeg' | 'png' | 'webp'; quality?: number }
+  ) => {
+    setProcessingImage(imageId);
+    try {
+      const response = await fetch(`${getBaseUrl()}/api/images/${imageId}/optimize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(options),
+      });
+      const result = await response.json();
+      
+      if (result.success) {
+        emitTopRightToast('Image optimized successfully!', 'success');
+        loadImages();
+        if (previewImage?.id === imageId) {
+          setPreviewImage(result.data);
+        }
+      } else {
+        emitTopRightToast(result.error || 'Failed to optimize image', 'error');
+      }
+    } catch (error) {
+      emitTopRightToast('Failed to optimize image', 'error');
+    } finally {
+      setProcessingImage(null);
+    }
+  };
+
+  const handleDownload = async (imageId: string, filename: string) => {
+    try {
+      const response = await fetch(`${getBaseUrl()}/api/images/${imageId}/download`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        emitTopRightToast('Image downloaded', 'success');
+        loadImages();
+      }
+    } catch (error) {
+      emitTopRightToast('Failed to download image', 'error');
+    }
+  };
+
+  const handleDelete = async (imageId: string) => {
+    if (!confirm('Are you sure you want to delete this image?')) return;
+    
+    try {
+      const response = await fetch(`${getBaseUrl()}/api/images/${imageId}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+      
+      if (result.success) {
+        emitTopRightToast('Image deleted', 'success');
+        loadImages();
+      } else {
+        emitTopRightToast(result.error || 'Failed to delete image', 'error');
+      }
+    } catch (error) {
+      emitTopRightToast('Failed to delete image', 'error');
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedImages.size === 0) return;
+    if (!confirm(`Delete ${selectedImages.size} image(s)?`)) return;
+
+    const promises = Array.from(selectedImages).map(id => 
+      fetch(`${getBaseUrl()}/api/images/${id}`, { method: 'DELETE' })
+    );
+    
+    await Promise.all(promises);
+    emitTopRightToast(`Deleted ${selectedImages.size} image(s)`, 'success');
+    setSelectedImages(new Set());
+    loadImages();
+  };
+
+  const handleToggleFavorite = async (imageId: string, currentValue: boolean) => {
+    try {
+      const response = await fetch(`${getBaseUrl()}/api/images/${imageId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isFavorite: !currentValue }),
+      });
+      
+      if (response.ok) {
+        loadImages();
+      }
+    } catch (error) {
+      emitTopRightToast('Failed to update favorite status', 'error');
+    }
+  };
+
+  const handleEdit = (image: UploadedImage) => {
+    setEditingImage(image);
+    setEditForm({
+      filename: image.filename,
+      altText: image.altText,
+      tags: image.tags || [],
+      category: image.category || '',
+      isFavorite: image.isFavorite || false,
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingImage) return;
+
+    try {
+      const response = await fetch(`${getBaseUrl()}/api/images/${editingImage.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        emitTopRightToast('Image updated successfully', 'success');
+        setEditingImage(null);
+        loadImages();
+      } else {
+        emitTopRightToast(result.error || 'Failed to update image', 'error');
+      }
+    } catch (error) {
+      emitTopRightToast('Failed to update image', 'error');
+    }
+  };
+
+  const toggleImageSelection = (imageId: string) => {
+    const newSelected = new Set(selectedImages);
+    if (newSelected.has(imageId)) {
+      newSelected.delete(imageId);
+    } else {
+      newSelected.add(imageId);
+    }
+    setSelectedImages(newSelected);
   };
 
   return (
@@ -260,7 +516,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         </p>
       </div>
 
-      {/* Selected Files */}
+      {/* Selected Files Preview */}
       {files.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -315,6 +571,491 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         </div>
       )}
 
+      {/* Gallery Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Image Library</h3>
+          <div className="flex items-center gap-2">
+            {selectedImages.size > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete ({selectedImages.size})
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadImages}
+              disabled={loadingImages}
+            >
+              <RefreshCw className={`w-4 h-4 ${loadingImages ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+        </div>
+
+        {/* Filters and Search */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <Input
+              placeholder="Search images..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <select
+            value={qualityFilter}
+            onChange={(e) => setQualityFilter(e.target.value as any)}
+            className="px-3 py-2 border rounded-lg"
+          >
+            <option value="all">All Quality</option>
+            <option value="high">High Quality</option>
+            <option value="poor">Poor Quality</option>
+          </select>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="px-3 py-2 border rounded-lg"
+          >
+            <option value="createdAt">Date</option>
+            <option value="filename">Filename</option>
+            <option value="size">Size</option>
+            <option value="quality">Quality</option>
+          </select>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+          >
+            {sortOrder === 'asc' ? '↑' : '↓'}
+          </Button>
+        </div>
+
+        {/* Image Grid */}
+        {loadingImages ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          </div>
+        ) : uploadedImages.length === 0 ? (
+          <div className="border-2 border-dashed rounded-lg p-12 text-center">
+            <ImageIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            <p className="text-gray-500">No images uploaded yet</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {uploadedImages.map((image) => (
+              <div
+                key={image.id}
+                className="relative border rounded-lg p-2 bg-white group cursor-pointer"
+              >
+                {/* Selection Checkbox */}
+                <input
+                  type="checkbox"
+                  checked={selectedImages.has(image.id)}
+                  onChange={() => toggleImageSelection(image.id)}
+                  className="absolute top-2 left-2 z-10 w-4 h-4"
+                  onClick={(e) => e.stopPropagation()}
+                />
+
+                {/* Image */}
+                <img
+                  src={image.url}
+                  alt={image.altText}
+                  className="w-full h-32 object-cover rounded"
+                  onClick={() => setPreviewImage(image)}
+                />
+
+                {/* Quality Badge */}
+                {image.quality === 'poor' && (
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">
+                    Low Quality
+                  </div>
+                )}
+
+                {/* Favorite Icon */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleFavorite(image.id, image.isFavorite || false);
+                  }}
+                  className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  {image.isFavorite ? (
+                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  ) : (
+                    <Star className="w-4 h-4 text-gray-400" />
+                  )}
+                </button>
+
+                {/* Actions Menu */}
+                <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownload(image.id, image.filename);
+                    }}
+                    className="bg-blue-500 text-white p-1 rounded"
+                    title="Download"
+                  >
+                    <Download className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(image);
+                    }}
+                    className="bg-gray-500 text-white p-1 rounded"
+                    title="Edit"
+                  >
+                    <Settings2 className="w-3 h-3" />
+                  </button>
+                  {image.quality === 'poor' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleUpscale(image.id);
+                      }}
+                      className="bg-green-500 text-white p-1 rounded"
+                      title="Upscale"
+                      disabled={processingImage === image.id}
+                    >
+                      {processingImage === image.id ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <ZoomIn className="w-3 h-3" />
+                      )}
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCompress(image.id);
+                    }}
+                    className="bg-purple-500 text-white p-1 rounded"
+                    title="Compress"
+                    disabled={processingImage === image.id}
+                  >
+                    {processingImage === image.id ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Compress className="w-3 h-3" />
+                    )}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(image.id);
+                    }}
+                    className="bg-red-500 text-white p-1 rounded"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+
+                {/* Image Info */}
+                <div className="mt-2">
+                  <p className="text-xs text-gray-600 truncate" title={image.filename}>
+                    {image.filename}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {image.width}×{image.height}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Preview Modal */}
+      {previewImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">{previewImage.filename}</h3>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(previewImage)}
+                >
+                  <Settings2 className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownload(previewImage.id, previewImage.filename)}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+                {previewImage.quality === 'poor' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleUpscale(previewImage.id)}
+                    disabled={processingImage === previewImage.id}
+                  >
+                    {processingImage === previewImage.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <ZoomIn className="w-4 h-4 mr-2" />
+                    )}
+                    Upscale
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCompress(previewImage.id)}
+                  disabled={processingImage === previewImage.id}
+                >
+                  {processingImage === previewImage.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <Compress className="w-4 h-4 mr-2" />
+                  )}
+                  Compress
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setOptimizingImage(previewImage);
+                    setOptimizeForm({
+                      width: previewImage.width.toString(),
+                      height: previewImage.height.toString(),
+                      format: previewImage.mimeType.includes('png') ? 'png' : previewImage.mimeType.includes('webp') ? 'webp' : 'jpeg',
+                      quality: 85,
+                    });
+                  }}
+                >
+                  <Settings2 className="w-4 h-4 mr-2" />
+                  Optimize
+                </Button>
+                <button
+                  onClick={() => setPreviewImage(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            <div className="p-4">
+              <img
+                src={previewImage.url}
+                alt={previewImage.altText}
+                className="w-full h-auto rounded mb-4"
+              />
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="font-semibold">Dimensions:</p>
+                  <p>{previewImage.width} × {previewImage.height}px</p>
+                  {previewImage.originalWidth && (
+                    <p className="text-xs text-gray-500">
+                      Original: {previewImage.originalWidth} × {previewImage.originalHeight}px
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="font-semibold">File Size:</p>
+                  <p>{(previewImage.fileSize / 1024 / 1024).toFixed(2)} MB</p>
+                </div>
+                <div>
+                  <p className="font-semibold">Quality:</p>
+                  <p className={previewImage.quality === 'high' ? 'text-green-600' : 'text-yellow-600'}>
+                    {previewImage.quality === 'high' ? 'High' : 'Poor'}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-semibold">Format:</p>
+                  <p>{previewImage.mimeType}</p>
+                </div>
+              </div>
+              <div className="mt-4">
+                <p className="font-semibold mb-2">Alt Text:</p>
+                <p className="text-sm text-gray-600">{previewImage.altText}</p>
+              </div>
+              {previewImage.tags && previewImage.tags.length > 0 && (
+                <div className="mt-4">
+                  <p className="font-semibold mb-2">Tags:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {previewImage.tags.map((tag, i) => (
+                      <span key={i} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Optimize Modal */}
+      {optimizingImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">Optimize Image</h3>
+              <button
+                onClick={() => setOptimizingImage(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Width (px)"
+                  type="number"
+                  value={optimizeForm.width}
+                  onChange={(e) => setOptimizeForm({ ...optimizeForm, width: e.target.value })}
+                  placeholder="Auto"
+                />
+                <Input
+                  label="Height (px)"
+                  type="number"
+                  value={optimizeForm.height}
+                  onChange={(e) => setOptimizeForm({ ...optimizeForm, height: e.target.value })}
+                  placeholder="Auto"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Format</label>
+                <select
+                  value={optimizeForm.format}
+                  onChange={(e) => setOptimizeForm({ ...optimizeForm, format: e.target.value as any })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                >
+                  <option value="jpeg">JPEG</option>
+                  <option value="png">PNG</option>
+                  <option value="webp">WebP</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Quality: {optimizeForm.quality}%
+                </label>
+                <input
+                  type="range"
+                  min="50"
+                  max="100"
+                  value={optimizeForm.quality}
+                  onChange={(e) => setOptimizeForm({ ...optimizeForm, quality: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Lower quality = smaller file size
+                </p>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setOptimizingImage(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    handleOptimize(optimizingImage.id, {
+                      width: optimizeForm.width ? parseInt(optimizeForm.width) : undefined,
+                      height: optimizeForm.height ? parseInt(optimizeForm.height) : undefined,
+                      format: optimizeForm.format,
+                      quality: optimizeForm.quality,
+                    });
+                    setOptimizingImage(null);
+                  }}
+                  disabled={processingImage === optimizingImage.id}
+                >
+                  {processingImage === optimizingImage.id ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Optimizing...
+                    </>
+                  ) : (
+                    'Optimize'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">Edit Image</h3>
+              <button
+                onClick={() => setEditingImage(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <Input
+                label="Filename"
+                value={editForm.filename}
+                onChange={(e) => setEditForm({ ...editForm, filename: e.target.value })}
+              />
+              <Textarea
+                label="Alt Text"
+                value={editForm.altText}
+                onChange={(e) => setEditForm({ ...editForm, altText: e.target.value })}
+                rows={4}
+                helperText={`${editForm.altText.length}/500 characters (minimum 100)`}
+              />
+              <Input
+                label="Tags (comma-separated)"
+                value={editForm.tags.join(', ')}
+                onChange={(e) => setEditForm({ 
+                  ...editForm, 
+                  tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)
+                })}
+              />
+              <Input
+                label="Category"
+                value={editForm.category}
+                onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="favorite"
+                  checked={editForm.isFavorite}
+                  onChange={(e) => setEditForm({ ...editForm, isFavorite: e.target.checked })}
+                />
+                <label htmlFor="favorite">Mark as favorite</label>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingImage(null)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveEdit}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Info Box */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 className="font-semibold text-blue-900 mb-2">About Image Uploader</h4>
@@ -324,6 +1065,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           <li>• Direct multipart upload - bypasses server limits</li>
           <li>• AI automatically generates SEO-friendly filenames and alt text</li>
           <li>• Images are checked for quality (Etsy prefers 2000x2000px or higher)</li>
+          <li>• Upscale low-quality images with one click</li>
+          <li>• Edit metadata: filename, alt text, tags, category</li>
+          <li>• Filter, search, and sort your image library</li>
+          <li>• Bulk operations: select and delete multiple images</li>
           <li>• Images are automatically deleted after 24 hours</li>
           <li>• Inappropriate content is automatically detected and blocked</li>
         </ul>
@@ -331,4 +1076,3 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     </div>
   );
 };
-
