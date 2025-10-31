@@ -68,6 +68,28 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
 
+    // Check file sizes (warn if total exceeds ~4MB to avoid Vercel 413 errors)
+    const maxTotalSize = 4 * 1024 * 1024; // 4MB to stay under Vercel's limit
+    const totalSize = [...files, ...imageFiles].reduce((sum, file) => sum + file.size, 0);
+    
+    if (totalSize > maxTotalSize) {
+      const totalMB = (totalSize / 1024 / 1024).toFixed(2);
+      emitTopRightToast(
+        `Total file size (${totalMB}MB) is too large. Upload fewer images or compress them.`,
+        'error'
+      );
+      return;
+    }
+
+    // Check for very large individual files (>5MB)
+    const largeFiles = imageFiles.filter(file => file.size > 5 * 1024 * 1024);
+    if (largeFiles.length > 0) {
+      emitTopRightToast(
+        `${largeFiles.length} file(s) are very large (>5MB). Consider compressing them before upload.`,
+        'error'
+      );
+    }
+
     // Check total count
     const totalFiles = files.length + imageFiles.length;
     if (totalFiles > maxImages) {
@@ -89,45 +111,76 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
 
+    // Check total size before upload
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    const maxTotalSize = 4 * 1024 * 1024; // 4MB limit
+    if (totalSize > maxTotalSize) {
+      const totalMB = (totalSize / 1024 / 1024).toFixed(2);
+      emitTopRightToast(
+        `Total file size (${totalMB}MB) exceeds limit. Please upload fewer images or compress them.`,
+        'error'
+      );
+      return;
+    }
+
     setUploading(true);
     
     try {
-      const formData = new FormData();
-      files.forEach(file => {
-        formData.append('images', file);
-      });
+      // Upload images sequentially to avoid payload size limits
+      const uploadedImages: UploadedImage[] = [];
+      let successCount = 0;
+      let failedCount = 0;
 
-      const response = await fetch(`${getBaseUrl()}/api/images/upload`, {
-        method: 'POST',
-        body: formData,
-        // Don't set Content-Type header - browser will set it automatically with boundary
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorMessage = `Upload failed (${response.status})`;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
         try {
-          const errorJson = JSON.parse(errorText);
-          errorMessage = errorJson.error || errorMessage;
-        } catch (e) {
-          errorMessage = errorText || errorMessage;
+          const formData = new FormData();
+          formData.append('images', file);
+
+          const response = await fetch(`${getBaseUrl()}/api/images/upload`, {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            let errorMessage = `Failed to upload ${file.name} (${response.status})`;
+            try {
+              const errorJson = JSON.parse(errorText);
+              errorMessage = errorJson.error || errorMessage;
+            } catch (e) {
+              errorMessage = errorText || errorMessage;
+            }
+            console.error(`Upload failed for ${file.name}:`, response.status, errorMessage);
+            failedCount++;
+            continue;
+          }
+
+          const result = await response.json();
+
+          if (result.success && result.data.images && result.data.images.length > 0) {
+            uploadedImages.push(...result.data.images);
+            successCount++;
+          } else {
+            failedCount++;
+          }
+        } catch (error) {
+          console.error(`Upload error for ${file.name}:`, error);
+          failedCount++;
         }
-        console.error('Upload failed:', response.status, errorMessage);
-        emitTopRightToast(errorMessage, 'error');
-        return;
       }
 
-      const result = await response.json();
-
-      if (result.success) {
-        emitTopRightToast(`Successfully uploaded ${result.data.stats.successful} images`, 'success');
+      if (successCount > 0) {
+        emitTopRightToast(
+          `Successfully uploaded ${successCount} of ${files.length} image(s)`,
+          successCount === files.length ? 'success' : 'error'
+        );
         setFiles([]);
         if (onUploadSuccess) {
-          onUploadSuccess(result.data.images);
+          onUploadSuccess(uploadedImages);
         }
       } else {
-        console.error('Upload failed:', result);
-        emitTopRightToast(result.error || 'Failed to upload images', 'error');
+        emitTopRightToast('Failed to upload all images. Please try uploading fewer images at once.', 'error');
       }
     } catch (error) {
       console.error('Upload error:', error);
