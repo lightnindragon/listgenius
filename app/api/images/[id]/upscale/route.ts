@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { PrismaClient } from '@prisma/client';
 import { uploadImageToBlob, deleteImageFromBlob } from '@/lib/blob-storage';
-import { upscaleImageInMemory, analyzeImageQuality } from '@/lib/image-processing';
+import { upscaleImageInMemory } from '@/lib/image-processing';
+import { analyzeImageQuality } from '@/lib/image-ai';
 import { logger } from '@/lib/logger';
 
 const prisma = new PrismaClient();
