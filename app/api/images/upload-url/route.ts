@@ -45,9 +45,11 @@ export async function POST(request: NextRequest) {
 
     logger.info('Client token generated successfully', { userId, pathname: body.pathname });
 
-    // Return the response in the format expected by the client
+    // Return the response in the format expected by handleUploadUrl
+    // The client library expects { type: string, clientToken: string }
     return NextResponse.json({
-      token: clientToken,
+      type: 'blob.generate-client-token',
+      clientToken: clientToken,
     });
   } catch (error: any) {
     logger.error('Failed to generate upload URL', {
