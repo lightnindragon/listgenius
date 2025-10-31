@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Download, Edit, Trash2, Upload as UploadIcon, Search, Filter, Grid, List as ListIcon, Maximize2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Download, Edit, Trash2, Upload as UploadIcon, Search, Filter, Grid, List as ListIcon, Maximize2, AlertCircle, CheckCircle, X, Copy, Wand2, Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { Textarea } from './ui/Textarea';
 import { emitTopRightToast } from './TopRightToast';
 import { getBaseUrl } from '@/lib/utils';
 
@@ -19,6 +20,8 @@ interface SavedImage {
   createdAt: string;
   expiresAt: string;
   upscaledAt?: string;
+  originalFilename?: string;
+  mimeType?: string;
 }
 
 interface SavedImagesProps {
@@ -32,6 +35,11 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
   const [filterQuality, setFilterQuality] = useState<'all' | 'poor' | 'high'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
+  const [selectedImage, setSelectedImage] = useState<SavedImage | null>(null);
+  const [editingAltText, setEditingAltText] = useState('');
+  const [editingFilename, setEditingFilename] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [generatingAltText, setGeneratingAltText] = useState(false);
 
   useEffect(() => {
     loadImages();
@@ -117,6 +125,88 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
     }
   };
 
+  const handleImageClick = (image: SavedImage) => {
+    setSelectedImage(image);
+    setEditingAltText(image.altText);
+    setEditingFilename(image.filename);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedImage(null);
+    setEditingAltText('');
+    setEditingFilename('');
+  };
+
+  const handleSaveChanges = async () => {
+    if (!selectedImage) return;
+
+    setSaving(true);
+    try {
+      const response = await fetch(`${getBaseUrl()}/api/images/${selectedImage.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          altText: editingAltText,
+          filename: editingFilename,
+        }),
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        emitTopRightToast('Image updated successfully', 'success');
+        loadImages();
+        if (onRefresh) onRefresh();
+        handleCloseModal();
+      } else {
+        emitTopRightToast(result.error || 'Failed to update image', 'error');
+      }
+    } catch (error) {
+      console.error('Update error:', error);
+      emitTopRightToast('Failed to update image', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleGenerateAltText = async () => {
+    if (!selectedImage) return;
+
+    setGeneratingAltText(true);
+    try {
+      const response = await fetch(`${getBaseUrl()}/api/generate-alt-text`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl: selectedImage.url,
+        }),
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setEditingAltText(result.data.altText);
+        emitTopRightToast('Alt text generated!', 'success');
+      } else {
+        emitTopRightToast(result.error || 'Failed to generate alt text', 'error');
+      }
+    } catch (error) {
+      console.error('Generate alt text error:', error);
+      emitTopRightToast('Failed to generate alt text', 'error');
+    } finally {
+      setGeneratingAltText(false);
+    }
+  };
+
+  const handleCopyAltText = () => {
+    navigator.clipboard.writeText(editingAltText);
+    emitTopRightToast('Alt text copied to clipboard!', 'success');
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  };
+
   const filteredImages = images.filter(img => {
     const matchesSearch = search === '' || 
       img.filename.toLowerCase().includes(search.toLowerCase()) ||
@@ -184,9 +274,10 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
           {filteredImages.map((image) => (
             <div
               key={image.id}
-              className={`border rounded-lg overflow-hidden bg-white ${
+              className={`border rounded-lg overflow-hidden bg-white cursor-pointer hover:shadow-lg transition-shadow ${
                 viewMode === 'grid' ? '' : 'flex'
               }`}
+              onClick={() => handleImageClick(image)}
             >
               <div className={viewMode === 'grid' ? 'relative' : 'w-32 h-32 flex-shrink-0'}>
                 <img
@@ -219,19 +310,32 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
                   </div>
                 </div>
                 <p className="text-xs text-gray-600 mb-2 line-clamp-2">{image.altText}</p>
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleDownload(image)}
+                    title="Download image"
                   >
                     <Download className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(image.altText);
+                      emitTopRightToast('Alt text copied to clipboard!', 'success');
+                    }}
+                    title="Copy alt text to clipboard"
+                  >
+                    <Copy className="w-4 h-4" />
                   </Button>
                   {image.quality === 'poor' && (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleUpscale(image.id)}
+                      title="Upscale image"
                     >
                       <Maximize2 className="w-4 h-4" />
                       Upscale
@@ -241,6 +345,7 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleDelete(image.id)}
+                    title="Delete image"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -248,6 +353,152 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Image Detail Modal */}
+      {selectedImage && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" onClick={handleCloseModal}>
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            {/* Backdrop */}
+            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={handleCloseModal} />
+
+            {/* Modal */}
+            <div 
+              className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-2xl font-bold text-gray-900">Image Details</h3>
+                  <button
+                    onClick={handleCloseModal}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Image Preview */}
+                  <div>
+                    <img
+                      src={selectedImage.url}
+                      alt={selectedImage.altText}
+                      className="w-full rounded-lg border border-gray-200"
+                    />
+                    <div className="mt-4 space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Dimensions:</span>
+                        <span className="font-medium">{selectedImage.width}x{selectedImage.height}px</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">File Size:</span>
+                        <span className="font-medium">{formatFileSize(selectedImage.fileSize)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Quality:</span>
+                        <span className={`font-medium ${selectedImage.quality === 'high' ? 'text-green-600' : 'text-orange-600'}`}>
+                          {selectedImage.quality === 'high' ? 'High' : 'Low (needs upscale)'}
+                        </span>
+                      </div>
+                      {selectedImage.mimeType && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Type:</span>
+                          <span className="font-medium">{selectedImage.mimeType}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Edit Form */}
+                  <div className="space-y-4">
+                    {/* Filename */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Filename
+                      </label>
+                      <Input
+                        value={editingFilename}
+                        onChange={(e) => setEditingFilename(e.target.value)}
+                        placeholder="Enter filename"
+                      />
+                    </div>
+
+                    {/* Alt Text */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Alt Text
+                      </label>
+                      <Textarea
+                        value={editingAltText}
+                        onChange={(e) => setEditingAltText(e.target.value)}
+                        placeholder="Enter alt text"
+                        rows={4}
+                        maxLength={250}
+                      />
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-xs text-gray-500">
+                          {editingAltText.length}/250 characters
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleGenerateAltText}
+                            disabled={generatingAltText}
+                          >
+                            {generatingAltText ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Wand2 className="w-4 h-4" />
+                            )}
+                            Generate
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleCopyAltText}
+                          >
+                            <Copy className="w-4 h-4" />
+                            Copy
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2 pt-4">
+                      <Button
+                        onClick={handleSaveChanges}
+                        disabled={saving}
+                        className="flex-1"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Save Changes
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={handleCloseModal}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
