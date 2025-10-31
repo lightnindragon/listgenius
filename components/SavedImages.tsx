@@ -376,31 +376,37 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
 
       {/* Image Detail Modal */}
       {selectedImage && (
-        <div className="fixed inset-0 z-50 overflow-y-auto" onClick={handleCloseModal}>
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            {/* Backdrop */}
-            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={handleCloseModal} />
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+          onClick={handleCloseModal}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col min-h-[400px]"
+            onClick={(e) => e.stopPropagation()}
+            style={{ backgroundColor: 'white' }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white" style={{ backgroundColor: 'white' }}>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900" style={{ color: '#111827' }}>Image Details</h2>
+                <p className="text-sm text-gray-600 mt-1" style={{ color: '#4B5563' }}>
+                  View and edit image information, alt text, and metadata.
+                </p>
+              </div>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                type="button"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
 
-            {/* Modal */}
-            <div 
-              className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-2xl font-bold text-gray-900">Image Details</h3>
-                  <button
-                    onClick={handleCloseModal}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Image Preview */}
-                  <div>
+            {/* Content */}
+            <div className="p-6 overflow-y-auto flex-1" style={{ backgroundColor: 'white', color: '#111827' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Image Preview */}
+                <div>
                     <img
                       src={selectedImage.url}
                       alt={selectedImage.altText}
