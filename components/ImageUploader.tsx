@@ -68,28 +68,15 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
 
-    // Check individual file sizes (max 4MB per file to avoid Vercel 413 errors)
-    const maxFileSize = 4 * 1024 * 1024; // 4MB max per file (Vercel limit is ~4.5MB)
+    // Check file size (max 100MB per file - reasonable limit, can be increased)
+    const maxFileSize = 100 * 1024 * 1024; // 100MB max per file (can handle large 4000x4000 images)
     const oversizedFiles = imageFiles.filter(file => file.size > maxFileSize);
     
     if (oversizedFiles.length > 0) {
       const fileNames = oversizedFiles.map(f => f.name).join(', ');
       const maxMB = (maxFileSize / 1024 / 1024).toFixed(0);
       emitTopRightToast(
-        `${oversizedFiles.length} file(s) exceed ${maxMB}MB limit: ${fileNames.substring(0, 50)}... Please compress or resize these images before uploading.`,
-        'error'
-      );
-      return;
-    }
-
-    // Check total size for batch operations (even though we upload sequentially)
-    const maxTotalSize = 4 * 1024 * 1024; // 4MB total limit
-    const totalSize = [...files, ...imageFiles].reduce((sum, file) => sum + file.size, 0);
-    
-    if (totalSize > maxTotalSize) {
-      const totalMB = (totalSize / 1024 / 1024).toFixed(2);
-      emitTopRightToast(
-        `Total file size (${totalMB}MB) exceeds limit. Please upload fewer images at once or compress them.`,
+        `${oversizedFiles.length} file(s) exceed ${maxMB}MB limit: ${fileNames.substring(0, 50)}... Please compress these images before uploading.`,
         'error'
       );
       return;
@@ -116,15 +103,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
 
-    // Check individual file sizes before upload (must be under 4MB each)
-    const maxFileSize = 4 * 1024 * 1024; // 4MB max per file
+    // Check file size limit (100MB max per file)
+    const maxFileSize = 100 * 1024 * 1024; // 100MB max per file
     const oversizedFiles = files.filter(file => file.size > maxFileSize);
     
     if (oversizedFiles.length > 0) {
-      const fileNames = oversizedFiles.map(f => f.name).join(', ');
       const fileSizes = oversizedFiles.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)}MB)`).join(', ');
       emitTopRightToast(
-        `Some files are too large (>4MB): ${fileSizes.substring(0, 100)}... Please compress or resize these images before uploading.`,
+        `Some files are too large (>100MB): ${fileSizes.substring(0, 100)}... Please compress these images.`,
         'error'
       );
       return;
@@ -133,7 +119,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     setUploading(true);
     
     try {
-      // Upload images sequentially to avoid payload size limits
+      // Upload images sequentially using direct Vercel Blob upload
       const uploadedImages: UploadedImage[] = [];
       let successCount = 0;
       let failedCount = 0;
@@ -141,38 +127,73 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         try {
-          const formData = new FormData();
-          formData.append('images', file);
-
-          const response = await fetch(`${getBaseUrl()}/api/images/upload`, {
-            method: 'POST',
-            body: formData,
+          // Upload directly using Vercel Blob client with multipart support
+          // This bypasses serverless function payload limits
+          const { upload } = await import('@vercel/blob/client');
+          
+          const blob = await upload(file.name, file, {
+            access: 'public',
+            handleUploadUrl: `${getBaseUrl()}/api/images/upload-url`,
+            multipart: true, // Enable multipart for large files
           });
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            let errorMessage = `Failed to upload ${file.name} (${response.status})`;
+          const blobUrl = blob.url;
+          const blobKey = blob.pathname;
+
+          // Get image dimensions from the file
+          const dimensions = await new Promise<{width: number, height: number}>((resolve) => {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+              resolve({ width: img.width, height: img.height });
+              URL.revokeObjectURL(url);
+            };
+            img.onerror = () => resolve({ width: 0, height: 0 });
+            img.src = url;
+          });
+
+          // Step 3: Complete the upload by processing metadata (AI generation, moderation, etc.)
+          const completeResponse = await fetch(`${getBaseUrl()}/api/images/complete`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              blobUrl,
+              blobKey,
+              originalFilename: file.name,
+              width: dimensions.width,
+              height: dimensions.height,
+              fileSize: file.size,
+              mimeType: file.type,
+            }),
+          });
+
+          if (!completeResponse.ok) {
+            const errorText = await completeResponse.text();
+            let errorMessage = `Failed to process ${file.name}`;
             try {
               const errorJson = JSON.parse(errorText);
               errorMessage = errorJson.error || errorMessage;
             } catch (e) {
               errorMessage = errorText || errorMessage;
             }
-            console.error(`Upload failed for ${file.name}:`, response.status, errorMessage);
+            console.error(`Processing failed for ${file.name}:`, errorMessage);
             failedCount++;
             continue;
           }
 
-          const result = await response.json();
+          const result = await completeResponse.json();
 
-          if (result.success && result.data.images && result.data.images.length > 0) {
-            uploadedImages.push(...result.data.images);
+          if (result.success && result.data) {
+            uploadedImages.push(result.data);
             successCount++;
           } else {
             failedCount++;
           }
         } catch (error) {
           console.error(`Upload error for ${file.name}:`, error);
+          emitTopRightToast(`Failed to upload ${file.name}: ${(error as Error).message}`, 'error');
           failedCount++;
         }
       }
@@ -187,7 +208,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           onUploadSuccess(uploadedImages);
         }
       } else {
-        emitTopRightToast('Failed to upload all images. Please try uploading fewer images at once.', 'error');
+        emitTopRightToast('Failed to upload all images. Please try again.', 'error');
       }
     } catch (error) {
       console.error('Upload error:', error);
@@ -235,7 +256,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           Select Images
         </Button>
         <p className="text-xs text-gray-400 mt-4">
-          Maximum {maxImages} images • JPEG, PNG, WebP, GIF • Max 4MB per file
+          Maximum {maxImages} images • JPEG, PNG, WebP, GIF • Max 100MB per file
         </p>
       </div>
 
@@ -299,12 +320,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         <h4 className="font-semibold text-blue-900 mb-2">About Image Uploader</h4>
         <ul className="text-sm text-blue-800 space-y-1">
           <li>• Upload up to {maxImages} images at once</li>
-          <li>• Maximum 4MB per file (larger files will be rejected)</li>
+          <li>• Maximum 100MB per file (supports large 4000x4000 images)</li>
+          <li>• Direct multipart upload - bypasses server limits</li>
           <li>• AI automatically generates SEO-friendly filenames and alt text</li>
           <li>• Images are checked for quality (Etsy prefers 2000x2000px or higher)</li>
           <li>• Images are automatically deleted after 24 hours</li>
           <li>• Inappropriate content is automatically detected and blocked</li>
-          <li className="font-semibold text-orange-700">• Tip: Compress large images before uploading for best results</li>
         </ul>
       </div>
     </div>
