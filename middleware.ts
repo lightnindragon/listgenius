@@ -9,6 +9,7 @@ const isProtectedRoute = createRouteMatcher([
   '/bulk(.*)',
   '/api/generate(.*)',
   '/api/etsy(.*)',
+  '/api/images(.*)',
   '/api/stripe/checkout(.*)',
   '/api/stripe/portal(.*)',
   '/adm1n796(.*)'
