@@ -599,33 +599,59 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     
     setProcessingImage('bulk');
     try {
+      // Create an AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      
       const response = await fetch(`${getBaseUrl()}/api/images/export`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           imageIds: Array.from(selectedImages),
         }),
+        signal: controller.signal,
       });
       
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `images-export-${Date.now()}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        
-        emitTopRightToast(`Exported ${selectedImages.size} image(s)`, 'success');
-        setSelectedImages(new Set());
-        setBulkOperation(null);
+        // Check if response is actually a ZIP file
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/zip')) {
+          const blob = await response.blob();
+          
+          if (blob.size === 0) {
+            throw new Error('Downloaded ZIP file is empty');
+          }
+          
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `images-export-${Date.now()}.zip`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          
+          emitTopRightToast(`Exported ${selectedImages.size} image(s)`, 'success');
+          setSelectedImages(new Set());
+          setBulkOperation(null);
+        } else {
+          // Try to parse as JSON error response
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.error || 'Server returned invalid response');
+        }
       } else {
-        emitTopRightToast('Failed to export images', 'error');
+        // Try to get error message from response
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to export images');
       }
-    } catch (error) {
-      emitTopRightToast('Failed to export images', 'error');
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        emitTopRightToast('Export timed out. Please try with fewer images.', 'error');
+      } else {
+        emitTopRightToast(error.message || 'Failed to export images', 'error');
+      }
     } finally {
       setProcessingImage(null);
     }
@@ -1105,13 +1131,109 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setOptimizingImage(previewImage);
-                    setOptimizeForm({
-                      width: previewImage.width.toString(),
-                      height: previewImage.height.toString(),
-                      format: previewImage.mimeType.includes('png') ? 'png' : previewImage.mimeType.includes('webp') ? 'webp' : 'jpeg',
-                      quality: 85,
-                    });
+                  setOptimizingImage(previewImage);
+                  
+                  // Set initial dimensions ensuring they meet constraints:
+                  // - Minimum: 2000px on both dimensions
+                  // - Maximum: 4000px on both dimensions
+                  // - Maintain aspect ratio
+                  let initialWidth = previewImage.width;
+                  let initialHeight = previewImage.height;
+                  
+                  // Calculate scale factor to meet minimum requirement (2000px)
+                  const minScaleFactor = Math.max(2000 / initialWidth, 2000 / initialHeight);
+                  
+                  // Calculate scale factor to respect maximum (4000px)
+                  const maxScaleFactor = Math.min(4000 / initialWidth, 4000 / initialHeight);
+                  
+                  // Use the appropriate scale factor
+                  let scaleFactor = minScaleFactor;
+                  
+                  // If scaling to meet minimum would exceed maximum, we need to find a balance
+                  if (minScaleFactor > maxScaleFactor) {
+                    // We can't satisfy both constraints perfectly - prioritize maximum constraint
+                    // but this means one dimension will be less than 2000px, so we'll clamp it
+                    scaleFactor = maxScaleFactor;
+                    initialWidth = Math.round(initialWidth * scaleFactor);
+                    initialHeight = Math.round(initialHeight * scaleFactor);
+                    
+                    // If scaling to max leaves us below minimum, set to minimum on smaller dimension
+                    if (initialWidth < 2000 || initialHeight < 2000) {
+                      const smallerDimension = Math.min(initialWidth, initialHeight);
+                      const ratio = initialWidth / initialHeight;
+                      if (initialWidth < initialHeight) {
+                        initialWidth = 2000;
+                        initialHeight = Math.round(initialWidth / ratio);
+                      } else {
+                        initialHeight = 2000;
+                        initialWidth = Math.round(initialHeight * ratio);
+                      }
+                      
+                      // Re-check maximum constraint after minimum adjustment
+                      if (initialWidth > 4000) {
+                        const heightRatio = initialHeight / initialWidth;
+                        initialWidth = 4000;
+                        initialHeight = Math.round(initialWidth * heightRatio);
+                      }
+                      if (initialHeight > 4000) {
+                        const widthRatio = initialWidth / initialHeight;
+                        initialHeight = 4000;
+                        initialWidth = Math.round(initialHeight * widthRatio);
+                      }
+                    }
+                  } else {
+                    // Can satisfy minimum without exceeding maximum
+                    initialWidth = Math.round(initialWidth * scaleFactor);
+                    initialHeight = Math.round(initialHeight * scaleFactor);
+                    
+                    // Final check to ensure we didn't exceed maximum
+                    if (initialWidth > 4000 || initialHeight > 4000) {
+                      const constraintScaleFactor = Math.min(4000 / initialWidth, 4000 / initialHeight);
+                      initialWidth = Math.round(initialWidth * constraintScaleFactor);
+                      initialHeight = Math.round(initialHeight * constraintScaleFactor);
+                    }
+                  }
+                  
+                  // Final validation: ensure both are within bounds
+                  if (initialWidth < 2000 || initialHeight < 2000 || initialWidth > 4000 || initialHeight > 4000) {
+                    // Fallback: use original dimensions if they're within bounds, otherwise scale appropriately
+                    if (previewImage.width >= 2000 && previewImage.width <= 4000 && 
+                        previewImage.height >= 2000 && previewImage.height <= 4000) {
+                      initialWidth = previewImage.width;
+                      initialHeight = previewImage.height;
+                    } else {
+                      // Scale to fit within constraints while maintaining aspect ratio
+                      const aspectRatio = previewImage.width / previewImage.height;
+                      if (previewImage.width > previewImage.height) {
+                        initialWidth = Math.min(4000, Math.max(2000, previewImage.width));
+                        initialHeight = Math.round(initialWidth / aspectRatio);
+                        if (initialHeight < 2000) {
+                          initialHeight = 2000;
+                          initialWidth = Math.round(initialHeight * aspectRatio);
+                        } else if (initialHeight > 4000) {
+                          initialHeight = 4000;
+                          initialWidth = Math.round(initialHeight * aspectRatio);
+                        }
+                      } else {
+                        initialHeight = Math.min(4000, Math.max(2000, previewImage.height));
+                        initialWidth = Math.round(initialHeight * aspectRatio);
+                        if (initialWidth < 2000) {
+                          initialWidth = 2000;
+                          initialHeight = Math.round(initialWidth / aspectRatio);
+                        } else if (initialWidth > 4000) {
+                          initialWidth = 4000;
+                          initialHeight = Math.round(initialWidth / aspectRatio);
+                        }
+                      }
+                    }
+                  }
+                  
+                  setOptimizeForm({
+                    width: initialWidth.toString(),
+                    height: initialHeight.toString(),
+                    format: previewImage.mimeType.includes('png') ? 'png' : previewImage.mimeType.includes('webp') ? 'webp' : 'jpeg',
+                    quality: 85,
+                  });
                   }}
                 >
                   <Settings2 className="w-4 h-4 mr-2" />
@@ -1252,21 +1374,144 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             </div>
             <div className="p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label="Width (px)"
-                  type="number"
-                  value={optimizeForm.width}
-                  onChange={(e) => setOptimizeForm({ ...optimizeForm, width: e.target.value })}
-                  placeholder="Auto"
-                />
-                <Input
-                  label="Height (px)"
-                  type="number"
-                  value={optimizeForm.height}
-                  onChange={(e) => setOptimizeForm({ ...optimizeForm, height: e.target.value })}
-                  placeholder="Auto"
-                />
+                <div>
+                  <Input
+                    label="Width (px)"
+                    type="number"
+                    min={2000}
+                    max={4000}
+                    value={optimizeForm.width}
+                    onChange={(e) => {
+                      const newWidth = e.target.value;
+                      if (!newWidth) {
+                        setOptimizeForm({ ...optimizeForm, width: '', height: '' });
+                        return;
+                      }
+                      
+                      let width = parseInt(newWidth);
+                      
+                      // Enforce constraints
+                      if (width < 2000) width = 2000;
+                      if (width > 4000) width = 4000;
+                      
+                      // Maintain aspect ratio if height is set, or calculate from original image
+                      let height = optimizeForm.height ? parseInt(optimizeForm.height) : null;
+                      if (!height && optimizingImage) {
+                        const aspectRatio = optimizingImage.width / optimizingImage.height;
+                        height = Math.round(width / aspectRatio);
+                        
+                        // Ensure calculated height also respects constraints
+                        if (height < 2000) {
+                          height = 2000;
+                          width = Math.round(height * aspectRatio);
+                          if (width > 4000) {
+                            width = 4000;
+                            height = Math.round(width / aspectRatio);
+                          }
+                        } else if (height > 4000) {
+                          height = 4000;
+                          width = Math.round(height * aspectRatio);
+                          if (width < 2000) {
+                            width = 2000;
+                            height = Math.round(width / aspectRatio);
+                          }
+                        }
+                      } else if (height) {
+                        // If both are set, recalculate height to maintain ratio
+                        const aspectRatio = optimizingImage ? optimizingImage.width / optimizingImage.height : 1;
+                        height = Math.round(width / aspectRatio);
+                        
+                        // Ensure constraints
+                        if (height < 2000) {
+                          height = 2000;
+                          width = Math.round(height * aspectRatio);
+                        } else if (height > 4000) {
+                          height = 4000;
+                          width = Math.round(height * aspectRatio);
+                        }
+                      }
+                      
+                      setOptimizeForm({
+                        ...optimizeForm,
+                        width: width.toString(),
+                        height: height ? height.toString() : '',
+                      });
+                    }}
+                    placeholder="2000-4000"
+                    helperText="Min: 2000px, Max: 4000px"
+                  />
+                </div>
+                <div>
+                  <Input
+                    label="Height (px)"
+                    type="number"
+                    min={2000}
+                    max={4000}
+                    value={optimizeForm.height}
+                    onChange={(e) => {
+                      const newHeight = e.target.value;
+                      if (!newHeight) {
+                        setOptimizeForm({ ...optimizeForm, width: '', height: '' });
+                        return;
+                      }
+                      
+                      let height = parseInt(newHeight);
+                      
+                      // Enforce constraints
+                      if (height < 2000) height = 2000;
+                      if (height > 4000) height = 4000;
+                      
+                      // Maintain aspect ratio if width is set, or calculate from original image
+                      let width = optimizeForm.width ? parseInt(optimizeForm.width) : null;
+                      if (!width && optimizingImage) {
+                        const aspectRatio = optimizingImage.width / optimizingImage.height;
+                        width = Math.round(height * aspectRatio);
+                        
+                        // Ensure calculated width also respects constraints
+                        if (width < 2000) {
+                          width = 2000;
+                          height = Math.round(width / aspectRatio);
+                          if (height > 4000) {
+                            height = 4000;
+                            width = Math.round(height * aspectRatio);
+                          }
+                        } else if (width > 4000) {
+                          width = 4000;
+                          height = Math.round(width / aspectRatio);
+                          if (height < 2000) {
+                            height = 2000;
+                            width = Math.round(height * aspectRatio);
+                          }
+                        }
+                      } else if (width) {
+                        // If both are set, recalculate width to maintain ratio
+                        const aspectRatio = optimizingImage ? optimizingImage.width / optimizingImage.height : 1;
+                        width = Math.round(height * aspectRatio);
+                        
+                        // Ensure constraints
+                        if (width < 2000) {
+                          width = 2000;
+                          height = Math.round(width / aspectRatio);
+                        } else if (width > 4000) {
+                          width = 4000;
+                          height = Math.round(width / aspectRatio);
+                        }
+                      }
+                      
+                      setOptimizeForm({
+                        ...optimizeForm,
+                        width: width ? width.toString() : '',
+                        height: height.toString(),
+                      });
+                    }}
+                    placeholder="2000-4000"
+                    helperText="Min: 2000px, Max: 4000px"
+                  />
+                </div>
               </div>
+              <p className="text-xs text-gray-500">
+                Dimensions will be automatically adjusted to maintain aspect ratio. Both dimensions must be between 2000px and 4000px.
+              </p>
               <div>
                 <label className="block text-sm font-medium mb-2">Format</label>
                 <select
@@ -1304,9 +1549,86 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 </Button>
                 <Button
                   onClick={() => {
+                    // Validate dimensions before optimizing
+                    const width = optimizeForm.width ? parseInt(optimizeForm.width) : undefined;
+                    const height = optimizeForm.height ? parseInt(optimizeForm.height) : undefined;
+                    
+                    if (width && (width < 2000 || width > 4000)) {
+                      emitTopRightToast('Width must be between 2000px and 4000px', 'error');
+                      return;
+                    }
+                    
+                    if (height && (height < 2000 || height > 4000)) {
+                      emitTopRightToast('Height must be between 2000px and 4000px', 'error');
+                      return;
+                    }
+                    
+                    // If only one dimension is set, calculate the other maintaining aspect ratio
+                    let finalWidth = width;
+                    let finalHeight = height;
+                    
+                    if (optimizingImage) {
+                      const aspectRatio = optimizingImage.width / optimizingImage.height;
+                      
+                      if (width && !height) {
+                        finalHeight = Math.round(width / aspectRatio);
+                        // Ensure constraints
+                        if (finalHeight < 2000) {
+                          finalHeight = 2000;
+                          finalWidth = Math.round(finalHeight * aspectRatio);
+                        } else if (finalHeight > 4000) {
+                          finalHeight = 4000;
+                          finalWidth = Math.round(finalHeight * aspectRatio);
+                        }
+                        // Re-check width after adjustment
+                        if (finalWidth > 4000) {
+                          finalWidth = 4000;
+                          finalHeight = Math.round(finalWidth / aspectRatio);
+                        } else if (finalWidth < 2000) {
+                          finalWidth = 2000;
+                          finalHeight = Math.round(finalWidth / aspectRatio);
+                        }
+                      } else if (height && !width) {
+                        finalWidth = Math.round(height * aspectRatio);
+                        // Ensure constraints
+                        if (finalWidth < 2000) {
+                          finalWidth = 2000;
+                          finalHeight = Math.round(finalWidth / aspectRatio);
+                        } else if (finalWidth > 4000) {
+                          finalWidth = 4000;
+                          finalHeight = Math.round(finalWidth / aspectRatio);
+                        }
+                        // Re-check height after adjustment
+                        if (finalHeight > 4000) {
+                          finalHeight = 4000;
+                          finalWidth = Math.round(finalHeight * aspectRatio);
+                        } else if (finalHeight < 2000) {
+                          finalHeight = 2000;
+                          finalWidth = Math.round(finalHeight * aspectRatio);
+                        }
+                      } else if (width && height) {
+                        // Both set - verify they maintain aspect ratio (with small tolerance)
+                        const calculatedHeight = Math.round(width / aspectRatio);
+                        const calculatedWidth = Math.round(height * aspectRatio);
+                        
+                        // If dimensions don't match aspect ratio, use the one that's closer
+                        if (Math.abs(height - calculatedHeight) > Math.abs(width - calculatedWidth)) {
+                          finalHeight = calculatedHeight;
+                        } else {
+                          finalWidth = calculatedWidth;
+                        }
+                        
+                        // Final constraint check
+                        if (finalWidth < 2000) finalWidth = 2000;
+                        if (finalWidth > 4000) finalWidth = 4000;
+                        if (finalHeight < 2000) finalHeight = 2000;
+                        if (finalHeight > 4000) finalHeight = 4000;
+                      }
+                    }
+                    
                     handleOptimize(optimizingImage.id, {
-                      width: optimizeForm.width ? parseInt(optimizeForm.width) : undefined,
-                      height: optimizeForm.height ? parseInt(optimizeForm.height) : undefined,
+                      width: finalWidth,
+                      height: finalHeight,
                       format: optimizeForm.format,
                       quality: optimizeForm.quality,
                     });
