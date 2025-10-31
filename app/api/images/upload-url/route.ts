@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { handleUpload } from '@vercel/blob/client';
+import { generateClientTokenFromReadWriteToken } from '@vercel/blob/client';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
@@ -11,7 +11,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if BLOB_READ_WRITE_TOKEN is configured
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    if (!token) {
       logger.error('BLOB_READ_WRITE_TOKEN not configured', { userId });
       return NextResponse.json(
         { 
@@ -22,32 +23,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Delegate to Vercel Blob helper to generate a short‑lived client token
-    // that the browser will use to upload directly to Blob storage.
-    // NOTE: Do NOT parse request.json() here - handleUpload needs the raw request body
-    return handleUpload({
-      request,
-      onBeforeGenerateToken: async () => {
-        return {
-          allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-          tokenPayload: { userId },
-        };
+    // Parse the request body to get upload details
+    const body = await request.json();
+    const { pathname, multipart, contentType, contentLength } = body;
+
+    // Generate client token directly using the read-write token
+    // This bypasses handleUpload which may have issues with internal token retrieval
+    const clientToken = await generateClientTokenFromReadWriteToken({
+      token,
+      pathname: pathname || `images/${userId}/${Date.now()}-${body.filename || 'image'}`,
+      onUploadCompleted: {
+        callbackUrl: `${request.nextUrl.origin}/api/images/complete`,
+        tokenPayload: JSON.stringify({ userId }),
       },
-      // We do metadata processing separately in /api/images/complete
-      onUploadCompleted: async () => {
-        return;
-      },
+      tokenPayload: { userId },
+      allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+      maximumSizeInBytes: 100 * 1024 * 1024, // 100MB
+      addRandomSuffix: true,
+      cacheControlMaxAge: 86400, // 24 hours
+    });
+
+    logger.info('Client token generated successfully', { userId, pathname: body.pathname });
+
+    // Return the response in the format expected by the client
+    return NextResponse.json({
+      token: clientToken,
     });
   } catch (error: any) {
     logger.error('Failed to generate upload URL', {
       error: error.message,
       stack: error.stack,
+      hasToken: !!process.env.BLOB_READ_WRITE_TOKEN,
+      userId: (await auth()).userId,
     });
     
     return NextResponse.json(
       { 
         error: 'Failed to generate upload URL. Please try again.',
-        code: 'UPLOAD_URL_ERROR'
+        code: 'UPLOAD_URL_ERROR',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
       },
       { status: 500 }
     );
