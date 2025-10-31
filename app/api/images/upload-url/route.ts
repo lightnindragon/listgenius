@@ -22,13 +22,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-
     // Delegate to Vercel Blob helper to generate a short‑lived client token
     // that the browser will use to upload directly to Blob storage.
+    // NOTE: Do NOT parse request.json() here - handleUpload needs the raw request body
     return handleUpload({
       request,
-      body,
       onBeforeGenerateToken: async () => {
         return {
           allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
