@@ -4,7 +4,8 @@ const nextConfig: NextConfig = {
   serverExternalPackages: [
     'adm-zip',
     'fetch-blob',
-    'node-fetch'
+    'node-fetch',
+    'sharp'
   ],
   images: {
     remotePatterns: [

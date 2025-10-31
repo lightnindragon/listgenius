@@ -1,6 +1,5 @@
 {
   "installCommand": "npm install --include=optional",
-  "buildCommand": "npm run build",
   "crons": [
     {
       "path": "/api/cron/refresh-suggestions",
