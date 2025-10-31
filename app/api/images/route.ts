@@ -5,6 +5,9 @@ import { logger } from '@/lib/logger';
 
 const prisma = new PrismaClient();
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
@@ -126,10 +129,28 @@ export async function GET(request: NextRequest) {
     logger.error('Failed to list images', {
       error: error.message,
       stack: error.stack,
+      code: error.code,
+      meta: error.meta,
     });
 
+    // Check if it's a database/table not found error
+    if (error.code === 'P2021' || error.code === 'P1001' || error.message?.includes('does not exist')) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Database table not found. Please run database migrations.',
+          details: error.message 
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { success: false, error: 'Failed to retrieve images' },
+      { 
+        success: false, 
+        error: 'Failed to retrieve images',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     );
   } finally {
