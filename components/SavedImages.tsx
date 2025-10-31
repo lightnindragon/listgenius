@@ -375,9 +375,10 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
       )}
 
       {/* Image Detail Modal */}
-      {selectedImage && (
+      {selectedImage ? (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          style={{ zIndex: 9999 }}
           onClick={handleCloseModal}
         >
           <div 
@@ -415,7 +416,7 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
                     <div className="mt-4 space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Dimensions:</span>
-                        <span className="font-medium">{selectedImage.width}x{selectedImage.height}px</span>
+                        <span className="font-medium">{selectedImage.width}×{selectedImage.height}px</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">File Size:</span>
@@ -436,107 +437,106 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
                     </div>
                   </div>
 
-                  {/* Edit Form */}
-                  <div className="space-y-4">
-                    {/* Filename */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Filename
-                      </label>
-                      <Input
-                        value={editingFilename}
-                        onChange={(e) => setEditingFilename(e.target.value)}
-                        placeholder="Enter filename"
-                      />
-                    </div>
+                {/* Edit Form */}
+                <div className="space-y-4">
+                  {/* Filename */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Filename
+                    </label>
+                    <Input
+                      value={editingFilename}
+                      onChange={(e) => setEditingFilename(e.target.value)}
+                      placeholder="Enter filename"
+                    />
+                  </div>
 
-                    {/* Alt Text */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Alt Text <span className="text-gray-500 text-xs">(100-500 characters)</span>
-                      </label>
-                      <Textarea
-                        value={editingAltText}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          // Allow up to 500 characters
-                          if (value.length <= 500) {
-                            setEditingAltText(value);
-                          }
-                        }}
-                        placeholder="Enter descriptive alt text (100-500 characters)"
-                        rows={4}
-                        maxLength={500}
-                      />
-                      <div className="flex items-center justify-between mt-1">
-                        <p className={`text-xs ${
-                          editingAltText.length < 100 
-                            ? 'text-orange-600' 
-                            : editingAltText.length > 500 
-                            ? 'text-red-600' 
-                            : 'text-gray-500'
-                        }`}>
-                          {editingAltText.length}/500 characters {editingAltText.length < 100 && '(Minimum 100 required)'}
-                        </p>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleGenerateAltText}
-                            disabled={generatingAltText}
-                          >
-                            {generatingAltText ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Wand2 className="w-4 h-4" />
-                            )}
-                            Generate
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleCopyAltText}
-                          >
-                            <Copy className="w-4 h-4" />
-                            Copy
-                          </Button>
-                        </div>
+                  {/* Alt Text */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Alt Text <span className="text-gray-500 text-xs">(100-500 characters)</span>
+                    </label>
+                    <Textarea
+                      value={editingAltText}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Allow up to 500 characters
+                        if (value.length <= 500) {
+                          setEditingAltText(value);
+                        }
+                      }}
+                      placeholder="Enter descriptive alt text (100-500 characters)"
+                      rows={4}
+                      maxLength={500}
+                    />
+                    <div className="flex items-center justify-between mt-1">
+                      <p className={`text-xs ${
+                        editingAltText.length < 100 
+                          ? 'text-orange-600' 
+                          : editingAltText.length > 500 
+                          ? 'text-red-600' 
+                          : 'text-gray-500'
+                      }`}>
+                        {editingAltText.length}/500 characters {editingAltText.length < 100 && '(Minimum 100 required)'}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleGenerateAltText}
+                          disabled={generatingAltText}
+                        >
+                          {generatingAltText ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Wand2 className="w-4 h-4" />
+                          )}
+                          Generate
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleCopyAltText}
+                        >
+                          <Copy className="w-4 h-4" />
+                          Copy
+                        </Button>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-2 pt-4">
-                      <Button
-                        onClick={handleSaveChanges}
-                        disabled={saving || editingAltText.length < 100 || editingAltText.length > 500}
-                        className="flex-1"
-                      >
-                        {saving ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Save Changes
-                          </>
-                        )}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={handleCloseModal}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-4">
+                    <Button
+                      onClick={handleSaveChanges}
+                      disabled={saving || editingAltText.length < 100 || editingAltText.length > 500}
+                      className="flex-1"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Save Changes
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleCloseModal}
+                    >
+                      Cancel
+                    </Button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
