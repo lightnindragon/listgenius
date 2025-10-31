@@ -14,6 +14,7 @@ export const flags = {
   etsy: process.env.NEXT_PUBLIC_ENABLE_ETSY === 'true',
   savedListings: process.env.NEXT_PUBLIC_ENABLE_SAVED_LISTINGS === 'true',
   developerMode: process.env.NEXT_PUBLIC_DEVELOPER_MODE === 'true',
+  images: process.env.NEXT_PUBLIC_ENABLE_IMAGES === 'true', // Hidden by default until feature is complete
 } as const;
 
 export type FeatureKey = keyof typeof flags;
