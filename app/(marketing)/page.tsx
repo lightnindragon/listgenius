@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
-import { ArrowRight, Check, Star, Zap, Target, Users, BarChart3, Sparkles, TrendingUp, Shield, Clock, Award, Rocket, Heart } from 'lucide-react';
+import { ArrowRight, Check, Star, Zap, Target, Users, BarChart3, Sparkles, TrendingUp, Shield, Clock, Award, Rocket, Heart, Image, Wand2 } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -141,6 +141,22 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">SEO Optimization</h3>
               <p className="text-gray-600 leading-relaxed">Automatically follows Etsy's guidelines and best practices for maximum visibility.</p>
+            </div>
+
+            <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl mb-6 shadow-lg">
+                <Image className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">AI Image Uploader</h3>
+              <p className="text-gray-600 leading-relaxed">Upload, optimize, and upscale product images with AI-generated SEO-friendly filenames and alt text. Quality checking and automatic optimization included.</p>
+            </div>
+
+            <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-xl mb-6 shadow-lg">
+                <Wand2 className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Image Enhancement</h3>
+              <p className="text-gray-600 leading-relaxed">One-click upscaling for low-quality images, compression to reduce file sizes, and format conversion. Perfect for Etsy's image requirements.</p>
             </div>
           </div>
         </Container>

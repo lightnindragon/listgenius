@@ -24,6 +24,7 @@ interface UploadedImage {
   quality: 'poor' | 'high';
   needsUpscale?: boolean;
   expiresAt: string;
+  createdAt: string;
   fileSize: number;
   mimeType: string;
   tags?: string[];
@@ -59,8 +60,19 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   // Filtering/Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [qualityFilter, setQualityFilter] = useState<'all' | 'poor' | 'high'>('all');
+  const [tagFilter, setTagFilter] = useState<string>('');
+  const [dateRangeFilter, setDateRangeFilter] = useState<{from?: string, to?: string}>({});
+  const [fileSizeFilter, setFileSizeFilter] = useState<{min?: number, max?: number}>({});
   const [sortBy, setSortBy] = useState<'createdAt' | 'size' | 'quality' | 'filename'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  
+  // Usage statistics
+  const [usageStats, setUsageStats] = useState<{
+    dailyCount: number;
+    dailyLimit: number | 'unlimited';
+    lifetimeCount: number;
+    plan: string;
+  } | null>(null);
 
   // Modal state
   const [previewImage, setPreviewImage] = useState<UploadedImage | null>(null);
@@ -82,11 +94,50 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   // Processing state
   const [processingImage, setProcessingImage] = useState<string | null>(null);
+  const [bulkOperation, setBulkOperation] = useState<'convert' | 'export' | null>(null);
+  const [duplicateCheckResult, setDuplicateCheckResult] = useState<{
+    hasDuplicates: boolean;
+    duplicates: Array<{id: string; filename: string; createdAt: string}>;
+  } | null>(null);
 
-  // Load images on mount
+  // Load images when filters change
   useEffect(() => {
     loadImages();
-  }, [qualityFilter, sortBy, sortOrder, searchQuery]);
+  }, [qualityFilter, sortBy, sortOrder, searchQuery, tagFilter, dateRangeFilter.from, dateRangeFilter.to, fileSizeFilter.min, fileSizeFilter.max]);
+  
+  // Load stats on mount only (not dependent on filters)
+  useEffect(() => {
+    loadUsageStats();
+  }, []);
+  
+  const loadUsageStats = async () => {
+    try {
+      const response = await fetch(`${getBaseUrl()}/api/user/metadata`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          const plan = result.data.plan || 'free';
+          const dailyCount = result.data.dailyImageUploadCount || 0;
+          const lifetimeCount = result.data.lifetimeImageUploads || 0;
+          
+          // Get limit based on plan
+          let dailyLimit: number | 'unlimited' = 20;
+          if (plan === 'pro') dailyLimit = 1000;
+          else if (plan === 'business') dailyLimit = 4000;
+          else if (plan === 'agency') dailyLimit = 'unlimited';
+          
+          setUsageStats({
+            dailyCount,
+            dailyLimit,
+            lifetimeCount,
+            plan,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load usage stats:', error);
+    }
+  };
 
   const loadImages = async () => {
     setLoadingImages(true);
@@ -105,12 +156,48 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       if (searchQuery) {
         params.append('search', searchQuery);
       }
+      
+      if (tagFilter) {
+        params.append('tags', tagFilter);
+      }
 
       const response = await fetch(`${getBaseUrl()}/api/images?${params}`);
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
-          setUploadedImages(result.data.images || []);
+          let images = result.data.images || [];
+          
+          // Apply client-side filters (date range, file size)
+          if (dateRangeFilter.from || dateRangeFilter.to) {
+            images = images.filter((img: UploadedImage) => {
+              // Note: Using expiresAt as createdAt might not be in response
+              // In production, ensure createdAt is included in API response
+              // Use createdAt if available, otherwise calculate from expiresAt
+              const imgDate = img.createdAt ? new Date(img.createdAt) : (img.expiresAt ? new Date(new Date(img.expiresAt).getTime() - 24 * 60 * 60 * 1000) : new Date());
+              if (dateRangeFilter.from) {
+                const fromDate = new Date(dateRangeFilter.from);
+                fromDate.setHours(0, 0, 0, 0);
+                if (imgDate < fromDate) return false;
+              }
+              if (dateRangeFilter.to) {
+                const toDate = new Date(dateRangeFilter.to);
+                toDate.setHours(23, 59, 59, 999);
+                if (imgDate > toDate) return false;
+              }
+              return true;
+            });
+          }
+          
+          if (fileSizeFilter.min || fileSizeFilter.max) {
+            images = images.filter((img: UploadedImage) => {
+              const sizeMB = img.fileSize / 1024 / 1024;
+              if (fileSizeFilter.min && sizeMB < fileSizeFilter.min) return false;
+              if (fileSizeFilter.max && sizeMB > fileSizeFilter.max) return false;
+              return true;
+            });
+          }
+          
+          setUploadedImages(images);
         }
       }
     } catch (error) {
@@ -267,6 +354,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         );
         setFiles([]);
         loadImages();
+        loadUsageStats(); // Refresh usage stats after upload
         if (onUploadSuccess) {
           onUploadSuccess(uploadedImages);
         }
@@ -474,6 +562,75 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     setSelectedImages(newSelected);
   };
 
+  const handleBulkConvert = async (format: 'jpeg' | 'png' | 'webp', quality: number) => {
+    if (selectedImages.size === 0) return;
+    
+    setProcessingImage('bulk');
+    try {
+      const promises = Array.from(selectedImages).map(id =>
+        fetch(`${getBaseUrl()}/api/images/${id}/optimize`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ format, quality }),
+        })
+      );
+      
+      const results = await Promise.all(promises);
+      const successCount = results.filter(r => r.ok).length;
+      
+      emitTopRightToast(
+        `Converted ${successCount} of ${selectedImages.size} image(s) to ${format.toUpperCase()}`,
+        successCount === selectedImages.size ? 'success' : 'error'
+      );
+      
+      setSelectedImages(new Set());
+      setBulkOperation(null);
+      loadImages();
+      loadUsageStats();
+    } catch (error) {
+      emitTopRightToast('Failed to convert images', 'error');
+    } finally {
+      setProcessingImage(null);
+    }
+  };
+
+  const handleBulkExport = async () => {
+    if (selectedImages.size === 0) return;
+    
+    setProcessingImage('bulk');
+    try {
+      const response = await fetch(`${getBaseUrl()}/api/images/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageIds: Array.from(selectedImages),
+        }),
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `images-export-${Date.now()}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        emitTopRightToast(`Exported ${selectedImages.size} image(s)`, 'success');
+        setSelectedImages(new Set());
+        setBulkOperation(null);
+      } else {
+        emitTopRightToast('Failed to export images', 'error');
+      }
+    } catch (error) {
+      emitTopRightToast('Failed to export images', 'error');
+    } finally {
+      setProcessingImage(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Upload Area */}
@@ -571,21 +728,77 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         </div>
       )}
 
+      {/* Usage Statistics */}
+      {usageStats && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-1">Upload Usage</h4>
+              <div className="flex items-center gap-6 text-sm">
+                <div>
+                  <span className="text-gray-600">Today: </span>
+                  <span className="font-semibold text-gray-900">
+                    {usageStats.dailyCount} / {usageStats.dailyLimit === 'unlimited' ? '∞' : usageStats.dailyLimit}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Lifetime: </span>
+                  <span className="font-semibold text-gray-900">{usageStats.lifetimeCount.toLocaleString()}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Plan: </span>
+                  <span className="font-semibold text-gray-900 capitalize">{usageStats.plan}</span>
+                </div>
+              </div>
+            </div>
+            {usageStats.dailyLimit !== 'unlimited' && usageStats.dailyCount >= usageStats.dailyLimit && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.location.href = '/app/upgrade'}
+              >
+                Upgrade Plan
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Gallery Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Image Library</h3>
           <div className="flex items-center gap-2">
             {selectedImages.size > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleBulkDelete}
-                className="flex items-center gap-2"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete ({selectedImages.size})
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setBulkOperation('convert')}
+                  className="flex items-center gap-2"
+                >
+                  <Settings2 className="w-4 h-4" />
+                  Convert Format ({selectedImages.size})
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setBulkOperation('export')}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Export ({selectedImages.size})
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete ({selectedImages.size})
+                </Button>
+              </>
             )}
             <Button
               variant="outline"
@@ -599,41 +812,105 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         </div>
 
         {/* Filters and Search */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              placeholder="Search images..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
-            />
+        <div className="space-y-3">
+          {/* Basic Filters */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Search images..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <select
+              value={qualityFilter}
+              onChange={(e) => setQualityFilter(e.target.value as any)}
+              className="px-3 py-2 border rounded-lg"
+            >
+              <option value="all">All Quality</option>
+              <option value="high">High Quality</option>
+              <option value="poor">Poor Quality</option>
+            </select>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-3 py-2 border rounded-lg"
+            >
+              <option value="createdAt">Date</option>
+              <option value="filename">Filename</option>
+              <option value="size">Size</option>
+              <option value="quality">Quality</option>
+            </select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            >
+              {sortOrder === 'asc' ? '↑' : '↓'}
+            </Button>
           </div>
-          <select
-            value={qualityFilter}
-            onChange={(e) => setQualityFilter(e.target.value as any)}
-            className="px-3 py-2 border rounded-lg"
-          >
-            <option value="all">All Quality</option>
-            <option value="high">High Quality</option>
-            <option value="poor">Poor Quality</option>
-          </select>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 border rounded-lg"
-          >
-            <option value="createdAt">Date</option>
-            <option value="filename">Filename</option>
-            <option value="size">Size</option>
-            <option value="quality">Quality</option>
-          </select>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-          >
-            {sortOrder === 'asc' ? '↑' : '↓'}
-          </Button>
+          
+          {/* Advanced Filters */}
+          <details className="group">
+            <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-900 flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Advanced Filters
+            </summary>
+            <div className="mt-3 p-4 bg-gray-50 rounded-lg space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
+                  <Input
+                    placeholder="e.g. product, lifestyle"
+                    value={tagFilter}
+                    onChange={(e) => setTagFilter(e.target.value)}
+                    className="w-full text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Date From</label>
+                  <Input
+                    type="date"
+                    value={dateRangeFilter.from || ''}
+                    onChange={(e) => setDateRangeFilter({...dateRangeFilter, from: e.target.value})}
+                    className="w-full text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Date To</label>
+                  <Input
+                    type="date"
+                    value={dateRangeFilter.to || ''}
+                    onChange={(e) => setDateRangeFilter({...dateRangeFilter, to: e.target.value})}
+                    className="w-full text-sm"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Min Size (MB)</label>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={fileSizeFilter.min || ''}
+                    onChange={(e) => setFileSizeFilter({...fileSizeFilter, min: e.target.value ? parseFloat(e.target.value) : undefined})}
+                    className="w-full text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Max Size (MB)</label>
+                  <Input
+                    type="number"
+                    placeholder="∞"
+                    value={fileSizeFilter.max || ''}
+                    onChange={(e) => setFileSizeFilter({...fileSizeFilter, max: e.target.value ? parseFloat(e.target.value) : undefined})}
+                    className="w-full text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+          </details>
         </div>
 
         {/* Image Grid */}
@@ -840,8 +1117,33 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                   <Settings2 className="w-4 h-4 mr-2" />
                   Optimize
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(`${getBaseUrl()}/api/images/check-duplicates`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ imageId: previewImage.id }),
+                      });
+                      const result = await response.json();
+                      if (result.success) {
+                        setDuplicateCheckResult(result.data);
+                      }
+                    } catch (error) {
+                      emitTopRightToast('Failed to check duplicates', 'error');
+                    }
+                  }}
+                >
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  Check Duplicates
+                </Button>
                 <button
-                  onClick={() => setPreviewImage(null)}
+                  onClick={() => {
+                    setPreviewImage(null);
+                    setDuplicateCheckResult(null);
+                  }}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <X className="w-6 h-6" />
@@ -893,6 +1195,41 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                       </span>
                     ))}
                   </div>
+                </div>
+              )}
+              
+              {/* Duplicate Check Results */}
+              {duplicateCheckResult && (
+                <div className={`mt-4 p-4 rounded-lg border ${
+                  duplicateCheckResult.hasDuplicates 
+                    ? 'bg-yellow-50 border-yellow-200' 
+                    : 'bg-green-50 border-green-200'
+                }`}>
+                  <p className="font-semibold mb-2 flex items-center gap-2">
+                    {duplicateCheckResult.hasDuplicates ? (
+                      <>
+                        <AlertCircle className="w-5 h-5 text-yellow-600" />
+                        <span className="text-yellow-900">Duplicates Found</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        <span className="text-green-900">No Duplicates</span>
+                      </>
+                    )}
+                  </p>
+                  {duplicateCheckResult.hasDuplicates && duplicateCheckResult.duplicates.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm text-yellow-800">
+                        Found {duplicateCheckResult.duplicates.length} duplicate image(s):
+                      </p>
+                      <ul className="list-disc list-inside space-y-1 text-sm text-yellow-800">
+                        {duplicateCheckResult.duplicates.map((dup) => (
+                          <li key={dup.id}>{dup.filename} (uploaded {new Date(dup.createdAt).toLocaleDateString()})</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1056,6 +1393,117 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         </div>
       )}
 
+      {/* Bulk Convert Modal */}
+      {bulkOperation === 'convert' && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Bulk Format Conversion</h3>
+              <button
+                onClick={() => setBulkOperation(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Format</label>
+                <select
+                  value={optimizeForm.format}
+                  onChange={(e) => setOptimizeForm({ ...optimizeForm, format: e.target.value as any })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                >
+                  <option value="jpeg">JPEG</option>
+                  <option value="png">PNG</option>
+                  <option value="webp">WebP</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Quality: {optimizeForm.quality}%
+                </label>
+                <input
+                  type="range"
+                  min="50"
+                  max="100"
+                  value={optimizeForm.quality}
+                  onChange={(e) => setOptimizeForm({ ...optimizeForm, quality: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setBulkOperation(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => handleBulkConvert(optimizeForm.format, optimizeForm.quality)}
+                  disabled={processingImage === 'bulk'}
+                >
+                  {processingImage === 'bulk' ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Converting...
+                    </>
+                  ) : (
+                    `Convert ${selectedImages.size} Images`
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Export Modal */}
+      {bulkOperation === 'export' && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Export Images</h3>
+              <button
+                onClick={() => setBulkOperation(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                This will download {selectedImages.size} selected image(s) as a ZIP file.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setBulkOperation(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleBulkExport}
+                  disabled={processingImage === 'bulk'}
+                >
+                  {processingImage === 'bulk' ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Preparing...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4 mr-2" />
+                      Export ZIP
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Info Box */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 className="font-semibold text-blue-900 mb-2">About Image Uploader</h4>
@@ -1068,7 +1516,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           <li>• Upscale low-quality images with one click</li>
           <li>• Edit metadata: filename, alt text, tags, category</li>
           <li>• Filter, search, and sort your image library</li>
-          <li>• Bulk operations: select and delete multiple images</li>
+          <li>• Advanced filters: tags, date range, file size</li>
+          <li>• Bulk operations: convert format, export ZIP, delete multiple images</li>
+          <li>• Usage statistics: track daily and lifetime uploads</li>
+          <li>• Duplicate detection: identify duplicate images</li>
           <li>• Images are automatically deleted after 24 hours</li>
           <li>• Inappropriate content is automatically detected and blocked</li>
         </ul>

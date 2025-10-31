@@ -112,7 +112,7 @@ export const navigationCategories: NavigationCategory[] = [
         name: 'Images',
         href: '/app/images',
         icon: Images,
-        featureFlag: 'images', // Hidden until feature is complete
+        // Feature is complete - always visible
       },
     ],
   },

@@ -344,6 +344,34 @@ export default function PricingPage() {
                   <td className="text-center py-4 px-6 text-red-500">❌</td>
                   <td className="text-center py-4 px-6 text-red-500">❌</td>
                 </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-6 text-gray-900">AI Image Uploader</td>
+                  <td className="text-center py-4 px-6 text-gray-600">20/day</td>
+                  <td className="text-center py-4 px-6 text-green-600">1,000/day</td>
+                  <td className="text-center py-4 px-6 text-green-600">4,000/day</td>
+                  <td className="text-center py-4 px-6 text-green-600">Unlimited</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-6 text-gray-900">Image Optimization</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-6 text-gray-900">Image Upscaling</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-6 text-gray-900">Bulk Image Operations</td>
+                  <td className="text-center py-4 px-6 text-red-500">❌</td>
+                  <td className="text-center py-4 px-6 text-red-500">❌</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                  <td className="text-center py-4 px-6 text-green-600">✅</td>
+                </tr>
                 <tr>
                   <td className="py-4 px-6 text-gray-900">Support</td>
                   <td className="text-center py-4 px-6 text-gray-600">Community</td>
