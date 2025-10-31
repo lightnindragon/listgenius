@@ -8,6 +8,10 @@ import { logger } from '@/lib/logger';
 
 const prisma = new PrismaClient();
 
+// Ensure this route is not statically generated
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 /**
  * POST - Upscale image to meet 2000px minimum requirement
  */

@@ -41,6 +41,7 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
   const [saving, setSaving] = useState(false);
   const [generatingAltText, setGeneratingAltText] = useState(false);
   const [copiedStates, setCopiedStates] = useState<Set<string>>(new Set());
+  const [upscalingImages, setUpscalingImages] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadImages();
@@ -106,23 +107,66 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
     }
   };
 
-  const handleUpscale = async (id: string) => {
+  const handleUpscale = async (id: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation();
+    }
+    
+    // Prevent double-clicking
+    if (upscalingImages.has(id)) {
+      return;
+    }
+
+    setUpscalingImages(prev => new Set(prev).add(id));
+    
     try {
       const response = await fetch(`${getBaseUrl()}/api/images/${id}/upscale`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
+
+      // Check if response is OK and has JSON content
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        // Handle non-JSON responses (like HTML error pages)
+        const text = await response.text();
+        console.error('Non-JSON response from upscale API:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: text.substring(0, 200),
+        });
+        
+        if (response.status === 405) {
+          emitTopRightToast('Upscale endpoint not found. Please check server configuration.', 'error');
+        } else {
+          emitTopRightToast(`Upscale failed: ${response.statusText} (${response.status})`, 'error');
+        }
+        return;
+      }
 
       const result = await response.json();
       if (response.ok && result.success) {
         emitTopRightToast('Image upscaled successfully', 'success');
-        loadImages();
+        await loadImages();
         if (onRefresh) onRefresh();
       } else {
         emitTopRightToast(result.error || 'Failed to upscale image', 'error');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upscale error:', error);
-      emitTopRightToast('Failed to upscale image', 'error');
+      if (error.message && error.message.includes('JSON')) {
+        emitTopRightToast('Invalid response from server. The upscale endpoint may not be configured correctly.', 'error');
+      } else {
+        emitTopRightToast(`Failed to upscale image: ${error.message || 'Unknown error'}`, 'error');
+      }
+    } finally {
+      setUpscalingImages(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -352,11 +396,21 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleUpscale(image.id)}
+                      onClick={(e) => handleUpscale(image.id, e)}
+                      disabled={upscalingImages.has(image.id)}
                       title="Upscale image"
                     >
-                      <Maximize2 className="w-4 h-4" />
-                      Upscale
+                      {upscalingImages.has(image.id) ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="ml-1">Upscaling...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Maximize2 className="w-4 h-4" />
+                          Upscale
+                        </>
+                      )}
                     </Button>
                   )}
                   <Button
