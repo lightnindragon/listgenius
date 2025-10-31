@@ -24,14 +24,35 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse the request body to get upload details
+    // The client sends: { type: 'blob.generate-client-token', payload: { pathname, callbackUrl, multipart, clientPayload } }
     const body = await request.json();
-    const { pathname, multipart, contentType, contentLength } = body;
+    
+    // Log the request body structure for debugging
+    logger.info('Upload URL request received', { 
+      userId, 
+      bodyType: body.type,
+      hasPayload: !!body.payload,
+      payloadPathname: body.payload?.pathname,
+      directPathname: body.pathname,
+      fullBody: JSON.stringify(body).substring(0, 200)
+    });
+    
+    const requestPathname = body.payload?.pathname || body.pathname;
+    
+    if (!requestPathname) {
+      logger.error('Missing pathname in request', { userId, body: JSON.stringify(body) });
+      return NextResponse.json(
+        { error: 'Missing pathname in request' },
+        { status: 400 }
+      );
+    }
 
     // Generate client token directly using the read-write token
-    // This bypasses handleUpload which may have issues with internal token retrieval
+    // CRITICAL: Use the EXACT pathname from the client request to avoid pathname mismatch errors
+    // The client passes file.name as pathname, and we must use the same value in the token
     const clientToken = await generateClientTokenFromReadWriteToken({
       token,
-      pathname: pathname || `images/${userId}/${Date.now()}-${body.filename || 'image'}`,
+      pathname: requestPathname, // Must match exactly what client sends
       onUploadCompleted: {
         callbackUrl: `${request.nextUrl.origin}/api/images/complete`,
         tokenPayload: JSON.stringify({ userId }),
@@ -39,11 +60,11 @@ export async function POST(request: NextRequest) {
       tokenPayload: { userId },
       allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
       maximumSizeInBytes: 100 * 1024 * 1024, // 100MB
-      addRandomSuffix: true,
+      addRandomSuffix: true, // This adds a random suffix, but pathname must still match initially
       cacheControlMaxAge: 86400, // 24 hours
     });
 
-    logger.info('Client token generated successfully', { userId, pathname: body.pathname });
+    logger.info('Client token generated successfully', { userId, pathname: requestPathname });
 
     // Return the response in the format expected by handleUploadUrl
     // The client library expects { type: string, clientToken: string }
