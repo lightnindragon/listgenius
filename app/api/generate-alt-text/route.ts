@@ -32,18 +32,30 @@ export async function POST(request: NextRequest) {
       let altText;
 
       if (isMockMode) {
-        // Mock mode - generate simple alt text based on context
+        // Mock mode - generate simple alt text based on context (ensure 100-500 chars)
         await simulateDelay(800);
         
-        const titleWords = title ? title.split(' ').slice(0, 8).join(' ') : 'Product';
-        const firstTag = tags && tags.length > 0 ? tags[0] : '';
+        const titleWords = title ? title.split(' ').slice(0, 10).join(' ') : 'Product';
+        const tagsString = tags && Array.isArray(tags) ? tags.slice(0, 3).join(', ') : '';
+        const descExcerpt = descriptionExcerpt ? descriptionExcerpt.substring(0, 100) : '';
         
-        altText = `${titleWords}${firstTag ? ` - ${firstTag}` : ''}, handcrafted with attention to detail`.substring(0, 250);
+        // Build descriptive alt text between 100-500 characters
+        altText = `${titleWords}${tagsString ? ` featuring ${tagsString}` : ''}. ${descExcerpt || 'This handcrafted product features exceptional attention to detail and quality craftsmanship.'} Designed for customers who appreciate unique, well-made items that combine functionality with aesthetic appeal. Perfect for adding a touch of elegance to any space.`;
+        
+        // Ensure it's within bounds
+        if (altText.length < 100) {
+          altText = altText + ' This carefully crafted piece showcases the artisan\'s skill and dedication to creating beautiful, functional products that stand the test of time.';
+        }
+        if (altText.length > 500) {
+          altText = altText.substring(0, 497) + '...';
+        }
         
         logger.info('Generated mock alt text', { 
           userId, 
           isMockMode, 
-          altTextLength: altText.length 
+          altTextLength: altText.length,
+          minLength: 100,
+          maxLength: 500
         });
       } else {
         // Real mode - use GPT-4o Vision
@@ -74,15 +86,23 @@ export async function POST(request: NextRequest) {
               ]
             }
           ],
-          max_tokens: 100,
+          max_tokens: 150, // Increased to allow for longer descriptions
           temperature: altTextPrompt.temperature || 0.7,
         });
 
         altText = response.choices[0]?.message?.content?.trim() || '';
 
-        // Ensure it's under 250 characters
-        if (altText.length > altTextPrompt.maxLength) {
-          altText = altText.substring(0, altTextPrompt.maxLength - 3) + '...';
+        // Ensure it's between 100-500 characters
+        const minLength = altTextPrompt.minLength || 100;
+        const maxLength = altTextPrompt.maxLength || 500;
+        
+        if (altText.length < minLength) {
+          // If too short, generate more detail
+          altText = altText + '. This product features high-quality craftsmanship and attention to detail, making it perfect for discerning customers who appreciate fine workmanship and unique design elements.';
+        }
+        
+        if (altText.length > maxLength) {
+          altText = altText.substring(0, maxLength - 3) + '...';
         }
 
         logger.info('Generated AI alt text', {

@@ -19,10 +19,11 @@ export async function GET() {
     const affiliate = await getAffiliateForUser(userId);
 
     if (!affiliate) {
-      return NextResponse.json(
-        { error: 'No affiliate account found' }, 
-        { status: 404 }
-      );
+      // Return 200 with null affiliate instead of 404 to avoid console errors
+      return NextResponse.json({
+        affiliate: null,
+        hasApplication: false,
+      });
     }
 
     // Get actual referral count from database

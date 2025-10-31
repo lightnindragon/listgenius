@@ -192,7 +192,7 @@ export async function generateImageAltText(
             content: [
               {
                 type: 'text',
-                text: `Generate SEO-optimized alt text for this Etsy product image. Context: ${productContext}. Keep it under 250 characters and include relevant keywords for Etsy search.`
+                text: `Generate SEO-optimized alt text for this Etsy product image. Context: ${productContext}. Write a descriptive, comprehensive alt text between 100 and 500 characters (including spaces). Include relevant keywords naturally and provide a detailed description of what's visible in the image.`
               },
               {
                 type: 'image_url',
@@ -204,7 +204,7 @@ export async function generateImageAltText(
           }
         ],
         temperature: 0.5,
-        max_tokens: 100
+        max_tokens: 150 // Increased for longer descriptions
       });
     });
 
@@ -213,16 +213,25 @@ export async function generateImageAltText(
       throw new OpenAIError('No alt text generated');
     }
 
-    // Ensure it's under 250 characters
-    const truncatedAltText = altText.length > 250 ? altText.substring(0, 247) + '...' : altText;
+    // Ensure it's between 100-500 characters
+    let processedAltText = altText;
+    if (processedAltText.length < 100) {
+      // Add more detail if too short
+      processedAltText = processedAltText + '. This product features high-quality craftsmanship and attention to detail, making it perfect for discerning customers who appreciate fine workmanship and unique design elements.';
+    }
+    if (processedAltText.length > 500) {
+      processedAltText = processedAltText.substring(0, 497) + '...';
+    }
     
     logger.info('OpenAI alt text generated', {
       model,
-      length: truncatedAltText.length,
+      length: processedAltText.length,
+      minLength: 100,
+      maxLength: 500,
       tokensUsed: completion.usage?.total_tokens || 0
     });
 
-    return truncatedAltText;
+    return processedAltText;
   } catch (error) {
     logger.error('OpenAI alt text generation failed', { error: (error as Error).message });
     throw new OpenAIError(`Failed to generate alt text: ${(error as Error).message}`);

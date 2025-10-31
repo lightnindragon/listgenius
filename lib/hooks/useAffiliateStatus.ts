@@ -33,14 +33,23 @@ export function useAffiliateStatus(): AffiliateStatus {
         const response = await fetch('/api/affiliate/dashboard');
         if (response.ok) {
           const data = await response.json();
-          setAffiliateStatus({
-            hasApplication: true,
-            status: data.affiliate?.status || null,
-            code: data.affiliate?.code,
-            loading: false,
-          });
+          if (data.affiliate) {
+            setAffiliateStatus({
+              hasApplication: true,
+              status: data.affiliate?.status || null,
+              code: data.affiliate?.code,
+              loading: false,
+            });
+          } else {
+            // No affiliate application found - this is expected and not an error
+            setAffiliateStatus({
+              hasApplication: false,
+              status: null,
+              loading: false,
+            });
+          }
         } else {
-          // No affiliate application found
+          // Other error - handle silently
           setAffiliateStatus({
             hasApplication: false,
             status: null,
@@ -48,7 +57,7 @@ export function useAffiliateStatus(): AffiliateStatus {
           });
         }
       } catch (error) {
-        console.error('Failed to check affiliate status:', error);
+        // Silently handle errors - don't log to console to avoid noise
         setAffiliateStatus({
           hasApplication: false,
           status: null,

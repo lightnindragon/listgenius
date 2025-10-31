@@ -63,7 +63,13 @@ export async function PUT(
     }
 
     if (body.altText !== undefined) {
-      // Validate alt text length (max 500 chars)
+      // Validate alt text length (100-500 chars)
+      if (body.altText.length < 100) {
+        return NextResponse.json(
+          { success: false, error: 'Alt text must be at least 100 characters' },
+          { status: 400 }
+        );
+      }
       if (body.altText.length > 500) {
         return NextResponse.json(
           { success: false, error: 'Alt text must be 500 characters or less' },

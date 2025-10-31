@@ -40,6 +40,7 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
   const [editingFilename, setEditingFilename] = useState('');
   const [saving, setSaving] = useState(false);
   const [generatingAltText, setGeneratingAltText] = useState(false);
+  const [copiedStates, setCopiedStates] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadImages();
@@ -139,6 +140,16 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
 
   const handleSaveChanges = async () => {
     if (!selectedImage) return;
+
+    // Validate alt text length (100-500 characters)
+    if (editingAltText.length < 100) {
+      emitTopRightToast('Alt text must be at least 100 characters', 'error');
+      return;
+    }
+    if (editingAltText.length > 500) {
+      emitTopRightToast('Alt text must be 500 characters or less', 'error');
+      return;
+    }
 
     setSaving(true);
     try {
@@ -324,11 +335,18 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
                     size="sm"
                     onClick={() => {
                       navigator.clipboard.writeText(image.altText);
-                      emitTopRightToast('Alt text copied to clipboard!', 'success');
+                      setCopiedStates(new Set([image.id]));
+                      setTimeout(() => {
+                        setCopiedStates(new Set());
+                      }, 2000);
                     }}
                     title="Copy alt text to clipboard"
                   >
-                    <Copy className="w-4 h-4" />
+                    {copiedStates.has(image.id) ? (
+                      <span className="text-xs">Copied!</span>
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
                   </Button>
                   {image.quality === 'poor' && (
                     <Button
@@ -429,18 +447,30 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
                     {/* Alt Text */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Alt Text
+                        Alt Text <span className="text-gray-500 text-xs">(100-500 characters)</span>
                       </label>
                       <Textarea
                         value={editingAltText}
-                        onChange={(e) => setEditingAltText(e.target.value)}
-                        placeholder="Enter alt text"
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Allow up to 500 characters
+                          if (value.length <= 500) {
+                            setEditingAltText(value);
+                          }
+                        }}
+                        placeholder="Enter descriptive alt text (100-500 characters)"
                         rows={4}
-                        maxLength={250}
+                        maxLength={500}
                       />
                       <div className="flex items-center justify-between mt-1">
-                        <p className="text-xs text-gray-500">
-                          {editingAltText.length}/250 characters
+                        <p className={`text-xs ${
+                          editingAltText.length < 100 
+                            ? 'text-orange-600' 
+                            : editingAltText.length > 500 
+                            ? 'text-red-600' 
+                            : 'text-gray-500'
+                        }`}>
+                          {editingAltText.length}/500 characters {editingAltText.length < 100 && '(Minimum 100 required)'}
                         </p>
                         <div className="flex gap-2">
                           <Button
@@ -472,7 +502,7 @@ export const SavedImages: React.FC<SavedImagesProps> = ({ onRefresh }) => {
                     <div className="flex gap-2 pt-4">
                       <Button
                         onClick={handleSaveChanges}
-                        disabled={saving}
+                        disabled={saving || editingAltText.length < 100 || editingAltText.length > 500}
                         className="flex-1"
                       >
                         {saving ? (
